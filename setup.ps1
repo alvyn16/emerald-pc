@@ -44,3 +44,5 @@ foreach ($patch in $patches) {
 Write-Host "pokeemerald preparado desde $commit. Parches aplicados: $($patches.Count)."
 Write-Host 'Coloca tu propia ROM legal de Pokémon Emerald en inglés en roms/ y conserva el original intacto.'
 Write-Host 'Consulta pokeemerald/INSTALL.md para instalar la toolchain y compilar.'
+Write-Host 'Para el port PC usa MSYS2 MINGW32 (i686) con GCC y SDL2 de 32 bits.'
+Write-Host 'Consulta port/docs/toolchain.md para instalar las versiones requeridas y ejecutar make -C port exe.'

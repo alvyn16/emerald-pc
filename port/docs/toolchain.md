@@ -1,0 +1,36 @@
+# Toolchain del port PC (Windows)
+
+El objetivo PC se compila con **MSYS2 MINGW32 / i686**. `HOST_ARCH=i686` es el valor por defecto de `port/Makefile`. El checkout de `pokeemerald` queda fijado por `setup.ps1` al commit `731ad5bfd6e6f265508d0efcca0ba42f9dcf5881` y permanece ignorado por Git.
+
+## Versiones medidas en esta máquina
+
+Salida de `pacman -Q` en esta instalación de MSYS2:
+
+| Entorno | Paquete | Versión |
+| --- | --- | --- |
+| MINGW32 | `mingw-w64-i686-gcc` | `16.2.0-4` |
+| MINGW32 | `mingw-w64-i686-binutils` | `2.47-3` |
+| MINGW32 | `mingw-w64-i686-SDL2` | `2.32.10-1` |
+| MINGW32 | `mingw-w64-i686-pkgconf` | `1~3.0.7-1` |
+| MINGW32 | `mingw-w64-i686-crt` | `14.0.0.r426.g4564ee4b5-1` |
+| MINGW64 | `mingw-w64-x86_64-gcc` | `16.2.0-4` |
+| MINGW64 | `mingw-w64-x86_64-binutils` | `2.47-3` |
+| MINGW64 | `mingw-w64-x86_64-SDL2` | `2.32.10-1` |
+| MINGW64 | `mingw-w64-x86_64-pkgconf` | `1~3.0.7-1` |
+| MINGW64 | `mingw-w64-x86_64-crt` | `14.0.0.r426.g4564ee4b5-1` |
+| MINGW64 | `mingw-w64-x86_64-libpng` | `1.6.59-1` |
+| MINGW64 | `mingw-w64-x86_64-zlib` | `1.3.2-2` |
+| MSYS | `make` | `4.4.1-3` |
+| MSYS | `git` | `2.56.0-1` |
+
+El build GBA usa `agbcc` de `pokeemerald/tools/agbcc` y un **Binutils ARM 2.43.1-1 aislado** en `pokeemerald/.toolchains/arm-binutils-2.43.1/mingw64/bin`; `arm-none-eabi-ld --version` indica `2.43.1`. El paquete original es `mingw-w64-x86_64-arm-none-eabi-binutils 2.43.1-1` (SHA-256 del archivo `.pkg.tar.zst` local: `557a00cbc60740a185e6c7d847cf06e4e5d06401fb179d699fd4fbc898ec5a18`). No usar el Binutils ARM 2.47 actual para el build GBA de este commit: el script `memory.ld` falla con esa versión. `agbcc`, recursos y `tools/preproc.exe` se generan siguiendo `pokeemerald/INSTALL.md` y el build GBA original.
+
+## Reproducción desde cero
+
+1. Instalar MSYS2 en Windows. En el shell **MINGW64**, instalar herramientas para construir pokeemerald y su preprocesador: `pacman -S --needed make git mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils mingw-w64-x86_64-libpng mingw-w64-x86_64-zlib mingw-w64-x86_64-pkgconf mingw-w64-x86_64-SDL2`. Seguir `pokeemerald/INSTALL.md` para cualquier otra dependencia del build GBA.
+2. En el shell **MINGW32**, instalar `pacman -S --needed mingw-w64-i686-gcc mingw-w64-i686-binutils mingw-w64-i686-SDL2 mingw-w64-i686-pkgconf`. `pacman -Q` permite verificar las versiones instaladas; el repositorio puede publicar otras versiones en el futuro.
+3. Desde PowerShell, ejecutar `./setup.ps1`; clona el commit upstream fijado y aplica los parches locales en orden. Conservar la ROM legal propia en `roms/`; para el build GBA, copiarla a `pokeemerald/baserom.gba` según `INSTALL.md`, sin mover el original.
+4. Construir `agbcc` y el GBA con el Binutils ARM 2.43.1 aislado antepuesto a `PATH`, y verificar `make compare` → `OK`. Esto también genera `tools/preproc.exe` y `build/assets`. El shell MINGW32 necesita la DLL x86-64 de `preproc.exe`; `port/Makefile` antepone `/mingw64/bin` **solo** al ejecutar esa herramienta.
+5. Para el PC, entrar en **MINGW32** y ejecutar `make -C port exe`. Los resultados quedan en `build/`, ignorado por Git.
+
+MINGW32 y MINGW64 deben mantenerse separados: el `.exe` PC, SDL2 y todas sus DLL se compilan en 32 bits; el preprocesador upstream ya construido es x86-64. El repositorio público no incluye ninguna ROM, recurso ni toolchain upstream.

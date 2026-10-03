@@ -6,7 +6,7 @@ SHELL := bash
 
 POKEEMERALD := ../pokeemerald
 HOST_CC ?= gcc
-HOST_ARCH ?= x86_64
+HOST_ARCH ?= i686
 PKG_CONFIG ?= pkg-config
 
 SDL2_CFLAGS := $(shell $(PKG_CONFIG) --cflags sdl2)
