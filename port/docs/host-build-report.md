@@ -40,3 +40,16 @@ Los **9** fallos anteriores por `abs` desaparecieron. Ejemplos: `src/battle_anim
 El único error de sintaxis que queda es la aserción de `ListMenu`; requiere una decisión de representación en 64 bits. Después abordaría las conversiones de punteros, pues los 999 avisos son un riesgo de ejecución aunque GCC acepte la sintaxis. Aún no se implementó una adaptación de tamaño de punteros.
 
 Este informe sigue siendo un diagnóstico: no hay port, ventana SDL2 ni ejecutable host. No se modificaron `pokeemerald/src`, `include` ni `data`, y no se incorporaron ROMs ni assets al repositorio público.
+
+## Medición adicional i686 (MINGW32)
+
+`pacman -Ss mingw-w64-i686-SDL2` confirmó el paquete **2.32.10-1**. Se instalaron `mingw-w64-i686-SDL2` y `mingw-w64-i686-pkgconf` (dependencia adicional: `mingw-w64-i686-vulkan-loader`); `mingw-w64-i686-gcc` **16.2.0-4** ya estaba instalado. `gcc -dumpmachine` en MINGW32 devuelve `i686-w64-mingw32`; `pkg-config --modversion sdl2` devuelve `2.32.10`.
+
+```sh
+# Dentro del shell MSYS2 MINGW32, desde la raíz del proyecto:
+make -C port -k syntax HOST_ARCH=i686 > build/host-syntax-i686.log 2>&1
+```
+
+Resultado: **310/310** archivos pasan, **0** errores de sintaxis y salida `make` **0**. `src/list_menu.c` pasa `ListMenuTooLargeForTaskData` (su estructura mide 32 bytes en i686). Quedan **3** avisos `cast from pointer to integer of different size`, todos en `src/m4a.c:83,179,195`: `NUM_MUSIC_PLAYERS` convierte la dirección de `gNumMusicPlayers` a `u16`, que sigue siendo menor que un puntero i686. Hay un aviso adicional de trigraph en `src/strings.c`, ajeno al ancho de puntero. Comparación directa: **999** avisos puntero/entero en x86-64 frente a **3** en i686.
+
+El `preproc.exe` original es x86-64 y necesita la DLL `libgcc_s_seh-1.dll` de MINGW64; al ejecutar desde MINGW32 sin ajustar su `PATH` sale con código 127 y rompe la tubería. `port/Makefile` antepone `/mingw64/bin` **solo** a ese proceso. GCC, `pkg-config` y SDL2 de la medición siguen siendo i686. La primera pasada fallida por DLL no se contó como diagnóstico C.
