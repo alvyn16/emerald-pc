@@ -36,12 +36,56 @@ Es la opción de mayor trabajo inicial, pero deja contratos de memoria y seriali
 
 Esto haría válidos algunos accesos directos a direcciones de **RAM y registros** y algunos casts a `u32` cuando el objeto realmente esté en esas regiones. No arregla el layout de `ListMenu`, los punteros host guardados en `u32` hacia heap, código o datos fuera de ellas, las palabras `.4byte` de las tablas ROM, ni la BIOS/PPU. Tampoco reproduce la semántica de registros (DMA, interrupciones, modos de video) al escribir en memoria ordinaria. `VirtualAlloc` exige que los rangos estén libres en cada arranque; ASLR, reservas de otras bibliotecas, antivirus o versiones de Windows pueden cambiar el resultado. Además, estos rangos tienen espejos/alias GBA que una reserva simple no reproduce. El experimento demuestra viabilidad de reserva **en esta ejecución**, no un diseño de port completo.
 
-## Comparación
+## Medición completa i686 frente a x86-64
 
-| Opción | Esfuerzo estimado | Riesgo principal | Problemas que evita |
-| --- | --- | --- | --- |
-| A: i686 | Medio para arrancar, alto a largo plazo | Dependencias y distribución de 32 bits; direcciones GBA aún sin soporte | Ensanchamiento de punteros/layouts como `ListMenu` |
-| B: x86-64 y adaptación | Alto inicial | Auditoría extensa de casts, save y datos ROM | Dependencia de direcciones fijas; truncamientos implícitos; layout host confundido con serializado |
-| C: x86-64 y `VirtualAlloc` fijo | Bajo para el experimento, alto para hacerlo correcto | Colisiones de direcciones y falsa sensación de compatibilidad | Algunos accesos directos a RAM/IO y casts de direcciones realmente mapeadas |
+Se emplearon las **mismas 310 fuentes C** y GCC 16.2.0 con SDL2 2.32.10 en ambas arquitecturas. `pacman -Ss mingw-w64-i686-SDL2` confirmó `2.32.10-1`; se instalaron SDL2 i686 y `mingw-w64-i686-pkgconf` (más su dependencia `mingw-w64-i686-vulkan-loader`). El compilador i686 ya estaba instalado. El `preproc.exe` original es de 64 bits: desde MINGW32, `port/Makefile` antepone `/mingw64/bin` solo al ejecutar esa herramienta para cargar sus DLL. GCC y SDL2 del diagnóstico siguen siendo i686.
 
-**Recomendación: B.** El dato decisivo es que tanto el save como los mapas/scripts ROM contienen representaciones de 32 bits, mientras que el host tendrá también punteros a objetos fuera de las regiones GBA. A reduce algunos síntomas de layout pero no la separación de memoria ni la emulación; C solo cubre una parte de la memoria. B establece esa separación desde el principio y permite conservar intacto el build GBA mediante `PORT_PC`. Esta decisión es propuesta; aquí no se implementa.
+| Medición | x86-64 | i686 |
+| --- | ---: | ---: |
+| `.c` que pasan `-fsyntax-only` | **309/310** | **310/310** |
+| Avisos de cast puntero↔entero de distinto tamaño | **999** | **3** |
+| `ListMenuTooLargeForTaskData` | Falla | Pasa |
+| Objetos C host obtenidos | **305/310** | **306/310** |
+| Símbolos distintos sin definir al enlazar esos objetos | **2.630** | **2.614** |
+
+Los **tres** avisos i686 están en `src/m4a.c:83,179,195`: la macro `NUM_MUSIC_PLAYERS` convierte una dirección a `u16`, menor incluso que un puntero i686. Los **16** símbolos que desaparecen del enlace i686 son exactamente los definidos por `list_menu.o`; la lista i686 no añade nombres nuevos. Cuatro unidades siguen sin producir objeto por asm ARM inline en ambas arquitecturas. Detalles y comandos: `port/docs/host-build-report.md` y `port/docs/link-report.md`.
+
+## `.4byte`: ensamblado y enlace medidos
+
+De los **15 `data/*.s`**, **8** escriben directamente `.4byte símbolo` en el archivo principal y **10** contienen esa forma literal al seguir `.include`. Los objetos ARM originales de **12/15** contienen relocaciones `R_ARM_ABS32`, incluidas `map_events.s` y `sound_data.s`, cuyas macros generan tablas de punteros. Los tres restantes son blobs multiboot. `arm-none-eabi-readelf -r` cuenta **37.325** entradas `R_ARM_ABS32` en las 12 unidades. Se trata de relocaciones absolutas de 32 bits; el conteo no afirma que cada una sea un puntero de juego.
+
+Se pasó el **`data/maps.s` real** por su cadena de preprocesado `tools/preproc → GCC -E → tools/preproc -ie`, sin modificarlo. GAS lo ensambla tanto en i686 (`pe-i386`) como en x86-64 (`pe-x86-64`). `objdump -r` muestra `dir32` en i686 y `IMAGE_REL_AMD64_ADDR32` en x86-64, por ejemplo para `gTileset_General` y `gTileset_Petalburg`: **`.4byte` sigue ocupando 4 bytes en x86-64**. El enlace completo de `maps.o` requiere otros símbolos del juego, así que se aisló el comportamiento en `port/experiments/map_pointer_table.s`: dos `.4byte` hacia etiquetas propias y un `main` mínimo.
+
+Reproducción de la muestra real, desde `pokeemerald/` en MINGW64; después se usa cada shell MinGW para ensamblar el mismo flujo:
+
+```sh
+tools/preproc/preproc.exe data/maps.s charmap.txt \
+  | gcc -E -iquote include -Wno-trigraphs -DMODERN=0 \
+      -I tools/agbcc/include -I tools/agbcc -nostdinc -undef -std=gnu89 - \
+  | tools/preproc/preproc.exe -ie data/maps.s charmap.txt \
+  > ../build/maps-preprocessed-original.s
+gcc -c -x assembler -I. ../build/maps-preprocessed-original.s -o ../build/maps-ARQUITECTURA.o
+objdump -r ../build/maps-ARQUITECTURA.o
+```
+
+Para el enlace aislado, desde la raíz y en cada shell: `gcc -c port/experiments/map_pointer_table.s -o build/map-pointer-ARQUITECTURA.o`, seguido de `gcc port/experiments/map_pointer_link_main.c build/map-pointer-ARQUITECTURA.o -o build/map-pointer-ARQUITECTURA.exe`. La tercera variante añade `-Wl,--image-base,0x10000000` al segundo comando x86-64.
+
+| Enlace del experimento | Resultado |
+| --- | --- |
+| GCC i686, base PE normal | **OK**; `dir32` |
+| GCC x86-64, base PE normal | **Falla** dos veces: `relocation truncated to fit: IMAGE_REL_AMD64_ADDR32 against .rdata` |
+| GCC x86-64 con `-Wl,--image-base,0x10000000` | **OK** en esta prueba; `ImageBase=0x10000000` |
+
+La base baja solo hace que **esas direcciones** quepan en 32 bits. No convierte una tabla `.4byte` en `void *[ ]` de x86-64: leer elementos de 8 bytes combinaría entradas vecinas. Tampoco sitúa ROM, heap, DLLs y datos host bajo 4 GB. El problema de x86-64 **sin solución barata** es la coexistencia de miles de palabras/relocaciones GBA de 32 bits con punteros host de 64 bits y estructuras/save que dependen de su ancho. Se necesita un formato host transformado o decodificar `u32` a punteros host en cada consumidor, además de corregir layouts y casts; un flag de compilador, `VirtualAlloc` o una base PE baja no bastan.
+
+## Costes comprobados y decisión
+
+| Opción | Evidencia medida | Desventaja concreta pendiente |
+| --- | --- | --- |
+| A: i686 | 310/310 sintaxis, 3 avisos, `ListMenu` pasa, tabla `.4byte` enlaza | Límite de direcciones virtuales; DLL SDL2 i686; dependencia del repositorio MINGW32; BIOS/ARM/hardware aún pendientes |
+| B: x86-64 adaptado | 309/310, 999 avisos, tabla `.4byte` falla con base normal | Convertir o decodificar datos ROM de 32 bits y revisar layouts, save y casts |
+| C: x86-64 con `VirtualAlloc` fijo | 6/6 regiones GBA reservadas y base baja enlaza la tabla mínima | No resuelve el layout, datos ROM fuera de esas regiones ni semántica de registros |
+
+Un proceso i686 en Windows x64 tiene **2 GB** de espacio virtual por defecto o **4 GB** con `LARGEADDRESSAWARE` ([Microsoft](https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases)); los recursos descomprimidos y caches compartirían ese límite. Se necesitan SDL2 y demás DLL **de 32 bits**; SDL2 i686 **2.32.10** está disponible hoy ([MSYS2](https://packages.msys2.org/packages/mingw-w64-i686-SDL2?repo=mingw32)). [MSYS2 inició en 2023 la retirada gradual de paquetes MINGW32](https://www.msys2.org/news/), así que no debe asumirse disponibilidad futura del mismo conjunto de dependencias. Son riesgos concretos de mantenimiento, no fallos actuales de esta prueba.
+
+**Recomendación final para este hito: A, i686.** Es la única opción que hoy pasa las 310 fuentes sin adaptar layouts y permite enlazar una tabla GBA de punteros `.4byte` con la base normal. La mejora **999→3 avisos** y **309→310 archivos** justifica usarla para desbloquear un primer ejecutable PC. No elimina la necesidad de BIOS, memoria, PPU, sonido y asm host. Si más adelante se exige x86-64, hará falta B, con separación explícita de direcciones `u32` y punteros host. C puede servir como técnica auxiliar, pero los resultados no la respaldan como solución principal. Esta decisión documenta pruebas; no implementa todavía el port.
