@@ -10,17 +10,22 @@ make -C port link-probe > build/host-link.log 2>&1
 
 De 310 fuentes `.c`, **305** generaron objeto. Fallaron `list_menu.c` por `ListMenuTooLargeForTaskData`, y `librfu_intr.c`, `m4a.c`, `multiboot.c`, `script.c` porque el ensamblador x86-64 no acepta su ARM inline (`bx`, `swi`, `.syntax`, `svc`). `libisagbprn.c` produjo objeto, pero eso no demuestra que su asm tenga semántica correcta en PC. El enlace devolvió **exit 2 de make / exit 1 de ld**; no generó un ejecutable válido.
 
-Se contaron las líneas `undefined reference to` de `build/host-link.log` y se deduplicó por nombre exacto. Resultado: **3.956 referencias a 2.630 símbolos distintos**. Las clases son disjuntas; la clasificación es diagnóstica, no una lista de implementaciones.
+Se contaron las líneas `undefined reference to` de `build/host-link.log` y se deduplicó por nombre exacto. Resultado: **3.956 referencias a 2.630 símbolos distintos**. Para atribuir **definiciones reales**, se ejecutó `arm-none-eabi-nm -A -g --defined-only` de Binutils 2.43.1 sobre los 15 objetos ARM originales `build/emerald/data/*.o`, los cuatro objetos de `src/*.s` y los cinco objetos ARM correspondientes a los `.c` que no produjeron objeto host. Este índice solo se lee desde `pokeemerald/`, que está ignorado. Las clases siguientes son disjuntas y se asignan por proveedor en ese orden.
 
-| Categoría | Símbolos distintos | Referencias | Ejemplos / origen |
+| Proveedor en el build ARM | Símbolos distintos | Referencias | Ejemplos |
 | --- | ---: | ---: | --- |
-| BIOS GBA | **14** | 447 | `CpuSet`, `CpuFastSet`, `LZ77UnCompVram`, `SoftReset`, `VBlankIntrWait`; declaraciones en `include/gba/syscall.h` sin implementación host. |
-| Registros `REG_*` | **0** | 0 | `REG_IME`, `REG_DISPCNT` y similares se expanden a accesos a direcciones fijas en headers. Son un riesgo de ejecución, no símbolos externos de linker. |
-| Motor m4a / audio | **58** | 211 | `m4aSoundMain`, `m4aMPlayStop`, `ply_goto`, `SoundMainBTM`, `gMPlayInfo_BGM`; faltan `m4a.c`, `src/m4a_1.s` y datos de sonido. |
-| Plataforma / arranque y comunicación | **10** | 12 | `IntrMain`, `GameCubeMultiBoot_Init`, `MultiBootMain`; provienen de arranque/IRQ y multiboot ARM, no de SDL2. |
-| Otros | **2.548** | 3.286 | `gText_ApprenticePleaseTeach0`, `BattleScript_AbilityCuredStatus`, `EventScript_RepelWoreOff`, `gMapGroups`, `ScriptContext_Enable`, `ListMenuInit`. Predominan tablas/scripts/texto no enlazados porque los `.s` de datos no se convirtieron; también faltan funciones de las unidades C que no produjeron objeto. |
+| Datos definidos en `data/*.s` | **2.478** | 2.551 | `gText_ApprenticePleaseTeach0` (`event_scripts.o`), `BattleScript_AbilityCuredStatus` (`battle_scripts_1.o`), `gMapGroups` (`maps.o`); también datos de sonido. |
+| Otros `.s` (`src/*.s`) | **33** | 44 | `IntrMain` (`crt0.o`), `GameCubeMultiBoot_Init` (`libgcnmultiboot.o`), `ply_goto` y `SoundMainBTM` (`m4a_1.o`). |
+| BIOS GBA | **14** | 447 | `CpuSet`, `LZ77UnCompVram`, `SoftReset`, `VBlankIntrWait`; sin proveedor en esos objetos, declarados en `include/gba/syscall.h`. |
+| m4a C no compilado | **51** | 201 | `m4aSoundMain`, `m4aMPlayStop`, `gMPlayInfo_BGM`; definidos en el objeto ARM `src/m4a.o`. |
+| Plataforma C no compilada | **5** | 6 | `IntrSIO32` (`librfu_intr.o`) y `MultiBootInit`, `MultiBootMain`, `MultiBootStartMaster`, `MultiBootCheckComplete` (`multiboot.o`). |
+| Otros C no compilados | **49** | 707 | `ScriptContext_Enable`, `RunOnLoadMapScript` (`script.o`) y `ListMenuInit`, `DestroyListMenuTask` (`list_menu.o`). |
 | **Total** | **2.630** | **3.956** | |
 
-Reglas del conteo: BIOS es el conjunto de nombres declarados en `include/gba/syscall.h` que aparece sin definición (14; `MultiBoot` no se referencia). Audio abarca prefijos `m4a`, `ply_`, `gMPlayInfo_` y nombres `SoundMainBTM`, `gSoundInfo`. Plataforma abarca `IntrMain`, `GameCubeMultiBoot_*` y `MultiBoot*` excepto el nombre BIOS exacto `MultiBoot`. Registros es el prefijo `REG_`; el resto queda en «otros». Dentro de «otros» hay **538** nombres `gText_*`, **197** `BattleScript_*` y **60** `EventScript_*` (subconjuntos, no categorías adicionales). Este recuento depende de las 305 unidades incluidas: al incorporar datos y resolver errores de compilación aparecerán o desaparecerán símbolos.
+Los **14** símbolos sin proveedor en los objetos inspeccionados coinciden con funciones BIOS de `include/gba/syscall.h`. No hay símbolos externos `REG_*`: `REG_IME`, `REG_DISPCNT` y similares se expanden a direcciones fijas y serán un problema de ejecución, no de enlace. La clasificación anterior por *nombre* mezclaba `ply_*` e `IntrMain` con m4a/plataforma; esta tabla usa el objeto ARM que realmente los define. El recuento cambiará al incorporar datos u otros objetos host.
+
+## Comparación i686
+
+En MINGW32 con GCC i686 16.2.0 y SDL2 i686 2.32.10, `make -C port -k objects HOST_ARCH=i686` produjo **306/310** objetos. Fallan solo los cuatro `.c` con asm ARM inline: `librfu_intr.c`, `m4a.c`, `multiboot.c` y `script.c`; `list_menu.c` sí produce objeto. `make -C port link-probe HOST_ARCH=i686` falla con **4.008 referencias a 2.614 símbolos distintos**. El conjunto i686 es el de x86-64 menos **exactamente 16** símbolos definidos por `list_menu.o`; no introduce nombres nuevos. Logs completos: `build/host-objects-i686.log` y `build/host-link-i686.log` (ignorados).
 
 El resultado muestra que el obstáculo principal para un enlace completo no es solo la BIOS: también hacen falta una estrategia para los datos/recursos y sustitutos de código ARM. No se agregó ninguno en esta tarea.
