@@ -13,9 +13,13 @@ SOURCES := $(shell find $(POKEEMERALD)/src -type f -name '*.c' | sort)
 CHECKS := $(patsubst $(POKEEMERALD)/src/%.c,check/%,$(SOURCES))
 HOST_CPPFLAGS := -std=gnu11 -E -DMODERN=0 -DPORT_PC -include stdlib.h -iquote include -I. $(SDL2_CFLAGS)
 HOST_CFLAGS := -std=gnu11 -fsyntax-only -fmax-errors=5 -x c
+OBJECT_DIR := ../build/host-objects
+OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(SOURCES))
+HOST_OBJECT_CFLAGS := -std=gnu11 -fmax-errors=5 -x c -c
 
-.PHONY: syntax check-tools
+.PHONY: syntax objects link-probe check-tools
 syntax: $(CHECKS)
+objects: $(OBJECTS)
 
 $(CHECKS): | check-tools
 
@@ -34,3 +38,17 @@ check/%: $(POKEEMERALD)/src/%.c
 		tools/preproc/preproc.exe -i -g build/assets "src/$*.c" charmap.txt | \
 		$(HOST_CC) $(HOST_CFLAGS) -; \
 	}
+
+$(OBJECT_DIR)/%.o: $(POKEEMERALD)/src/%.c | check-tools
+	@mkdir -p $(OBJECT_DIR)
+	@echo "OBJECT $<"
+	@cd $(POKEEMERALD) && { \
+		$(HOST_CC) $(HOST_CPPFLAGS) "src/$*.c" | \
+		tools/preproc/preproc.exe -i -g build/assets "src/$*.c" charmap.txt | \
+		$(HOST_CC) $(HOST_OBJECT_CFLAGS) -o "../build/host-objects/$*.o" -; \
+	}
+
+# Run after `make -k objects`; failed object units are deliberately omitted.
+link-probe:
+	@$(HOST_CC) -nostartfiles -Wl,-e,AgbMain -o ../build/host-link-probe.exe \
+		$(OBJECT_DIR)/*.o $(shell $(PKG_CONFIG) --libs sdl2)
