@@ -11,7 +11,7 @@ PKG_CONFIG ?= pkg-config
 SDL2_CFLAGS := $(shell $(PKG_CONFIG) --cflags sdl2)
 SOURCES := $(shell find $(POKEEMERALD)/src -type f -name '*.c' | sort)
 CHECKS := $(patsubst $(POKEEMERALD)/src/%.c,check/%,$(SOURCES))
-HOST_CPPFLAGS := -std=gnu11 -E -DMODERN=0 -DPORT_PC -iquote include -I. $(SDL2_CFLAGS)
+HOST_CPPFLAGS := -std=gnu11 -E -DMODERN=0 -DPORT_PC -include stdlib.h -iquote include -I. $(SDL2_CFLAGS)
 HOST_CFLAGS := -std=gnu11 -fsyntax-only -fmax-errors=5 -x c
 
 .PHONY: syntax check-tools

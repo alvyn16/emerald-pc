@@ -4,16 +4,16 @@
 
 El build GBA original pasó `make compare` con `pokeemerald.gba: OK` y GNU Binutils ARM 2.43.1. El checkout de pret/pokeemerald sigue en `731ad5bfd6e6f265508d0efcca0ba42f9dcf5881`; no se modificó para este diagnóstico.
 
-El build GBA procesa cada `.c` con `CPP | tools/preproc -i -g build/assets <fuente> charmap.txt | agbcc`. `scaninc` genera archivos de dependencias `.d`, pero no transforma el C entregado al compilador. `port/Makefile` reproduce la etapa `GCC -E | tools/preproc | GCC -fsyntax-only`, desde el directorio de pokeemerald para que funcionen las rutas a recursos y `charmap.txt`. Usa `tools/preproc/preproc.exe` y los recursos generados por el build original; solo los lee. No genera archivos dentro de pokeemerald.
+El build GBA procesa cada `.c` con `CPP | tools/preproc -i -g build/assets <fuente> charmap.txt | agbcc`. `scaninc` genera archivos de dependencias `.d`, pero no transforma el C entregado al compilador. `port/Makefile` reproduce la etapa `GCC -E | tools/preproc | GCC -fsyntax-only`, desde el directorio de pokeemerald para que funcionen las rutas a recursos y `charmap.txt`. Usa `tools/preproc/preproc.exe` y los recursos generados por el build original; solo los lee. Añade `-include stdlib.h` en **GCC -E** para declarar `abs` una sola vez, antes de `tools/preproc`. No genera archivos dentro de pokeemerald.
 
 Entorno: MSYS2 **MINGW64**, GCC 16.2.0 (`x86_64-w64-mingw32`) y SDL2 2.32.10. Reproducción desde la raíz del proyecto:
 
 ```sh
 mkdir -p build
-make -C port -k syntax > build/host-syntax-preproc.log 2>&1
+make -C port -k syntax > build/host-syntax-stdlib.log 2>&1
 ```
 
-Se intentaron los **310** archivos `.c` de `pokeemerald/src`. Antes de introducir `tools/preproc`, **191 pasaban y 119 fallaban** (540 diagnósticos `error:`). Con la tubería original de preprocesado, **300 pasan y 10 fallan** (10 diagnósticos `error:`). No queda ningún error de `INCGFX_*`, `INCBIN_*`, `_()` o `__()`. El código de salida de `make` sigue siendo 2 porque el objetivo diagnóstico incluye los diez fallos. El log completo está en `build/`, ignorado por Git.
+Se intentaron los **310** archivos `.c` de `pokeemerald/src`. Antes de introducir `tools/preproc`, **191 pasaban y 119 fallaban** (540 diagnósticos `error:`). Con el preprocesado, **300 pasaban y 10 fallaban**. Tras incluir `<stdlib.h>` en la fase host de preprocesado, **309 pasan y 1 falla** (un diagnóstico `error:`). No quedan errores de `INCGFX_*`, `INCBIN_*`, `_()`, `__()` ni `abs`. El código de salida de `make` sigue siendo 2 porque el objetivo diagnóstico incluye el fallo restante. El log completo está en `build/`, ignorado por Git.
 
 Los conteos siguientes son archivos `.c` distintos. `-fmax-errors=5` limita los errores visibles por unidad, y `-fsyntax-only` no ensambla ni enlaza; pasar esta comprobación no demuestra que exista un ejecutable x86-64. Los grupos de referencias estáticas se solapan con los errores y entre sí.
 
@@ -21,8 +21,9 @@ Los conteos siguientes son archivos `.c` distintos. `-fmax-errors=5` limita los 
 
 | Tipo | Archivos | Ejemplos y causa | Solución propuesta; no aplicada |
 | --- | ---: | --- | --- |
-| `abs` sin declaración | **9** | `src/battle_anim_effects_3.c:1655`, `src/contest.c:3727` y `src/pokemon_storage_system.c:8364` llaman `abs` sin que GCC host vea su prototipo. | Probar la inclusión host de `<stdlib.h>` durante el diagnóstico y comprobar si revela errores adicionales. Mantener cualquier ajuste de código necesario tras `PORT_PC` y fuera del build GBA. |
 | Layout dependiente de punteros de 32 bits | **1** | `src/list_menu.c:18` falla la aserción `ListMenuTooLargeForTaskData`; `include/list_menu.h:82` define `ListMenu` con punteros; `include/task.h:20` ofrece `Task.data` como almacenamiento fijo. En x86-64 la estructura ya no cabe. Es el único archivo que falla por este tipo en el log. | Diseñar almacenamiento host separado o una representación compatible bajo `PORT_PC`, sin cambiar el layout del juego GBA. Medir los tamaños antes de elegir la adaptación. |
+
+Los **9** fallos anteriores por `abs` desaparecieron. Ejemplos: `src/battle_anim_effects_3.c:1655`, `src/contest.c:3727` y `src/pokemon_storage_system.c:8364`. Una prueba de poner `-include stdlib.h` en la **segunda** invocación de GCC produjo redefiniciones de cabeceras CRT, porque el flujo ya estaba preprocesado; colocarlo en `GCC -E` corrigió eso sin tocar pokeemerald.
 
 ## Riesgos adicionales que la sintaxis no resuelve
 
@@ -36,6 +37,6 @@ Los conteos siguientes son archivos `.c` distintos. `-fmax-errors=5` limita los 
 
 ## Siguiente grupo recomendado
 
-Resolvería primero **`abs` sin declaración**: concentra **9 de los 10** fallos actuales y podría comprobarse con un único ajuste de inclusión de cabecera en la compilación host. Eso deja aislada la aserción de tamaño de `ListMenu`, que requiere una decisión de representación en 64 bits. Después abordaría las conversiones de punteros, pues los 999 avisos son un riesgo de ejecución aunque GCC acepte la sintaxis. Ninguno de esos cambios de solución se hizo en esta sesión.
+El único error de sintaxis que queda es la aserción de `ListMenu`; requiere una decisión de representación en 64 bits. Después abordaría las conversiones de punteros, pues los 999 avisos son un riesgo de ejecución aunque GCC acepte la sintaxis. Aún no se implementó una adaptación de tamaño de punteros.
 
 Este informe sigue siendo un diagnóstico: no hay port, ventana SDL2 ni ejecutable host. No se modificaron `pokeemerald/src`, `include` ni `data`, y no se incorporaron ROMs ni assets al repositorio público.
