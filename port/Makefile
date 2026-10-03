@@ -25,10 +25,16 @@ PREPROC_PATH_PREFIX :=
 endif
 OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(SOURCES))
 HOST_OBJECT_CFLAGS := -std=gnu11 -fmax-errors=5 -x c -c
+DATA_SOURCES := $(sort $(wildcard $(POKEEMERALD)/data/*.s))
+DATA_OBJECT_DIR := ../build/host-data-i686
+DATA_RAW_OBJECT_DIR := ../build/host-data-i686-raw
+DATA_OBJECTS := $(patsubst $(POKEEMERALD)/data/%.s,$(DATA_OBJECT_DIR)/%.o,$(DATA_SOURCES))
+DATA_CPPFLAGS := -iquote include -Wno-trigraphs -DMODERN=0 -I tools/agbcc/include -I tools/agbcc -nostdinc -undef -std=gnu89
 
-.PHONY: syntax objects link-probe check-tools
+.PHONY: syntax objects data-objects link-probe check-tools
 syntax: $(CHECKS)
 objects: $(OBJECTS)
+data-objects: $(DATA_OBJECTS)
 
 $(CHECKS): | check-tools
 
@@ -56,6 +62,18 @@ $(OBJECT_DIR)/%.o: $(POKEEMERALD)/src/%.c | check-tools
 		PATH="$(PREPROC_PATH_PREFIX)$$PATH" tools/preproc/preproc.exe -i -g build/assets "src/$*.c" charmap.txt | \
 		$(HOST_CC) $(HOST_OBJECT_CFLAGS) -o "../build/$(notdir $(OBJECT_DIR))/$*.o" -; \
 	}
+
+$(DATA_OBJECT_DIR)/%.o: $(POKEEMERALD)/data/%.s | check-tools
+	@mkdir -p $(DATA_OBJECT_DIR) $(DATA_RAW_OBJECT_DIR)
+	@echo "DATA $<"
+	@cd $(POKEEMERALD) && { \
+		PATH="$(PREPROC_PATH_PREFIX)$$PATH" tools/preproc/preproc.exe "data/$*.s" charmap.txt | \
+		$(HOST_CC) -E $(DATA_CPPFLAGS) - | \
+		PATH="$(PREPROC_PATH_PREFIX)$$PATH" tools/preproc/preproc.exe -ie "data/$*.s" charmap.txt | \
+		sed -E -f ../port/asm_compat.sed | \
+		$(HOST_CC) -c -x assembler -I. -Wa,--defsym,MODERN=0 -o "../build/host-data-i686-raw/$*.o" -; \
+	}
+	@objcopy --prefix-symbols=_ $(DATA_RAW_OBJECT_DIR)/$*.o $(DATA_OBJECT_DIR)/$*.o
 
 # Run after `make -k objects`; failed object units are deliberately omitted.
 link-probe:
