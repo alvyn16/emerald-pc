@@ -1,0 +1,13 @@
+# emerald-pc
+
+Preparación de un futuro port nativo a PC con SDL2 de Pokémon Emerald, basado en la decompilación de [pret/pokeemerald](https://github.com/pret/pokeemerald). Aún no hay un port jugable.
+
+Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Este repositorio no distribuye ROMs, saves, assets ni código de pokeemerald. Es un proyecto de fans no afiliado a Nintendo, Game Freak ni The Pokémon Company.
+
+## Preparación en Windows
+
+1. Clona este repositorio y entra en su carpeta.
+2. Ejecuta `pwsh -File .\setup.ps1` en PowerShell. El script descarga pret/pokeemerald en `pokeemerald/`, fija el commit usado por este proyecto y aplica los parches de `patches/` en orden.
+3. Coloca tu ROM legal original en `roms/` y conserva ese archivo intacto. Ambas carpetas están ignoradas por Git.
+
+El build GBA de referencia requiere las dependencias descritas en `pokeemerald/INSTALL.md`. La preparación de este repositorio se verificó en MSYS2 MINGW64 con `agbcc` y GNU Binutils ARM 2.43.1 mediante `make compare`. El script de preparación no instala la toolchain ni distribuye la ROM.

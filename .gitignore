@@ -1,0 +1,6 @@
+/pokeemerald/
+/roms/
+/build/
+/extracted/
+*.gba
+*.sav
