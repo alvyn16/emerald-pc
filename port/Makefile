@@ -40,16 +40,24 @@ HOST_EXE_OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(HOST_E
 PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c sdl_loader.c audio_silent.c arm_stubs.c host_flash.c port_dma.c port_ppu.c
 EXE := ../build/emerald-pc.exe
 
-.PHONY: syntax objects data-objects song-objects exe link-probe check-tools
+ifeq ($(DIAGNOSTIC),1)
+PORT_EXE_SOURCES += input_script.c
+EXE := ../build/emerald-pc-diagnostic.exe
+PORT_CPPFLAGS := -DPORT_DIAGNOSTIC -g
+endif
+
+.PHONY: syntax objects data-objects song-objects exe diagnostic-exe link-probe check-tools
 syntax: $(CHECKS)
 objects: $(OBJECTS)
 data-objects: $(DATA_OBJECTS)
 song-objects: $(SONG_OBJECTS)
 exe: $(EXE)
+diagnostic-exe:
+	@$(MAKE) DIAGNOSTIC=1 exe
 
 $(EXE): $(HOST_EXE_OBJECTS) $(DATA_OBJECTS) $(SONG_OBJECTS) $(addprefix ./,$(PORT_EXE_SOURCES)) host_flash.h Makefile
 	@find $(OBJECT_DIR) $(DATA_OBJECT_DIR) $(SONG_OBJECT_DIR) -name '*.o' > ../build/host-exe-objects.rsp
-	@$(HOST_CC) -std=gnu11 -DMODERN=0 -DPORT_PC -iquote $(POKEEMERALD)/include -I. \
+	@$(HOST_CC) -std=gnu11 -DMODERN=0 -DPORT_PC $(PORT_CPPFLAGS) -iquote $(POKEEMERALD)/include -I. \
 		-Wl,--image-base=0x10000000 -Wl,--disable-dynamicbase \
 		-o $(EXE) @../build/host-exe-objects.rsp $(PORT_EXE_SOURCES) \
 		$(SDL2_CFLAGS) -lm -lpsapi

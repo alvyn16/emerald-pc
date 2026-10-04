@@ -8,6 +8,9 @@
 #include "platform.h"
 #include "port_ppu.h"
 #include "sdl_loader.h"
+#ifdef PORT_DIAGNOSTIC
+#include "input_script.h"
+#endif
 
 /* gIntrTableTemplate in upstream main.c puts VBlank at index four. */
 #define VBLANK_INTR_INDEX 4
@@ -19,6 +22,9 @@ static SDL_Texture *sTexture;
 static uint32_t sPixels[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
 static Uint64 sNextFrameTick;
 static Uint64 sFrameRemainder;
+#ifdef PORT_DIAGNOSTIC
+static unsigned sDiagnosticFrame;
+#endif
 
 void Port_AttachRenderer(SDL_Renderer *renderer, SDL_Texture *texture)
 {
@@ -43,7 +49,7 @@ static void SetVideoLine(unsigned line, int vblank)
 static void UpdateKeyInput(void)
 {
     const Uint8 *keys = portSDL.GetKeyboardState(NULL);
-    u16 pressed = 0;
+    unsigned pressed = 0;
 
     if (keys[SDL_SCANCODE_Z]) pressed |= A_BUTTON;
     if (keys[SDL_SCANCODE_X]) pressed |= B_BUTTON;
@@ -56,6 +62,10 @@ static void UpdateKeyInput(void)
     if (keys[SDL_SCANCODE_S]) pressed |= R_BUTTON;
     if (keys[SDL_SCANCODE_A]) pressed |= L_BUTTON;
 
+#ifdef PORT_DIAGNOSTIC
+    if (PortInputScript_GetPressed(++sDiagnosticFrame, &pressed))
+        pressed &= KEYS_MASK;
+#endif
     REG_KEYINPUT = KEYS_MASK & ~pressed;
 }
 
@@ -100,7 +110,10 @@ void PortHost_RunFrame(void)
             Port_ExitCleanly();
     }
     UpdateKeyInput();
-    WaitForFrameDeadline();
+#ifdef PORT_DIAGNOSTIC
+    if (!PortInputScript_Fast())
+#endif
+        WaitForFrameDeadline();
     SetVideoLine(160, 1);
 
     if (gIntrTable[VBLANK_INTR_INDEX] != NULL)
@@ -117,4 +130,9 @@ void PortHost_RunFrame(void)
         portSDL.RenderPresent(sRenderer);
     }
     SetVideoLine(0, 0);
+#ifdef PORT_DIAGNOSTIC
+    if (PortInputScript_StopFrame() != 0 &&
+        sDiagnosticFrame >= PortInputScript_StopFrame())
+        Port_ExitCleanly();
+#endif
 }

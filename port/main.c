@@ -8,6 +8,9 @@
 #include "gba_memory.h"
 #include "platform.h"
 #include "sdl_loader.h"
+#ifdef PORT_DIAGNOSTIC
+#include "input_script.h"
+#endif
 
 /* Entry point provided by the user's ignored pokeemerald checkout. */
 extern void AgbMain(void);
@@ -30,6 +33,10 @@ void Port_ExitCleanly(void)
 
 int main(void)
 {
+#ifdef PORT_DIAGNOSTIC
+    if (PortInputScript_Init() != 0)
+        return 1;
+#endif
     if (Port_InitGbaMemory() != 0)
         return 1;
     if (Port_LoadGbaRom() != 0)
