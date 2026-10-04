@@ -1,0 +1,41 @@
+From 6c6aeeb7a42f3e87b67e6c36398b1cd938a0054d Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 4 Oct 2026 13:36:32 -0400
+Subject: [PATCH] Avoid naming callbacks after host cleanup
+
+---
+ src/naming_screen.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/src/naming_screen.c b/src/naming_screen.c
+index ca3be25..a7248f6 100644
+--- a/src/naming_screen.c
++++ b/src/naming_screen.c
+@@ -699,6 +699,11 @@ static bool8 MainState_Exit(void)
+     {
+         if (sNamingScreen->templateNum == NAMING_SCREEN_PLAYER)
+             SeedRngAndSetTrainerId();
++#ifdef PORT_PC
++        // The cooperative host invokes VBlank before the next main callback.
++        // The naming VBlank callback must not retain the soon-to-be-freed data.
++        SetVBlankCallback(NULL);
++#endif
+         SetMainCallback2(sNamingScreen->returnCallback);
+         DestroyTask(FindTaskIdByFunc(Task_NamingScreen));
+         FreeAllWindowBuffers();
+@@ -2008,6 +2013,12 @@ static void PrintControls(void)
+ static void CB2_NamingScreen(void)
+ {
+     RunTasks();
++#ifdef PORT_PC
++    // MainState_Exit may free sNamingScreen during RunTasks. Its cursor
++    // callback cannot run in the remainder of this host frame.
++    if (sNamingScreen == NULL)
++        return;
++#endif
+     AnimateSprites();
+     BuildOamBuffer();
+     UpdatePaletteFade();
+-- 
+2.51.0.windows.2
+
