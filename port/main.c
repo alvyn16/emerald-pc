@@ -15,6 +15,11 @@ int main(void)
 {
     if (Port_InitGbaMemory() != 0)
         return 1;
+    if (Port_LoadGbaRom() != 0)
+    {
+        Port_FreeGbaMemory();
+        return 1;
+    }
 
     if (Port_LoadSDL2() != 0)
     {
