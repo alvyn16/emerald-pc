@@ -254,6 +254,159 @@ int main(void)
     assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff00ff00u);
     assert(sFrame[20 * PORT_SCREEN_WIDTH + 20] == 0xff000000u);
 
+    memset(io, 0, 0x1000);
+    memset(vram, 0, 0x18000);
+    for (int i = 0; i < 128; ++i) oam[i * 4] = 0x0200;
+    palette[0] = 0;
+    palette[1] = 0x001f;
+    palette[2] = 0x7c00;
+    palette[257] = 0x03e0;
+    memset(vram + 0x4000, 0x11, 32);
+    memset(vram + 0x8000, 0x22, 32);
+    memset(vram + 0x10000, 0x11, 32);
+    REG_BG0CNT = BGCNT_PRIORITY(0) | BGCNT_CHARBASE(1);
+    REG_BG1CNT = BGCNT_PRIORITY(1) | BGCNT_CHARBASE(2) | BGCNT_SCREENBASE(1);
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_BG1_ON;
+    REG_BLDCNT = BLDCNT_TGT1_BG0 | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_BG1;
+    REG_BLDALPHA = BLDALPHA_BLEND(8, 8);
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff7b007bu); // Red and blue at half intensity.
+    REG_BLDALPHA = BLDALPHA_BLEND(16, 0);
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff0000u);
+    REG_BLDALPHA = BLDALPHA_BLEND(0, 16);
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff0000ffu);
+    REG_BLDALPHA = BLDALPHA_BLEND(31, 31);
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff00ffu); // Coefficients clamp to 16.
+    palette[2] = 0x001f;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff0000u); // Channel sum saturates at 31.
+    palette[2] = 0x7c00;
+
+    REG_BLDCNT = BLDCNT_TGT1_BG0 | BLDCNT_EFFECT_LIGHTEN;
+    REG_BLDY = 0;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff0000u);
+    REG_BLDY = 8;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff7b7bu);
+    REG_BLDY = 16;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffffffffu);
+    REG_BLDY = 31;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffffffffu); // BLDY clamps to 16.
+    REG_BLDCNT = BLDCNT_TGT1_BG0 | BLDCNT_EFFECT_DARKEN;
+    REG_BLDY = 0;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff0000u);
+    REG_BLDY = 8;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff840000u);
+    REG_BLDY = 16;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff000000u);
+    REG_BLDY = 31;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff000000u);
+
+    REG_DISPCNT = DISPCNT_BG0_ON;
+    palette[0] = 0x7c00;
+    REG_BLDCNT = BLDCNT_TGT1_BG0 | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_BD;
+    REG_BLDALPHA = BLDALPHA_BLEND(8, 8);
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff7b007bu); // Backdrop is the second layer.
+    REG_DISPCNT = 0;
+    REG_BLDCNT = BLDCNT_TGT1_BD | BLDCNT_EFFECT_LIGHTEN;
+    REG_BLDY = 16;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffffffffu); // Backdrop can be first target.
+    palette[0] = 0;
+
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_BG1_ON | DISPCNT_WIN0_ON;
+    REG_WIN0H = 8;
+    REG_WIN0V = 8;
+    REG_WININ = WININ_WIN0_BG0 | WININ_WIN0_BG1 | WININ_WIN0_CLR;
+    REG_WINOUT = WINOUT_WIN01_BG0 | WINOUT_WIN01_BG1;
+    REG_BLDCNT = BLDCNT_TGT1_BG0 | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_BG1;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff7b007bu);
+    assert(sFrame[10] == 0xffff0000u); // Outside: effects disabled.
+    REG_WININ &= ~WININ_WIN0_CLR;
+    REG_WINOUT |= WINOUT_WIN01_CLR;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff0000u);
+    assert(sFrame[10] == 0xff7b007bu);
+
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_OBJ_ON;
+    REG_BLDCNT = BLDCNT_TGT2_BG0; // No global alpha or OBJ first-target bit.
+    oam[0] = 0x0400 | 5; // OAM mode 1: semi-transparent OBJ.
+    oam[1] = 5;
+    oam[2] = 0;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff7b7b00u);
+    REG_DISPCNT |= DISPCNT_WIN0_ON;
+    REG_WININ = WININ_WIN0_BG0 | WININ_WIN0_OBJ;
+    REG_WINOUT = WINOUT_WIN01_BG0 | WINOUT_WIN01_OBJ | WINOUT_WIN01_CLR;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff00ff00u);
+    REG_WININ |= WININ_WIN0_CLR;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff7b7b00u);
+
+    oam[0] = 5; // Ordinary OBJ selected as first target.
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_OBJ_ON;
+    REG_BLDCNT = BLDCNT_TGT1_OBJ | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_BG0;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff7b7b00u);
+    oam[2] = 1 << 10; // OBJ behind BG0, selected as second target.
+    REG_BLDCNT = BLDCNT_TGT1_BG0 | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_OBJ;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff7b7b00u);
+
+    oam[0] = 0x0200;
+    memset(vram + 0xc000, 0x33, 32);
+    REG_BG2CNT = BGCNT_PRIORITY(2) | BGCNT_CHARBASE(3) | BGCNT_SCREENBASE(2);
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_BG2_ON;
+    REG_BLDCNT = BLDCNT_TGT1_BG0 | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_BG2;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff7b7b00u); // BG2 can be second target.
+    REG_DISPCNT |= DISPCNT_BG1_ON;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff0000u); // Visible BG1 blocks the selected BG2.
+    REG_BG3CNT = BGCNT_CHARBASE(1);
+    REG_DISPCNT = DISPCNT_BG3_ON;
+    REG_BLDCNT = BLDCNT_TGT1_BG3 | BLDCNT_EFFECT_DARKEN;
+    REG_BLDY = 16;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff000000u); // BG3 can be first target.
+
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_BG1_ON | DISPCNT_WIN1_ON;
+    REG_WIN1H = 8;
+    REG_WIN1V = 8;
+    REG_WININ = WININ_WIN1_BG0 | WININ_WIN1_BG1 | WININ_WIN1_CLR;
+    REG_WINOUT = WINOUT_WIN01_BG0 | WINOUT_WIN01_BG1;
+    REG_BLDCNT = BLDCNT_TGT1_BG0 | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_BG1;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff7b007bu);
+    assert(sFrame[10] == 0xffff0000u); // WIN1 effect bit is independent.
+
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_OBJ_ON;
+    REG_BLDCNT = BLDCNT_TGT2_BG0 | BLDCNT_TGT2_OBJ;
+    oam[0] = 0x0400 | 5;
+    oam[1] = 5;
+    oam[2] = 0;
+    oam[4] = 5;
+    oam[5] = 5;
+    oam[6] = 1;
+    memset(vram + 0x10020, 0x22, 32);
+    palette[258] = 0x7c00;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff7b7b00u);
+    // The lower OBJ is hidden before blending; BG0 is the second layer.
+
     VirtualFree(oam, 0, MEM_RELEASE);
     VirtualFree(vram, 0, MEM_RELEASE);
     VirtualFree(palette, 0, MEM_RELEASE);

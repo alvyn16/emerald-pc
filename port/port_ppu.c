@@ -9,6 +9,22 @@
 #define OAM ((const uint16_t *)0x07000000u)
 
 static uint8_t sWindowMask[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
+typedef struct {
+    uint16_t color;
+    uint8_t layer;
+    uint8_t semiTransparent;
+} PixelLayer;
+
+static PixelLayer sTop[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
+static PixelLayer sSecond[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
+
+static void PlotPixel(unsigned position, uint16_t color, unsigned layer, int semiTransparent)
+{
+    // The GBA exposes only the frontmost OBJ pixel to color effects.
+    if (layer != 4 || sTop[position].layer != 4)
+        sSecond[position] = sTop[position];
+    sTop[position] = (PixelLayer){color, (uint8_t)layer, (uint8_t)semiTransparent};
+}
 
 static int WithinWindowAxis(unsigned position, uint16_t bounds)
 {
@@ -35,11 +51,11 @@ static void BuildWindowMasks(uint16_t displayControl)
         const int inWin1Y = (windows & DISPCNT_WIN1_ON) && WithinWindowAxis(y, win1v);
         for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
         {
-            unsigned mask = windows ? (outside & 0x1f) : 0x1f;
+            unsigned mask = windows ? (outside & 0x3f) : 0x3f;
             if (inWin1Y && WithinWindowAxis(x, win1h))
-                mask = (inside >> 8) & 0x1f;
+                mask = (inside >> 8) & 0x3f;
             if (inWin0Y && WithinWindowAxis(x, win0h))
-                mask = inside & 0x1f;
+                mask = inside & 0x3f;
             // TODO: OBJ window pixels use the high byte of WINOUT.
             sWindowMask[y * PORT_SCREEN_WIDTH + x] = (uint8_t)mask;
         }
@@ -62,7 +78,7 @@ static uint32_t ExpandColor(uint16_t color)
            | ((green << 3 | green >> 2) << 8) | (blue << 3 | blue >> 2);
 }
 
-static void RenderBackground(uint32_t *pixels, unsigned bg)
+static void RenderBackground(unsigned bg)
 {
     const uint16_t control = ((const volatile uint16_t *)REG_ADDR_BG0CNT)[bg];
     const uint16_t *scroll = (const uint16_t *)(uintptr_t)REG_ADDR_BG0HOFS;
@@ -102,7 +118,7 @@ static void RenderBackground(uint32_t *pixels, unsigned bg)
             if (index != 0)
             {
                 const unsigned paletteIndex = bpp8 ? index : ((entry >> 12) * 16 + index);
-                pixels[y * PORT_SCREEN_WIDTH + x] = ExpandColor(PALETTE[paletteIndex]);
+                PlotPixel(y * PORT_SCREEN_WIDTH + x, PALETTE[paletteIndex], bg, 0);
             }
         }
     }
@@ -114,7 +130,7 @@ static int32_t SignExtend28(uint32_t value)
     return (value & 0x08000000u) ? (int32_t)(value | 0xf0000000u) : (int32_t)value;
 }
 
-static void RenderAffineBackground(uint32_t *pixels, unsigned bg)
+static void RenderAffineBackground(unsigned bg)
 {
     const uint16_t control = ((const volatile uint16_t *)REG_ADDR_BG0CNT)[bg];
     const unsigned size = 128u << ((control >> 14) & 3);
@@ -156,7 +172,7 @@ static void RenderAffineBackground(uint32_t *pixels, unsigned bg)
                 continue;
             const unsigned index = VRAM[tileOffset];
             if (index != 0)
-                pixels[y * PORT_SCREEN_WIDTH + x] = ExpandColor(PALETTE[index]);
+                PlotPixel(y * PORT_SCREEN_WIDTH + x, PALETTE[index], bg, 0);
         }
     }
 }
@@ -173,7 +189,7 @@ static void SpriteDimensions(unsigned shape, unsigned size, unsigned *width, uns
     *height = heights[shape][size];
 }
 
-static void RenderSprites(uint32_t *pixels, unsigned priority, uint16_t displayControl)
+static void RenderSprites(unsigned priority, uint16_t displayControl)
 {
     const unsigned oneDimensional = (displayControl & DISPCNT_OBJ_1D_MAP) != 0;
     for (int sprite = 127; sprite >= 0; --sprite)
@@ -182,10 +198,11 @@ static void RenderSprites(uint32_t *pixels, unsigned priority, uint16_t displayC
         const uint16_t attr1 = OAM[sprite * 4 + 1];
         const uint16_t attr2 = OAM[sprite * 4 + 2];
         const unsigned shape = (attr0 >> 14) & 3;
+        const unsigned objectMode = (attr0 >> 10) & 3;
         const int affine = (attr0 & 0x0100) != 0;
         const int doubleSize = affine && (attr0 & 0x0200);
         if ((!affine && (attr0 & 0x0200)) || shape == 3 ||
-            ((attr0 >> 10) & 3) == 2 || ((attr2 >> 10) & 3) != priority)
+            objectMode == 2 || objectMode == 3 || ((attr2 >> 10) & 3) != priority)
             continue;
 
         unsigned width, height;
@@ -250,41 +267,109 @@ static void RenderSprites(uint32_t *pixels, unsigned priority, uint16_t displayC
                 if (index != 0)
                 {
                     const unsigned paletteIndex = bpp8 ? index : ((attr2 >> 12) * 16 + index);
-                    pixels[screenY * PORT_SCREEN_WIDTH + screenX] =
-                            ExpandColor(PALETTE[256 + paletteIndex]);
+                    PlotPixel(screenY * PORT_SCREEN_WIDTH + screenX,
+                              PALETTE[256 + paletteIndex], 4, objectMode == 1);
                 }
             }
         }
     }
 }
 
+static unsigned ClampCoefficient(unsigned value)
+{
+    return value > 16 ? 16 : value;
+}
+
+static uint16_t BlendColors(uint16_t top, uint16_t bottom, unsigned eva, unsigned evb)
+{
+    uint16_t result = 0;
+    for (unsigned shift = 0; shift <= 10; shift += 5)
+    {
+        unsigned channel = (((top >> shift) & 31) * eva
+                          + ((bottom >> shift) & 31) * evb) >> 4;
+        if (channel > 31) channel = 31;
+        result |= channel << shift;
+    }
+    return result;
+}
+
+static uint16_t AdjustBrightness(uint16_t color, unsigned evy, int lighten)
+{
+    uint16_t result = 0;
+    for (unsigned shift = 0; shift <= 10; shift += 5)
+    {
+        const unsigned channel = (color >> shift) & 31;
+        const unsigned adjusted = lighten
+                ? channel + (((31 - channel) * evy) >> 4)
+                : channel - ((channel * evy) >> 4);
+        result |= adjusted << shift;
+    }
+    return result;
+}
+
+static void ResolvePixels(uint32_t *pixels)
+{
+    const uint16_t blendControl = REG_BLDCNT;
+    const uint16_t alpha = REG_BLDALPHA;
+    const unsigned effect = (blendControl >> 6) & 3;
+    const unsigned eva = ClampCoefficient(alpha & 31);
+    const unsigned evb = ClampCoefficient((alpha >> 8) & 31);
+    const unsigned evy = ClampCoefficient(REG_BLDY & 31);
+
+    for (unsigned i = 0; i < PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT; ++i)
+    {
+        const PixelLayer top = sTop[i], second = sSecond[i];
+        uint16_t color = top.color;
+        if (sWindowMask[i] & 0x20)
+        {
+            const int secondTarget = second.layer < 6 &&
+                    (blendControl & (1u << (second.layer + 8)));
+            if ((top.semiTransparent || (effect == 1 &&
+                 (blendControl & (1u << top.layer)))) && secondTarget)
+                color = BlendColors(color, second.color, eva, evb);
+            else if ((blendControl & (1u << top.layer)) && effect >= 2)
+                color = AdjustBrightness(color, evy, effect == 2);
+        }
+        pixels[i] = ExpandColor(color);
+    }
+}
+
 void PortPpu_Render(uint32_t *pixels)
 {
     const uint16_t displayControl = REG_DISPCNT;
-    const uint32_t backdrop = (displayControl & DISPCNT_FORCED_BLANK)
-            ? 0xffffffffu : ExpandColor(PALETTE[0]);
+    if (displayControl & DISPCNT_FORCED_BLANK)
+    {
+        for (unsigned i = 0; i < PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT; ++i)
+            pixels[i] = 0xffffffffu;
+        return;
+    }
+
     for (unsigned i = 0; i < PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT; ++i)
-        pixels[i] = backdrop;
+    {
+        sTop[i] = (PixelLayer){PALETTE[0], 5, 0};
+        sSecond[i] = (PixelLayer){0, 6, 0};
+    }
 
     BuildWindowMasks(displayControl);
 
     const unsigned mode = displayControl & 7;
-    if (mode > DISPCNT_MODE_2 || (displayControl & DISPCNT_FORCED_BLANK))
-        return;
-
-    for (int priority = 3; priority >= 0; --priority)
+    if (mode <= DISPCNT_MODE_2)
     {
-        for (int bg = 3; bg >= 0; --bg)
+        for (int priority = 3; priority >= 0; --priority)
         {
-            if (!(displayControl & (DISPCNT_BG0_ON << bg)) ||
-                ((((volatile uint16_t *)REG_ADDR_BG0CNT)[bg] & 3) != priority))
-                continue;
-            if (mode == DISPCNT_MODE_0 || (mode == DISPCNT_MODE_1 && bg < 2))
-                RenderBackground(pixels, bg);
-            else if (bg >= 2 && (mode == DISPCNT_MODE_2 || bg == 2))
-                RenderAffineBackground(pixels, bg);
+            for (int bg = 3; bg >= 0; --bg)
+            {
+                if (!(displayControl & (DISPCNT_BG0_ON << bg)) ||
+                    ((((volatile uint16_t *)REG_ADDR_BG0CNT)[bg] & 3) != priority))
+                    continue;
+                if (mode == DISPCNT_MODE_0 || (mode == DISPCNT_MODE_1 && bg < 2))
+                    RenderBackground(bg);
+                else if (bg >= 2 && (mode == DISPCNT_MODE_2 || bg == 2))
+                    RenderAffineBackground(bg);
+            }
+            if (displayControl & DISPCNT_OBJ_ON)
+                RenderSprites(priority, displayControl);
         }
-        if (displayControl & DISPCNT_OBJ_ON)
-            RenderSprites(pixels, priority, displayControl);
     }
+    ResolvePixels(pixels);
 }
