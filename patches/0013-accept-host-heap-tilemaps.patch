@@ -1,0 +1,32 @@
+From 92b13ce8005ea1d69554813d617d13ba4c7ce073 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 4 Oct 2026 13:36:33 -0400
+Subject: [PATCH] Accept host heap tilemaps
+
+---
+ src/bg.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/bg.c b/src/bg.c
+index 2c82a42..6b49dea 100644
+--- a/src/bg.c
++++ b/src/bg.c
+@@ -1238,10 +1238,15 @@ bool32 IsInvalidBg32(u8 bg)
+ 
+ bool32 IsTileMapOutsideWram(u8 bg)
+ {
++#ifdef PORT_PC
++    // Host tilemap buffers live in the process heap, not GBA EWRAM/IWRAM.
++    return sGpuBgConfigs2[bg].tilemap == NULL;
++#else
+     if (sGpuBgConfigs2[bg].tilemap > (void *)IWRAM_END)
+         return TRUE;
+     else if (sGpuBgConfigs2[bg].tilemap == NULL)
+         return TRUE;
+     else
+         return FALSE;
++#endif
+ }
+-- 
+2.51.0.windows.2
+
