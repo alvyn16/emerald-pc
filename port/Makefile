@@ -37,7 +37,7 @@ SONG_INCLUDE_DIR := ../build/host-song-includes
 SONG_OBJECTS := $(patsubst $(POKEEMERALD)/sound/songs/midi/%.s,$(SONG_OBJECT_DIR)/%.o,$(SONG_SOURCES))
 HOST_EXE_SOURCES := $(filter-out $(addprefix $(POKEEMERALD)/src/,librfu_intr.c m4a.c multiboot.c),$(SOURCES))
 HOST_EXE_OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(HOST_EXE_SOURCES))
-PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c sdl_loader.c audio_silent.c arm_stubs.c host_flash.c
+PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c sdl_loader.c audio_silent.c arm_stubs.c host_flash.c port_dma.c
 EXE := ../build/emerald-pc.exe
 
 .PHONY: syntax objects data-objects song-objects exe link-probe check-tools
@@ -82,6 +82,7 @@ $(OBJECT_DIR)/%.o: $(POKEEMERALD)/src/%.c | check-tools
 	}
 
 $(OBJECT_DIR)/agb_flash.o $(OBJECT_DIR)/agb_flash_1m.o: host_flash.h
+$(OBJECTS): $(POKEEMERALD)/include/gba/macro.h
 
 $(DATA_OBJECT_DIR)/%.o: $(POKEEMERALD)/data/%.s | check-tools
 	@mkdir -p $(DATA_OBJECT_DIR) $(DATA_RAW_OBJECT_DIR)

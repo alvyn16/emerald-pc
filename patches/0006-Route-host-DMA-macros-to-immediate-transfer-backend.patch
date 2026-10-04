@@ -1,0 +1,36 @@
+From bd6047041aa57be363c925d83d72764f25b9f33a Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 4 Oct 2026 00:23:26 -0400
+Subject: [PATCH] Route host DMA macros to immediate transfer backend
+
+---
+ include/gba/macro.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/include/gba/macro.h b/include/gba/macro.h
+index 8566762..3f5e6d5 100644
+--- a/include/gba/macro.h
++++ b/include/gba/macro.h
+@@ -54,6 +54,11 @@
+ 
+ #define CpuFastCopy(src, dest, size) CpuFastSet(src, dest, ((size)/(32/8) & 0x1FFFFF))
+ 
++#ifdef PORT_PC
++#include "port_dma.h"
++#define DmaSetUnchecked(dmaNum, src, dest, control) \
++    PortDma_Set((dmaNum), (const void *)(src), (void *)(dest), (control))
++#else
+ #define DmaSetUnchecked(dmaNum, src, dest, control) \
+ {                                                 \
+     vu32 *dmaRegs = (vu32 *)REG_ADDR_DMA##dmaNum; \
+@@ -62,6 +67,7 @@
+     dmaRegs[2] = (vu32)(control);                 \
+     dmaRegs[2];                                   \
+ }
++#endif
+ 
+ #if MODERN
+ // NOTE: Assumes 16-bit DMAs.
+-- 
+2.51.0.windows.2
+
