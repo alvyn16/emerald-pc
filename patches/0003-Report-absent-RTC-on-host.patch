@@ -1,0 +1,35 @@
+From 3657f57ecf0e39631793ea4072556bb48b6bb052 Mon Sep 17 00:00:00 2001
+From: emerald-pc <port@local.invalid>
+Date: Sat, 3 Oct 2026 23:03:19 -0400
+Subject: [PATCH] Report absent RTC on host
+
+---
+ src/siirtc.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/siirtc.c b/src/siirtc.c
+index 3557685..46f3d54 100644
+--- a/src/siirtc.c
++++ b/src/siirtc.c
+@@ -92,6 +92,10 @@ void SiiRtcProtect(void)
+ 
+ u8 SiiRtcProbe(void)
+ {
++#ifdef PORT_PC
++    // A PC has no cartridge RTC. RtcInit will set RTC_INIT_ERROR.
++    return 0;
++#else
+     u8 errorCode;
+     struct SiiRtcInfo rtc;
+ 
+@@ -133,6 +137,7 @@ u8 SiiRtcProbe(void)
+     }
+ 
+     return (errorCode << 4) | 1;
++#endif
+ }
+ 
+ bool8 SiiRtcReset(void)
+-- 
+2.51.0.windows.2
+
