@@ -19,6 +19,8 @@ El build GBA generó además 530 fuentes de canciones en `sound/songs/midi/*.s`.
 `make -C port song-objects` ensambla las 530 en MINGW32. El flujo quita los
 comentarios ARM `@` de la canción y de `MPlayDef.s` en archivos intermedios
 ignorados bajo `build/`, ensambla sin copiar fuentes al repositorio público y
+convierte `.word` ARM (32 bits) a `.long` x86 (32 bits). Sin esto el ensamblado
+pasa pero el enlace falla con `relocation truncated to fit: 16`. Finalmente
 aplica el prefijo `_` de COFF a los símbolos definidos. Las 530 pasan; con los
 306 objetos C, los 15 datos y las funciones BIOS host, el enlace de prueba
 queda en 122 símbolos distintos sin definir (869 referencias), concentrados

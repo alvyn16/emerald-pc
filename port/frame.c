@@ -4,6 +4,7 @@
 #include <SDL.h>
 
 #include "platform.h"
+#include "sdl_loader.h"
 
 static SDL_Renderer *sRenderer;
 static Uint64 sNextFrameTick;
@@ -17,7 +18,7 @@ void Port_AttachRenderer(SDL_Renderer *renderer)
 void Port_PresentAndWait(void)
 {
     SDL_Event event;
-    while (SDL_PollEvent(&event))
+    while (portSDL.PollEvent(&event))
     {
         if (event.type == SDL_QUIT)
         {
@@ -28,14 +29,14 @@ void Port_PresentAndWait(void)
 
     if (sRenderer != NULL)
     {
-        SDL_SetRenderDrawColor(sRenderer, 0, 0, 0, 255);
-        SDL_RenderClear(sRenderer);
-        SDL_RenderPresent(sRenderer);
+        portSDL.SetRenderDrawColor(sRenderer, 0, 0, 0, 255);
+        portSDL.RenderClear(sRenderer);
+        portSDL.RenderPresent(sRenderer);
     }
 
-    const Uint64 frequency = SDL_GetPerformanceFrequency();
+    const Uint64 frequency = portSDL.GetPerformanceFrequency();
     const Uint64 interval = (Uint64)((double)frequency / 59.73 + 0.5);
-    Uint64 now = SDL_GetPerformanceCounter();
+    Uint64 now = portSDL.GetPerformanceCounter();
     if (sNextFrameTick == 0 || now > sNextFrameTick + interval)
         sNextFrameTick = now + interval;
     else
@@ -45,7 +46,7 @@ void Port_PresentAndWait(void)
     {
         Uint64 remaining = sNextFrameTick - now;
         Uint32 milliseconds = (Uint32)(remaining * 1000 / frequency);
-        SDL_Delay(milliseconds > 1 ? milliseconds - 1 : 1);
-        now = SDL_GetPerformanceCounter();
+        portSDL.Delay(milliseconds > 1 ? milliseconds - 1 : 1);
+        now = portSDL.GetPerformanceCounter();
     }
 }

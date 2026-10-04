@@ -35,12 +35,24 @@ SONG_OBJECT_DIR := ../build/host-songs-i686
 SONG_RAW_OBJECT_DIR := ../build/host-songs-i686-raw
 SONG_INCLUDE_DIR := ../build/host-song-includes
 SONG_OBJECTS := $(patsubst $(POKEEMERALD)/sound/songs/midi/%.s,$(SONG_OBJECT_DIR)/%.o,$(SONG_SOURCES))
+HOST_EXE_SOURCES := $(filter-out $(addprefix $(POKEEMERALD)/src/,librfu_intr.c m4a.c multiboot.c),$(SOURCES))
+HOST_EXE_OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(HOST_EXE_SOURCES))
+PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c sdl_loader.c audio_silent.c arm_stubs.c
+EXE := ../build/emerald-pc.exe
 
-.PHONY: syntax objects data-objects song-objects link-probe check-tools
+.PHONY: syntax objects data-objects song-objects exe link-probe check-tools
 syntax: $(CHECKS)
 objects: $(OBJECTS)
 data-objects: $(DATA_OBJECTS)
 song-objects: $(SONG_OBJECTS)
+exe: $(EXE)
+
+$(EXE): $(HOST_EXE_OBJECTS) $(DATA_OBJECTS) $(SONG_OBJECTS) $(addprefix ./,$(PORT_EXE_SOURCES)) Makefile
+	@find $(OBJECT_DIR) $(DATA_OBJECT_DIR) $(SONG_OBJECT_DIR) -name '*.o' > ../build/host-exe-objects.rsp
+	@$(HOST_CC) -std=gnu11 -DMODERN=0 -DPORT_PC -iquote $(POKEEMERALD)/include -I. \
+		-Wl,--image-base=0x10000000 -Wl,--disable-dynamicbase \
+		-o $(EXE) @../build/host-exe-objects.rsp $(PORT_EXE_SOURCES) \
+		$(SDL2_CFLAGS) -lm -lpsapi
 
 $(CHECKS): | check-tools
 
@@ -81,13 +93,13 @@ $(DATA_OBJECT_DIR)/%.o: $(POKEEMERALD)/data/%.s | check-tools
 	}
 	@objcopy --prefix-symbols=_ $(DATA_RAW_OBJECT_DIR)/$*.o $(DATA_OBJECT_DIR)/$*.o
 
-$(SONG_INCLUDE_DIR)/MPlayDef.s: $(POKEEMERALD)/sound/MPlayDef.s
+$(SONG_INCLUDE_DIR)/MPlayDef.s: $(POKEEMERALD)/sound/MPlayDef.s ../port/song_compat.sed
 	@mkdir -p $(SONG_INCLUDE_DIR)
-	@sed -E 's/@.*$$//' $< > $@
+	@sed -E -f ../port/song_compat.sed $< > $@
 
-$(SONG_OBJECT_DIR)/%.o: $(POKEEMERALD)/sound/songs/midi/%.s $(SONG_INCLUDE_DIR)/MPlayDef.s | check-tools
+$(SONG_OBJECT_DIR)/%.o: $(POKEEMERALD)/sound/songs/midi/%.s $(SONG_INCLUDE_DIR)/MPlayDef.s ../port/song_compat.sed | check-tools
 	@mkdir -p $(SONG_OBJECT_DIR) $(SONG_RAW_OBJECT_DIR)
-	@sed -E 's/@.*$$//' $< | $(HOST_CC) -c -x assembler -I$(SONG_INCLUDE_DIR) -o $(SONG_RAW_OBJECT_DIR)/$*.o -
+	@sed -E -f ../port/song_compat.sed $< | $(HOST_CC) -c -x assembler -I$(SONG_INCLUDE_DIR) -o $(SONG_RAW_OBJECT_DIR)/$*.o -
 	@objcopy --prefix-symbols=_ $(SONG_RAW_OBJECT_DIR)/$*.o $@
 
 # Run after `make -k objects`; failed object units are deliberately omitted.

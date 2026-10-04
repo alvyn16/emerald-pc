@@ -1,0 +1,69 @@
+#include <stdio.h>
+
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
+#undef main
+
+#include "gba_memory.h"
+#include "platform.h"
+#include "sdl_loader.h"
+
+/* Entry point provided by the user's ignored pokeemerald checkout. */
+extern void AgbMain(void);
+
+int main(void)
+{
+    if (Port_InitGbaMemory() != 0)
+        return 1;
+
+    if (Port_LoadSDL2() != 0)
+    {
+        Port_FreeGbaMemory();
+        return 1;
+    }
+    portSDL.SetMainReady();
+    if (portSDL.Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0)
+    {
+        fprintf(stderr, "SDL_Init failed: %s\n", portSDL.GetError());
+        Port_FreeGbaMemory();
+        return 1;
+    }
+
+    SDL_Window *window = portSDL.CreateWindow("emerald-pc: milestone 2",
+                                         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                         240 * 4, 160 * 4, SDL_WINDOW_SHOWN);
+    if (window == NULL)
+    {
+        fprintf(stderr, "SDL_CreateWindow failed: %s\n", portSDL.GetError());
+        portSDL.Quit();
+        Port_FreeGbaMemory();
+        return 1;
+    }
+
+    SDL_Renderer *renderer = portSDL.CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+    if (renderer == NULL || portSDL.RenderSetLogicalSize(renderer, 240, 160) != 0)
+    {
+        fprintf(stderr, "SDL renderer failed: %s\n", portSDL.GetError());
+        if (renderer != NULL)
+            portSDL.DestroyRenderer(renderer);
+        portSDL.DestroyWindow(window);
+        portSDL.Quit();
+        Port_FreeGbaMemory();
+        return 1;
+    }
+
+    Port_AttachRenderer(renderer);
+    portSDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    portSDL.RenderClear(renderer);
+    portSDL.RenderPresent(renderer);
+    fprintf(stderr, "PC: SDL window ready (240x160, scale 4); entering AgbMain\n");
+    AgbMain();
+    fprintf(stderr, "PC: AgbMain returned\n");
+
+    Port_AttachRenderer(NULL);
+    portSDL.DestroyRenderer(renderer);
+    portSDL.DestroyWindow(window);
+    portSDL.Quit();
+    Port_FreeGbaMemory();
+    return 0;
+}

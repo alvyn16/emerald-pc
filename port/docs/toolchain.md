@@ -12,6 +12,7 @@ Salida de `pacman -Q` en esta instalación de MSYS2:
 | MINGW32 | `mingw-w64-i686-binutils` | `2.47-3` |
 | MINGW32 | `mingw-w64-i686-SDL2` | `2.32.10-1` |
 | MINGW32 | `mingw-w64-i686-pkgconf` | `1~3.0.7-1` |
+| MINGW32 | `mingw-w64-i686-gdb` | `18.1-3` |
 | MINGW32 | `mingw-w64-i686-crt` | `14.0.0.r426.g4564ee4b5-1` |
 | MINGW64 | `mingw-w64-x86_64-gcc` | `16.2.0-4` |
 | MINGW64 | `mingw-w64-x86_64-binutils` | `2.47-3` |
@@ -28,9 +29,11 @@ El build GBA usa `agbcc` de `pokeemerald/tools/agbcc` y un **Binutils ARM 2.43.1
 ## Reproducción desde cero
 
 1. Instalar MSYS2 en Windows. En el shell **MINGW64**, instalar herramientas para construir pokeemerald y su preprocesador: `pacman -S --needed make git mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils mingw-w64-x86_64-libpng mingw-w64-x86_64-zlib mingw-w64-x86_64-pkgconf mingw-w64-x86_64-SDL2`. Seguir `pokeemerald/INSTALL.md` para cualquier otra dependencia del build GBA.
-2. En el shell **MINGW32**, instalar `pacman -S --needed mingw-w64-i686-gcc mingw-w64-i686-binutils mingw-w64-i686-SDL2 mingw-w64-i686-pkgconf`. `pacman -Q` permite verificar las versiones instaladas; el repositorio puede publicar otras versiones en el futuro.
+2. En el shell **MINGW32**, instalar `pacman -S --needed mingw-w64-i686-gcc mingw-w64-i686-binutils mingw-w64-i686-SDL2 mingw-w64-i686-pkgconf mingw-w64-i686-gdb`. `pacman -Q` permite verificar las versiones instaladas; el repositorio puede publicar otras versiones en el futuro.
 3. Desde PowerShell, ejecutar `./setup.ps1`; clona el commit upstream fijado y aplica los parches locales en orden. Conservar la ROM legal propia en `roms/`; para el build GBA, copiarla a `pokeemerald/baserom.gba` según `INSTALL.md`, sin mover el original.
 4. Construir `agbcc` y el GBA con el Binutils ARM 2.43.1 aislado antepuesto a `PATH`, y verificar `make compare` → `OK`. Esto también genera `tools/preproc.exe` y `build/assets`. El shell MINGW32 necesita la DLL x86-64 de `preproc.exe`; `port/Makefile` antepone `/mingw64/bin` **solo** al ejecutar esa herramienta.
 5. Para el PC, entrar en **MINGW32** y ejecutar `make -C port exe`. Los resultados quedan en `build/`, ignorado por Git.
+
+El ejecutable carga `SDL2.dll` **después** de reservar las direcciones de memoria GBA con `VirtualAlloc`; iniciar desde MINGW32 pone la DLL i686 en `PATH`. El linker fija la imagen en `0x10000000` y desactiva ASLR para dejar libres las direcciones GBA. Si se ejecuta desde otro shell, añadir `mingw32/bin` al `PATH` antes de iniciarlo. GDB i686 es una herramienta de diagnóstico opcional, instalada aquí para la primera ejecución.
 
 MINGW32 y MINGW64 deben mantenerse separados: el `.exe` PC, SDL2 y todas sus DLL se compilan en 32 bits; el preprocesador upstream ya construido es x86-64. El repositorio público no incluye ninguna ROM, recurso ni toolchain upstream.
