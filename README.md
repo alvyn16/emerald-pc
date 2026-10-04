@@ -1,6 +1,6 @@
 # emerald-pc
 
-Port nativo experimental a PC con SDL2 de Pokémon Emerald, basado en la decompilación de [pret/pokeemerald](https://github.com/pret/pokeemerald). Aún no es jugable: abre una ventana negra y el arranque se detiene al detectar flash/guardado sin emular.
+Port nativo experimental a PC con SDL2 de Pokémon Emerald, basado en la decompilación de [pret/pokeemerald](https://github.com/pret/pokeemerald). Aún no es jugable: abre una ventana negra y el arranque espera una interrupción VBlank todavía sin emular.
 
 Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Este repositorio no distribuye ROMs, saves, assets ni código de pokeemerald. Es un proyecto de fans no afiliado a Nintendo, Game Freak ni The Pokémon Company.
 
@@ -23,5 +23,6 @@ make -C port exe
 ```
 
 El ejecutable carga solo en memoria el único `.gba` de `roms/`; nunca modifica
-el archivo original. El estado del arranque y el siguiente fallo medido con
+el archivo original. El guardado experimental usa `saves/emerald-pc.sav`,
+ignorado por Git. El estado del arranque y el siguiente bloqueo medido con
 GDB están en `port/docs/first-run-report.md`.

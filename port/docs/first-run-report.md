@@ -74,3 +74,37 @@ hito; el acceso produce la excepción. El mismo procedimiento prepara una
 rutina de lectura copiada a RAM y espera ejecutarla con semántica ARM Thumb,
 por lo que reservar flash sin adaptar esa rutina tampoco bastaría para
 continuar. No se implementó flash, guardado, PPU ni audio en esta sesión.
+
+## Hito 4: flash de 128 KiB y siguiente espera
+
+El parche `0004-Route-host-flash-operations-to-save-backend.patch` hace que,
+solo bajo `PORT_PC`, `IdentifyFlash` seleccione una flash válida de 128 KiB
+con 32 sectores de 4 KiB. Lectura y verificación dejan de copiar y ejecutar
+rutinas Thumb desde la pila. Las operaciones de escritura y borrado apuntan
+al buffer de `port/host_flash.c`, que está mapeado al archivo
+`saves/emerald-pc.sav` (ignorado por Git). El archivo nuevo se llena con
+`0xFF`; uno existente debe tener exactamente 131.072 bytes. El backend
+preserva la regla de flash de programar bits de 1 a 0 y persiste los cambios.
+No se reserva ni se usa `0x0E000000` para esas operaciones host.
+
+La prueba independiente `port/tests/host_flash_test.c` usó un save temporal
+bajo `build/`: borrado, programación de byte/sector, lectura, verificación,
+rechazo de sector inválido y persistencia tras cerrar y reabrir dieron **OK**.
+GDB detuvo la ejecución después de `CheckForFlashMemory` y midió
+`gFlashMemoryPresent = 1` y `gFlash->romSize = 131072`. El build original
+continuó dando `make compare` → `pokeemerald.gba: OK` con ARM Binutils 2.43.1.
+
+La ejecución ya no cae en `ReadFlashId`; el **siguiente bloqueo** es:
+
+```
+#0 WaitForVBlank
+#1 AgbMain
+#2 main
+```
+
+`WaitForVBlank` limpia `INTR_FLAG_VBLANK` de `gMain.intrCheck` y gira hasta
+que una IRQ vuelva a poner ese bit. El host todavía no genera interrupciones
+VBlank ni ejecuta el despachador ARM `IntrMain`: la memoria IO y la tabla de
+interrupciones son solo reservas/estados iniciales. Por eso el bit nunca cambia
+y el hilo principal queda en ese bucle, sin procesar eventos SDL. Emular esa
+IRQ queda para un hito posterior; no se cambió video, PPU ni audio aquí.
