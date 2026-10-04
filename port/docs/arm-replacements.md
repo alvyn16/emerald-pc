@@ -14,7 +14,7 @@ parches `git format-patch`.
 | `src/crt0.s` | Arranque ARM (pilas, salto a `AgbMain`) y despachador de IRQ `IntrMain`. | `port/main.c` proporciona `main`; `port/arm_stubs.c` declara un bloque `IntrMain` no ejecutable de 0x800 bytes. No hay IRQ emuladas aún. |
 | `src/m4a_1.s` | Mezclador de muestras y handlers `ply_*` en ARM/Thumb. | Entradas `ply_*` silenciosas en `port/audio_silent.c`. |
 | `src/libgcnmultiboot.s` | Transferencia serial GameCube multiboot, íntegramente Thumb. | Funciones host seguras que no afirman completar un enlace. |
-| `src/rom_header.s` | Cabecera y constantes ROM, además de símbolos GPIO próximos a `0x080000C4`; solo datos salvo el salto inicial ARM. | `port/arm_stubs.c` da `RomHeaderGameCode`, versión y variable GPIO. Los accesos numéricos RTC a `0x080000C4`–`0x080000C8` siguen pendientes. |
+| `src/rom_header.s` | Cabecera y constantes ROM, además de símbolos GPIO próximos a `0x080000C4`; solo datos salvo el salto inicial ARM. | `port/arm_stubs.c` da `RomHeaderGameCode`, versión y variable GPIO. El hito 3 mapea los accesos numéricos RTC a `0x080000C4`–`0x080000C8` y declara RTC ausente. |
 
 `src/link_rfu_2.c` no contiene asm, pero `InitRFU` llama a
 `AgbRFU_SoftReset`, que espera a que avance `REG_TMCNT_L`. Sin emular el timer

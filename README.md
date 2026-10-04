@@ -1,6 +1,6 @@
 # emerald-pc
 
-Preparación de un futuro port nativo a PC con SDL2 de Pokémon Emerald, basado en la decompilación de [pret/pokeemerald](https://github.com/pret/pokeemerald). Aún no hay un port jugable.
+Port nativo experimental a PC con SDL2 de Pokémon Emerald, basado en la decompilación de [pret/pokeemerald](https://github.com/pret/pokeemerald). Aún no es jugable: abre una ventana negra y el arranque se detiene al detectar flash/guardado sin emular.
 
 Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Este repositorio no distribuye ROMs, saves, assets ni código de pokeemerald. Es un proyecto de fans no afiliado a Nintendo, Game Freak ni The Pokémon Company.
 
@@ -11,3 +11,17 @@ Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Es
 3. Coloca tu ROM legal original en `roms/` y conserva ese archivo intacto. Ambas carpetas están ignoradas por Git.
 
 El build GBA de referencia requiere las dependencias descritas en `pokeemerald/INSTALL.md`. La preparación de este repositorio se verificó en MSYS2 MINGW64 con `agbcc` y GNU Binutils ARM 2.43.1 mediante `make compare`. El script de preparación no instala la toolchain ni distribuye la ROM.
+
+## Ejecutable de diagnóstico
+
+Después de compilar el GBA original según `pokeemerald/INSTALL.md` y preparar
+MSYS2 MINGW32 como indica `port/docs/toolchain.md`, ejecuta desde la raíz:
+
+```sh
+make -C port exe
+./build/emerald-pc.exe
+```
+
+El ejecutable carga solo en memoria el único `.gba` de `roms/`; nunca modifica
+el archivo original. El estado del arranque y el siguiente fallo medido con
+GDB están en `port/docs/first-run-report.md`.
