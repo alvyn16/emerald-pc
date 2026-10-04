@@ -1,0 +1,135 @@
+From c26ac532bbb2338fb29120f763ee7bcc935f4d5d Mon Sep 17 00:00:00 2001
+From: emerald-pc <port@local.invalid>
+Date: Sat, 3 Oct 2026 23:23:31 -0400
+Subject: [PATCH] Route host flash operations to save backend
+
+---
+ src/agb_flash.c    | 19 +++++++++++++++++++
+ src/agb_flash_1m.c | 16 ++++++++++++++++
+ 2 files changed, 35 insertions(+)
+
+diff --git a/src/agb_flash.c b/src/agb_flash.c
+index ffec206..6cebf29 100644
+--- a/src/agb_flash.c
++++ b/src/agb_flash.c
+@@ -1,5 +1,8 @@
+ #include "gba/gba.h"
+ #include "gba/flash_internal.h"
++#ifdef PORT_PC
++#include "host_flash.h"
++#endif
+ 
+ static u8 sTimerNum;
+ static u16 sTimerCount;
+@@ -36,6 +39,9 @@ do {                             \
+ 
+ u16 ReadFlashId(void)
+ {
++#ifdef PORT_PC
++    return MX29L010.type.ids.joined;
++#else
+     u16 flashId;
+     u16 readFlash1Buffer[0x20];
+     u8 (*readFlash1)(u8 *);
+@@ -60,6 +66,7 @@ u16 ReadFlashId(void)
+     DELAY();
+ 
+     return flashId;
++#endif
+ }
+ 
+ void FlashTimerIntr(void)
+@@ -138,6 +145,9 @@ void ReadFlash_Core(vu8 *src, u8 *dest, u32 size)
+ 
+ void ReadFlash(u16 sectorNum, u32 offset, u8 *dest, u32 size)
+ {
++#ifdef PORT_PC
++    PortFlash_Read(sectorNum, offset, dest, size);
++#else
+     u8 *src;
+     u16 i;
+     vu16 readFlash_Core_Buffer[0x40];
+@@ -170,6 +180,7 @@ void ReadFlash(u16 sectorNum, u32 offset, u8 *dest, u32 size)
+     src = FLASH_BASE + (sectorNum << gFlash->sector.shift) + offset;
+ 
+     readFlash_Core(src, dest, size);
++#endif
+ }
+ 
+ u32 VerifyFlashSector_Core(u8 *src, u8 *tgt, u32 size)
+@@ -185,6 +196,9 @@ u32 VerifyFlashSector_Core(u8 *src, u8 *tgt, u32 size)
+ 
+ u32 VerifyFlashSector(u16 sectorNum, u8 *src)
+ {
++#ifdef PORT_PC
++    return PortFlash_Verify(sectorNum, src, gFlash->sector.size);
++#else
+     u16 i;
+     vu16 verifyFlashSector_Core_Buffer[0x80];
+     vu16 *funcSrc;
+@@ -219,10 +233,14 @@ u32 VerifyFlashSector(u16 sectorNum, u8 *src)
+     size = gFlash->sector.size;
+ 
+     return verifyFlashSector_Core(src, tgt, size);
++#endif
+ }
+ 
+ u32 VerifyFlashSectorNBytes(u16 sectorNum, u8 *src, u32 n)
+ {
++#ifdef PORT_PC
++    return PortFlash_Verify(sectorNum, src, n);
++#else
+     u16 i;
+     vu16 verifyFlashSector_Core_Buffer[0x80];
+     vu16 *funcSrc;
+@@ -255,6 +273,7 @@ u32 VerifyFlashSectorNBytes(u16 sectorNum, u8 *src, u32 n)
+     tgt = FLASH_BASE + (sectorNum << gFlash->sector.shift);
+ 
+     return verifyFlashSector_Core(src, tgt, n);
++#endif
+ }
+ 
+ u32 ProgramFlashSectorAndVerify(u16 sectorNum, u8 *src)
+diff --git a/src/agb_flash_1m.c b/src/agb_flash_1m.c
+index f5ebd83..e0f2cd2 100644
+--- a/src/agb_flash_1m.c
++++ b/src/agb_flash_1m.c
+@@ -1,5 +1,8 @@
+ #include "gba/gba.h"
+ #include "gba/flash_internal.h"
++#ifdef PORT_PC
++#include "host_flash.h"
++#endif
+ 
+ static const char AgbLibFlashVersion[] = "FLASH1M_V103";
+ 
+@@ -12,6 +15,18 @@ static const struct FlashSetupInfo *const sSetupInfos[] =
+ 
+ u16 IdentifyFlash(void)
+ {
++#ifdef PORT_PC
++    if (PortFlash_Open() != 0)
++        return 1;
++    ProgramFlashByte = PortFlash_ProgramByte;
++    ProgramFlashSector = PortFlash_ProgramSector;
++    EraseFlashChip = PortFlash_EraseChip;
++    EraseFlashSector = PortFlash_EraseSector;
++    WaitForFlashWrite = PortFlash_WaitForWrite;
++    gFlashMaxTime = MX29L010.maxTime;
++    gFlash = &MX29L010.type;
++    return 0;
++#else
+     u16 result;
+     u16 flashId;
+     const struct FlashSetupInfo *const *setupInfo;
+@@ -46,6 +61,7 @@ u16 IdentifyFlash(void)
+     gFlash = &(*setupInfo)->type;
+ 
+     return result;
++#endif
+ }
+ 
+ u16 WaitForFlashWrite_Common(u8 phase, u8 *addr, u8 lastData)
+-- 
+2.51.0.windows.2
+
