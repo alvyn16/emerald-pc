@@ -30,11 +30,17 @@ DATA_OBJECT_DIR := ../build/host-data-i686
 DATA_RAW_OBJECT_DIR := ../build/host-data-i686-raw
 DATA_OBJECTS := $(patsubst $(POKEEMERALD)/data/%.s,$(DATA_OBJECT_DIR)/%.o,$(DATA_SOURCES))
 DATA_CPPFLAGS := -iquote include -Wno-trigraphs -DMODERN=0 -I tools/agbcc/include -I tools/agbcc -nostdinc -undef -std=gnu89
+SONG_SOURCES := $(sort $(wildcard $(POKEEMERALD)/sound/songs/midi/*.s))
+SONG_OBJECT_DIR := ../build/host-songs-i686
+SONG_RAW_OBJECT_DIR := ../build/host-songs-i686-raw
+SONG_INCLUDE_DIR := ../build/host-song-includes
+SONG_OBJECTS := $(patsubst $(POKEEMERALD)/sound/songs/midi/%.s,$(SONG_OBJECT_DIR)/%.o,$(SONG_SOURCES))
 
-.PHONY: syntax objects data-objects link-probe check-tools
+.PHONY: syntax objects data-objects song-objects link-probe check-tools
 syntax: $(CHECKS)
 objects: $(OBJECTS)
 data-objects: $(DATA_OBJECTS)
+song-objects: $(SONG_OBJECTS)
 
 $(CHECKS): | check-tools
 
@@ -74,6 +80,15 @@ $(DATA_OBJECT_DIR)/%.o: $(POKEEMERALD)/data/%.s | check-tools
 		$(HOST_CC) -c -x assembler -I. -Wa,--defsym,MODERN=0 -o "../build/host-data-i686-raw/$*.o" -; \
 	}
 	@objcopy --prefix-symbols=_ $(DATA_RAW_OBJECT_DIR)/$*.o $(DATA_OBJECT_DIR)/$*.o
+
+$(SONG_INCLUDE_DIR)/MPlayDef.s: $(POKEEMERALD)/sound/MPlayDef.s
+	@mkdir -p $(SONG_INCLUDE_DIR)
+	@sed -E 's/@.*$$//' $< > $@
+
+$(SONG_OBJECT_DIR)/%.o: $(POKEEMERALD)/sound/songs/midi/%.s $(SONG_INCLUDE_DIR)/MPlayDef.s | check-tools
+	@mkdir -p $(SONG_OBJECT_DIR) $(SONG_RAW_OBJECT_DIR)
+	@sed -E 's/@.*$$//' $< | $(HOST_CC) -c -x assembler -I$(SONG_INCLUDE_DIR) -o $(SONG_RAW_OBJECT_DIR)/$*.o -
+	@objcopy --prefix-symbols=_ $(SONG_RAW_OBJECT_DIR)/$*.o $@
 
 # Run after `make -k objects`; failed object units are deliberately omitted.
 link-probe:
