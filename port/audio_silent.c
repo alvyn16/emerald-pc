@@ -2,6 +2,7 @@
 #include "global.h"
 #include "gba/m4a_internal.h"
 #include "m4a.h"
+#include "constants/songs.h"
 
 struct SoundInfo gSoundInfo;
 struct MusicPlayerInfo gMPlayInfo_BGM;
@@ -15,16 +16,17 @@ void m4aSoundMain(void) {}
 void m4aSoundVSync(void) {}
 void m4aSoundVSyncOn(void) {}
 void m4aSoundVSyncOff(void) {}
-void m4aSongNumStart(u16 n) { (void)n; }
-void m4aSongNumStartOrChange(u16 n) { (void)n; }
-void m4aSongNumStop(u16 n) { (void)n; }
-void m4aMPlayAllStop(void) {}
-void m4aMPlayContinue(struct MusicPlayerInfo *p) { (void)p; }
-void m4aMPlayFadeOut(struct MusicPlayerInfo *p, u16 speed) { (void)p; (void)speed; }
-void m4aMPlayFadeOutTemporarily(struct MusicPlayerInfo *p, u16 speed) { (void)p; (void)speed; }
-void m4aMPlayFadeIn(struct MusicPlayerInfo *p, u16 speed) { (void)p; (void)speed; }
+// Preserve logical BGM state while the host deliberately produces no audio.
+void m4aSongNumStart(u16 n) { if (n >= MUS_LITTLEROOT_TEST) gMPlayInfo_BGM.status = 1; }
+void m4aSongNumStartOrChange(u16 n) { m4aSongNumStart(n); }
+void m4aSongNumStop(u16 n) { if (n >= MUS_LITTLEROOT_TEST) gMPlayInfo_BGM.status = 0; }
+void m4aMPlayAllStop(void) { gMPlayInfo_BGM.status = 0; }
+void m4aMPlayContinue(struct MusicPlayerInfo *p) { p->status &= ~MUSICPLAYER_STATUS_PAUSE; }
+void m4aMPlayFadeOut(struct MusicPlayerInfo *p, u16 speed) { (void)speed; p->status = 0; }
+void m4aMPlayFadeOutTemporarily(struct MusicPlayerInfo *p, u16 speed) { (void)speed; p->status |= MUSICPLAYER_STATUS_PAUSE; }
+void m4aMPlayFadeIn(struct MusicPlayerInfo *p, u16 speed) { (void)speed; p->status &= ~MUSICPLAYER_STATUS_PAUSE; }
 void m4aMPlayImmInit(struct MusicPlayerInfo *p) { (void)p; }
-void m4aMPlayStop(struct MusicPlayerInfo *p) { (void)p; }
+void m4aMPlayStop(struct MusicPlayerInfo *p) { p->status = 0; }
 void m4aMPlayTempoControl(struct MusicPlayerInfo *p, u16 tempo) { (void)p; (void)tempo; }
 void m4aMPlayVolumeControl(struct MusicPlayerInfo *p, u16 tracks, u16 volume) { (void)p; (void)tracks; (void)volume; }
 void m4aMPlayPitchControl(struct MusicPlayerInfo *p, u16 tracks, s16 pitch) { (void)p; (void)tracks; (void)pitch; }
