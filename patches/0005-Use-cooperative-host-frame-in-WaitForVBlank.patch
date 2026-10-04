@@ -1,0 +1,39 @@
+From 1488bc6cc610e534b55ff7d627386932d7fbefd4 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 4 Oct 2026 00:01:42 -0400
+Subject: [PATCH] Use cooperative host frame in WaitForVBlank
+
+---
+ src/main.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/main.c b/src/main.c
+index 2a47ec5..a02441a 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -24,6 +24,9 @@
+ #include "main.h"
+ #include "trainer_hill.h"
+ #include "constants/rgb.h"
++#ifdef PORT_PC
++#include "platform.h"
++#endif
+ 
+ static void VBlankIntr(void);
+ static void HBlankIntr(void);
+@@ -411,8 +414,12 @@ static void WaitForVBlank(void)
+ {
+     gMain.intrCheck &= ~INTR_FLAG_VBLANK;
+ 
++#ifdef PORT_PC
++    PortHost_RunFrame();
++#else
+     while (!(gMain.intrCheck & INTR_FLAG_VBLANK))
+         ;
++#endif
+ }
+ 
+ void SetTrainerHillVBlankCounter(u32 *counter)
+-- 
+2.51.0.windows.2
+

@@ -7,7 +7,7 @@
 #include "gba/syscall.h"
 
 static int frames;
-void Port_PresentAndWait(void) { frames++; }
+void PortHost_RunFrame(void) { frames++; }
 
 extern s32 DivArm(s32 denominator, s32 numerator);
 

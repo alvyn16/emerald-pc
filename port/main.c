@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
@@ -10,6 +11,20 @@
 
 /* Entry point provided by the user's ignored pokeemerald checkout. */
 extern void AgbMain(void);
+
+static SDL_Window *sWindow;
+static SDL_Renderer *sRenderer;
+
+void Port_ExitCleanly(void)
+{
+    fprintf(stderr, "PC: window closed; exiting cleanly\n");
+    Port_AttachRenderer(NULL);
+    portSDL.DestroyRenderer(sRenderer);
+    portSDL.DestroyWindow(sWindow);
+    portSDL.Quit();
+    Port_FreeGbaMemory();
+    exit(EXIT_SUCCESS);
+}
 
 int main(void)
 {
@@ -58,6 +73,8 @@ int main(void)
     }
 
     Port_AttachRenderer(renderer);
+    sWindow = window;
+    sRenderer = renderer;
     portSDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
     portSDL.RenderClear(renderer);
     portSDL.RenderPresent(renderer);

@@ -4,6 +4,7 @@
 typedef struct SDL_Renderer SDL_Renderer;
 
 void Port_AttachRenderer(SDL_Renderer *renderer);
-void Port_PresentAndWait(void);
+void PortHost_RunFrame(void);
+void Port_ExitCleanly(void);
 
 #endif

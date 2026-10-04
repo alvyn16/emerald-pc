@@ -239,14 +239,19 @@ void RegisterRamReset(u32 resetFlags)
 
 void VBlankIntrWait(void)
 {
-    Port_PresentAndWait();
+    PortHost_RunFrame();
 }
 
 void IntrWait(u32 discard, u32 flags)
 {
     (void)discard;
     (void)flags;
-    Port_PresentAndWait();
+    PortHost_RunFrame();
+}
+
+void Halt(void)
+{
+    PortHost_RunFrame();
 }
 
 int MultiBoot(struct MultiBootParam *parameters)

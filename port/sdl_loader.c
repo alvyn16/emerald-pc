@@ -39,6 +39,7 @@ int Port_LoadSDL2(void)
     LOAD(RenderClear);
     LOAD(RenderPresent);
     LOAD(PollEvent);
+    LOAD(GetKeyboardState);
     LOAD(GetPerformanceFrequency);
     LOAD(GetPerformanceCounter);
     LOAD(Delay);
