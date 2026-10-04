@@ -168,6 +168,92 @@ int main(void)
     PortPpu_Render(sFrame);
     assert(sFrame[14 * PORT_SCREEN_WIDTH + 10] == 0xffff0000u);
 
+    memset(vram, 0, 0x18000);
+    for (int i = 0; i < 128; ++i) oam[i * 4] = 0x0200;
+    memset(vram + 0x4000, 0x11, 32);
+    memset(vram + 0x8000, 0x22, 32);
+    REG_BG0CNT = BGCNT_PRIORITY(1) | BGCNT_CHARBASE(1);
+    REG_BG1CNT = BGCNT_PRIORITY(0) | BGCNT_CHARBASE(2) | BGCNT_SCREENBASE(1);
+    REG_WIN0H = (10 << 8) | 20;
+    REG_WIN0V = (10 << 8) | 20;
+    REG_WIN1H = (15 << 8) | 25;
+    REG_WIN1V = (10 << 8) | 20;
+    REG_WININ = WININ_WIN0_BG0 | WININ_WIN1_BG1;
+    REG_WINOUT = 0;
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_BG1_ON |
+                   DISPCNT_WIN0_ON | DISPCNT_WIN1_ON;
+    PortPpu_Render(sFrame);
+    assert(sFrame[15 * PORT_SCREEN_WIDTH + 12] == 0xffff0000u);
+    assert(sFrame[15 * PORT_SCREEN_WIDTH + 16] == 0xffff0000u); // WIN0 wins overlap.
+    assert(sFrame[15 * PORT_SCREEN_WIDTH + 22] == 0xff0000ffu);
+    assert(sFrame[15 * PORT_SCREEN_WIDTH + 25] == 0xff000000u);
+    assert(sFrame[20 * PORT_SCREEN_WIDTH + 12] == 0xff000000u);
+    REG_WINOUT = WINOUT_WIN01_BG1;
+    PortPpu_Render(sFrame);
+    assert(sFrame[15 * PORT_SCREEN_WIDTH + 30] == 0xff0000ffu);
+    assert(sFrame[15 * PORT_SCREEN_WIDTH + 16] == 0xffff0000u);
+
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_WIN0_ON;
+    REG_WININ = WININ_WIN0_BG0;
+    REG_WINOUT = 0;
+    REG_WIN0H = (220 << 8) | 20;
+    REG_WIN0V = 160;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff0000u);
+    assert(sFrame[19] == 0xffff0000u);
+    assert(sFrame[20] == 0xff000000u);
+    assert(sFrame[100] == 0xff000000u);
+    assert(sFrame[220] == 0xffff0000u);
+    assert(sFrame[239] == 0xffff0000u);
+
+    REG_WIN0H = 240;
+    REG_WIN0V = (150 << 8) | 10;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff0000u);
+    assert(sFrame[9 * PORT_SCREEN_WIDTH] == 0xffff0000u);
+    assert(sFrame[10 * PORT_SCREEN_WIDTH] == 0xff000000u);
+    assert(sFrame[150 * PORT_SCREEN_WIDTH] == 0xffff0000u);
+
+    REG_WIN0H = (10 << 8) | 10;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff000000u); // Equal bounds make an empty window.
+    REG_DISPCNT = DISPCNT_BG0_ON;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff0000u); // Disabled windows do not mask layers.
+
+    memset(vram + 0x10000, 0x11, 32);
+    palette[257] = 0x03e0;
+    oam[0] = 5;
+    oam[1] = 5;
+    oam[2] = 0;
+    REG_WIN0H = 10;
+    REG_WIN0V = 10;
+    REG_WININ = WININ_WIN0_OBJ;
+    REG_WINOUT = 0;
+    REG_DISPCNT = DISPCNT_OBJ_ON | DISPCNT_WIN0_ON;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff00ff00u);
+    REG_WININ = WININ_WIN0_BG0;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff000000u);
+    REG_WIN0H = (20 << 8) | 30;
+    REG_WINOUT = WINOUT_WIN01_OBJ;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff00ff00u);
+
+    memset(vram + 0x4000, 3, 64);
+    REG_BG2CNT = BGCNT_CHARBASE(1);
+    REG_BG2PA = REG_BG2PD = 256;
+    REG_BG2PB = REG_BG2PC = 0;
+    REG_BG2X = REG_BG2Y = 0;
+    REG_WIN0H = 10;
+    REG_WININ = WININ_WIN0_BG2;
+    REG_WINOUT = 0;
+    REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_BG2_ON | DISPCNT_WIN0_ON;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff00ff00u);
+    assert(sFrame[20 * PORT_SCREEN_WIDTH + 20] == 0xff000000u);
+
     VirtualFree(oam, 0, MEM_RELEASE);
     VirtualFree(vram, 0, MEM_RELEASE);
     VirtualFree(palette, 0, MEM_RELEASE);

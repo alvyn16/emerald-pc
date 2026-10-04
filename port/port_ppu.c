@@ -8,6 +8,44 @@
 #define PALETTE ((const uint16_t *)0x05000000u)
 #define OAM ((const uint16_t *)0x07000000u)
 
+static uint8_t sWindowMask[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
+
+static int WithinWindowAxis(unsigned position, uint16_t bounds)
+{
+    const unsigned start = bounds >> 8;
+    const unsigned end = bounds & 0xff;
+    if (start < end)
+        return position >= start && position < end;
+    if (start > end)
+        return position >= start || position < end;
+    return 0;
+}
+
+static void BuildWindowMasks(uint16_t displayControl)
+{
+    const unsigned windows = displayControl &
+            (DISPCNT_WIN0_ON | DISPCNT_WIN1_ON | DISPCNT_OBJWIN_ON);
+    const uint16_t win0h = REG_WIN0H, win0v = REG_WIN0V;
+    const uint16_t win1h = REG_WIN1H, win1v = REG_WIN1V;
+    const uint16_t inside = REG_WININ, outside = REG_WINOUT;
+
+    for (unsigned y = 0; y < PORT_SCREEN_HEIGHT; ++y)
+    {
+        const int inWin0Y = (windows & DISPCNT_WIN0_ON) && WithinWindowAxis(y, win0v);
+        const int inWin1Y = (windows & DISPCNT_WIN1_ON) && WithinWindowAxis(y, win1v);
+        for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
+        {
+            unsigned mask = windows ? (outside & 0x1f) : 0x1f;
+            if (inWin1Y && WithinWindowAxis(x, win1h))
+                mask = (inside >> 8) & 0x1f;
+            if (inWin0Y && WithinWindowAxis(x, win0h))
+                mask = inside & 0x1f;
+            // TODO: OBJ window pixels use the high byte of WINOUT.
+            sWindowMask[y * PORT_SCREEN_WIDTH + x] = (uint8_t)mask;
+        }
+    }
+}
+
 static uint16_t ReadVram16(unsigned offset)
 {
     if (offset + 1 >= 0x18000)
@@ -43,6 +81,8 @@ static void RenderBackground(uint32_t *pixels, unsigned bg)
         const unsigned tileY = mapY >> 3;
         for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
         {
+            if (!(sWindowMask[y * PORT_SCREEN_WIDTH + x] & (1u << bg)))
+                continue;
             const unsigned mapX = (x + hscroll) & (width - 1);
             const unsigned tileX = mapX >> 3;
             const unsigned block = (tileY >> 5) * blocksWide + (tileX >> 5);
@@ -94,6 +134,8 @@ static void RenderAffineBackground(uint32_t *pixels, unsigned bg)
         const int64_t lineY = referenceY + pd * y;
         for (int x = 0; x < PORT_SCREEN_WIDTH; ++x)
         {
+            if (!(sWindowMask[y * PORT_SCREEN_WIDTH + x] & (1u << bg)))
+                continue;
             int sourceX = (int)((lineX + pa * x) >> 8);
             int sourceY = (int)((lineY + pc * x) >> 8);
             if (wrap)
@@ -181,6 +223,7 @@ static void RenderSprites(uint32_t *pixels, unsigned priority, uint16_t displayC
             {
                 const int screenX = originX + (int)sx;
                 if (screenX < 0 || screenX >= PORT_SCREEN_WIDTH) continue;
+                if (!(sWindowMask[screenY * PORT_SCREEN_WIDTH + screenX] & 0x10)) continue;
                 int tileX, tileY;
                 if (affine)
                 {
@@ -222,6 +265,8 @@ void PortPpu_Render(uint32_t *pixels)
             ? 0xffffffffu : ExpandColor(PALETTE[0]);
     for (unsigned i = 0; i < PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT; ++i)
         pixels[i] = backdrop;
+
+    BuildWindowMasks(displayControl);
 
     const unsigned mode = displayControl & 7;
     if (mode > DISPCNT_MODE_2 || (displayControl & DISPCNT_FORCED_BLANK))
