@@ -1,0 +1,25 @@
+From 19f9f9335673487ddfa5b464bff28e2daaa0e79b Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 4 Oct 2026 13:36:32 -0400
+Subject: [PATCH] Preserve sprite pointer bits on PC
+
+---
+ src/pokemon_animation.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/pokemon_animation.c b/src/pokemon_animation.c
+index 8058074..55d72df 100644
+--- a/src/pokemon_animation.c
++++ b/src/pokemon_animation.c
+@@ -902,7 +902,7 @@ u8 GetSpeciesBackAnimSet(u16 species)
+ // as 0xFFFFXXXX instead of the desired 0x02YYXXXX.
+ // By dumb luck, this is not an issue in vanilla. However,
+ // changing the link order revealed this bug.
+-#if MODERN || defined(BUGFIX)
++#if MODERN || defined(BUGFIX) || defined(PORT_PC)
+ #define ANIM_SPRITE(taskId)   ((struct Sprite *)((gTasks[taskId].tPtrHi << 16) | ((u16)gTasks[taskId].tPtrLo)))
+ #else
+ #define ANIM_SPRITE(taskId)   ((struct Sprite *)((gTasks[taskId].tPtrHi << 16) | (gTasks[taskId].tPtrLo)))
+-- 
+2.51.0.windows.2
+
