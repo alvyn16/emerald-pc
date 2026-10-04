@@ -298,3 +298,53 @@ identificado en el código del juego es la **ventana de objetos**:
 `battle_intro.c` activa `DISPCNT_OBJWIN_ON`, pero el PPU aún no calcula su
 máscara desde los sprites OAM ni aplica el byte alto de `WINOUT`. Se verá
 cuando se alcance esa escena; no se observó en la captura de la intro.
+
+## Hito 9: guion de entrada y recorrido de partida nueva
+
+Se añadió un ejecutable de diagnóstico i686 con entradas por intervalos de
+frames. La sintaxis y las variables de entorno están en
+`port/docs/scripted-input.md`. Un guion local en `build/` pulsó A durante la
+intro y los menús, eligió partida nueva, completó la pantalla de nombre y
+usó RIGHT y DOWN para salir del camión. `EMERALD_PC_FAST=1` permitió repetir
+el recorrido bajo GDB sin la espera de 59,7275 FPS. El ejecutable normal no
+contiene la entrada programada.
+
+### Fallos encontrados en orden
+
+| Punto | Evidencia de GDB | Causa y corrección PC |
+| --- | --- | --- |
+| Menú principal | El hilo se quedó en `AgbRFU_SoftReset` desde `Task_MainMenuCheckSaveFile`. | `IsWirelessAdapterConnected` intentaba interrogar hardware RFU inexistente. El parche `0008` devuelve `FALSE` bajo `PORT_PC`. |
+| Pantalla de título | `Task_TitleScreenPhase3` veía `gMPlayInfo_BGM.status = 0` y volvía a copyright sin mostrar menú. | El backend de audio silencioso no mantenía estado lógico. Ahora start/stop/fade actualizan `status`, sin generar sonido. |
+| Animación de Pokémon | `Task_HandleMonAnimation` produjo `SIGSEGV` al reconstruir `ANIM_SPRITE`: el semipuntero bajo `s16` se extendía con signo (valor observado `0xffffea44`). | `0009` activa para PC la reconstrucción ya existente bajo `MODERN`/`BUGFIX`; no cambia GBA. |
+| Salida de nombre, frame ~5.209 | `MainState_Exit` liberó `sNamingScreen` en `RunTasks`; `SpriteCB_Cursor` lo usó después desde `AnimateSprites`. En el VBlank siguiente también quedaba registrado `VBlankCB_NamingScreen`. | `0010` omite el resto del callback host si ya se liberó y desregistra el VBlank antes de liberar. |
+| Inicialización de partida, frame ~7.014 | `CB2_NewGame` llegó a `ClearRankingHallRecords`, que pasó el puntero nulo `ZERO` a `CopyTrainerId`; produjo `SIGSEGV`. | `0011` usa bajo PC los cuatro bytes cero de la ruta `UBFIX` existente. |
+| Carga del mapa | `DoMapLoadLoop` esperaba que terminara `IsDma3ManagerBusyWithBgCopy`, pero el bucle síncrono nunca dejaba ejecutar el VBlank que procesa la cola DMA3. | `0012` ejecuta `PortHost_RunFrame` entre pasos de carga solo bajo `PORT_PC`. |
+| Mapa negro con sprites visibles | En el frame 7.500 GDB mostró tilemaps BG1–BG3 con datos en el heap (`0x1000`, `0x6201`, `0x3014`), pero VRAM `0x0600e800`, `0x0600f000` y `0x0600f800` a cero. `IsTileMapOutsideWram` rechazaba esos punteros host por estar sobre `IWRAM_END`. | `0013` acepta cualquier buffer no nulo bajo `PORT_PC`. El camino GBA mantiene su comprobación de dirección. |
+
+### Resultado del recorrido
+
+GDB confirmó título en el frame 1.002, menú principal en 1.112, presentación
+del profesor Birch en 1.203, nueva partida en 7.014 y `CB2_Overworld` en
+7.028. Tras la corrección de tilemaps se ve el camión en el frame 7.500 y el
+texto de las cajas en 9.000. Con RIGHT y DOWN, el protagonista sale a
+**Villa Raíz**: el frame **12.500** muestra el mapa exterior, la madre y el
+camión. El recorrido continúa a la casa (14.000) y, con UP, al dormitorio de
+la segunda planta (19.000). Se observó movimiento controlado por el guion y
+no hubo excepción hasta ese frame. La secuencia del reloj y el resto de la
+historia todavía no se recorrieron.
+
+Las capturas ampliadas `build/hito9-frame-1080.png` (título),
+`build/hito9-frame-1800.png` (Birch), `build/hito9-frame-4900.png` (nombre),
+`build/hito9-frame-7500.png` (camión), `build/hito9-route-12500.png`
+(exterior), `build/hito9-route-14000.png` (casa) y
+`build/hito9-stairs-19000.png` (dormitorio) están en `build/`, ignorado por
+Git. También se guardaron allí los guiones y registros GDB para repetir el
+diagnóstico. Los parches `0008` a `0013` se aplicaron a un clon limpio junto
+con `0001` a `0007`; su árbol Git final coincide exactamente con el checkout
+de trabajo (`5fbe81f4033bbac5a2192bede821976b93db982e`).
+
+No se implementó audio ni DMA por HBlank. La ventana de objetos y el mosaico
+siguen pendientes de hitos gráficos futuros.
+La prueba de entrada pasó con GCC i686 y `-Wall -Wextra -Werror`; ambos
+ejecutables enlazaron. La compilación GBA original terminó con
+**`pokeemerald.gba: OK`** usando ARM Binutils 2.43.1.
