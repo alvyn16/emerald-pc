@@ -330,8 +330,11 @@ texto de las cajas en 9.000. Con RIGHT y DOWN, el protagonista sale a
 **Villa Raíz**: el frame **12.500** muestra el mapa exterior, la madre y el
 camión. El recorrido continúa a la casa (14.000) y, con UP, al dormitorio de
 la segunda planta (19.000). Se observó movimiento controlado por el guion y
-no hubo excepción hasta ese frame. La secuencia del reloj y el resto de la
-historia todavía no se recorrieron.
+no hubo excepción hasta el frame 22.000. Un intento adicional de interactuar
+con el reloj no lo alcanzó: las capturas de 19.500 y 22.000 son idénticas
+(44 colores), mientras GDB sigue en `CB2_Overworld` con BG2/BG3 y paletas
+cargados. No se trata de un bloqueo del motor. La secuencia del reloj y el
+resto de la historia todavía no se recorrieron.
 
 Las capturas ampliadas `build/hito9-frame-1080.png` (título),
 `build/hito9-frame-1800.png` (Birch), `build/hito9-frame-4900.png` (nombre),
