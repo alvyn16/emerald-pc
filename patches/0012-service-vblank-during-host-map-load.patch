@@ -1,0 +1,39 @@
+From 8faa76ca93cc9b7e6494724521c2e44363092f7a Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 4 Oct 2026 13:36:33 -0400
+Subject: [PATCH] Service VBlank during host map load
+
+---
+ src/overworld.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/src/overworld.c b/src/overworld.c
+index 1d6b81c..9a27803 100644
+--- a/src/overworld.c
++++ b/src/overworld.c
+@@ -1,4 +1,7 @@
+ #include "global.h"
++#ifdef PORT_PC
++#include "platform.h"
++#endif
+ #include "overworld.h"
+ #include "battle_pyramid.h"
+ #include "battle_setup.h"
+@@ -2065,7 +2068,13 @@ static bool32 ReturnToFieldLink(u8 *state)
+ 
+ static void DoMapLoadLoop(u8 *state)
+ {
+-    while (!LoadMapInStepsLocal(state, FALSE));
++    while (!LoadMapInStepsLocal(state, FALSE))
++    {
++#ifdef PORT_PC
++        // The GBA services queued DMA during asynchronous VBlank IRQs.
++        PortHost_RunFrame();
++#endif
++    }
+ }
+ 
+ static void ResetMirageTowerAndSaveBlockPtrs(void)
+-- 
+2.51.0.windows.2
+
