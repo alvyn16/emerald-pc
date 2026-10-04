@@ -12,7 +12,7 @@ PKG_CONFIG ?= pkg-config
 SDL2_CFLAGS := $(shell $(PKG_CONFIG) --cflags sdl2)
 SOURCES := $(shell find $(POKEEMERALD)/src -type f -name '*.c' | sort)
 CHECKS := $(patsubst $(POKEEMERALD)/src/%.c,check/%,$(SOURCES))
-HOST_CPPFLAGS := -std=gnu11 -E -DMODERN=0 -DPORT_PC -include stdlib.h -iquote include -I. $(SDL2_CFLAGS)
+HOST_CPPFLAGS := -std=gnu11 -E -DMODERN=0 -DPORT_PC -include stdlib.h -iquote include -I. -I../port $(SDL2_CFLAGS)
 HOST_CFLAGS := -std=gnu11 -fsyntax-only -fmax-errors=5 -x c
 ifeq ($(HOST_ARCH),i686)
 OBJECT_DIR := ../build/host-objects-i686
@@ -37,7 +37,7 @@ SONG_INCLUDE_DIR := ../build/host-song-includes
 SONG_OBJECTS := $(patsubst $(POKEEMERALD)/sound/songs/midi/%.s,$(SONG_OBJECT_DIR)/%.o,$(SONG_SOURCES))
 HOST_EXE_SOURCES := $(filter-out $(addprefix $(POKEEMERALD)/src/,librfu_intr.c m4a.c multiboot.c),$(SOURCES))
 HOST_EXE_OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(HOST_EXE_SOURCES))
-PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c sdl_loader.c audio_silent.c arm_stubs.c
+PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c sdl_loader.c audio_silent.c arm_stubs.c host_flash.c
 EXE := ../build/emerald-pc.exe
 
 .PHONY: syntax objects data-objects song-objects exe link-probe check-tools
@@ -47,7 +47,7 @@ data-objects: $(DATA_OBJECTS)
 song-objects: $(SONG_OBJECTS)
 exe: $(EXE)
 
-$(EXE): $(HOST_EXE_OBJECTS) $(DATA_OBJECTS) $(SONG_OBJECTS) $(addprefix ./,$(PORT_EXE_SOURCES)) Makefile
+$(EXE): $(HOST_EXE_OBJECTS) $(DATA_OBJECTS) $(SONG_OBJECTS) $(addprefix ./,$(PORT_EXE_SOURCES)) host_flash.h Makefile
 	@find $(OBJECT_DIR) $(DATA_OBJECT_DIR) $(SONG_OBJECT_DIR) -name '*.o' > ../build/host-exe-objects.rsp
 	@$(HOST_CC) -std=gnu11 -DMODERN=0 -DPORT_PC -iquote $(POKEEMERALD)/include -I. \
 		-Wl,--image-base=0x10000000 -Wl,--disable-dynamicbase \
@@ -80,6 +80,8 @@ $(OBJECT_DIR)/%.o: $(POKEEMERALD)/src/%.c | check-tools
 		PATH="$(PREPROC_PATH_PREFIX)$$PATH" tools/preproc/preproc.exe -i -g build/assets "src/$*.c" charmap.txt | \
 		$(HOST_CC) $(HOST_OBJECT_CFLAGS) -o "../build/$(notdir $(OBJECT_DIR))/$*.o" -; \
 	}
+
+$(OBJECT_DIR)/agb_flash.o $(OBJECT_DIR)/agb_flash_1m.o: host_flash.h
 
 $(DATA_OBJECT_DIR)/%.o: $(POKEEMERALD)/data/%.s | check-tools
 	@mkdir -p $(DATA_OBJECT_DIR) $(DATA_RAW_OBJECT_DIR)
