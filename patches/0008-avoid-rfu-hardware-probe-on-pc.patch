@@ -1,0 +1,35 @@
+From c0ca29c0b88b49c797b83af633bd93245f527139 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 4 Oct 2026 13:36:08 -0400
+Subject: [PATCH] Avoid RFU hardware probe on PC
+
+---
+ src/link.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/link.c b/src/link.c
+index 8a04b64..c02b418 100644
+--- a/src/link.c
++++ b/src/link.c
+@@ -236,6 +236,10 @@ static const u8 sUnusedData[] = {0x00, 0xFF, 0xFE, 0xFF, 0x00};
+ 
+ bool8 IsWirelessAdapterConnected(void)
+ {
++#ifdef PORT_PC
++    // No RFU or serial timer exists in the host memory map.
++    return FALSE;
++#else
+     SetWirelessCommType1();
+     InitRFUAPI();
+     if (rfu_LMAN_REQBN_softReset_and_checkID() == RFU_ID)
+@@ -248,6 +252,7 @@ bool8 IsWirelessAdapterConnected(void)
+     CloseLink();
+     RestoreSerialTimer3IntrHandlers();
+     return FALSE;
++#endif
+ }
+ 
+ void Task_DestroySelf(u8 taskId)
+-- 
+2.51.0.windows.2
+
