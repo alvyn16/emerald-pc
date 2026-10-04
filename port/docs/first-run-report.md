@@ -263,3 +263,38 @@ midió `REG_BLDCNT = 0x0087`, `REG_BLDY = 0x001F` y
 `REG_DISPCNT = 0x3740`: el juego pide aclarado de BG0–BG2, pero el
 renderizador todavía ignora la mezcla. No se implementaron mezcla ni audio
 en este hito.
+
+## Hito 8b: mezcla de color
+
+`port/port_ppu.c` conserva por píxel el color GBA de 15 bits y la identidad de
+la capa superior y la inmediatamente inferior. Solo el sprite visible más
+alto participa en la mezcla; otro sprite oculto no sustituye al fondo como
+segundo objetivo. `BLDCNT` selecciona BG0–BG3, OBJ y backdrop como objetivos
+primero o segundo. El PPU aplica alfa, aclarado y oscurecimiento; limita
+EVA/EVB y EVY a 16, y satura cada canal de alfa a 31. Un OBJ en modo OAM 1
+fuerza alfa cuando la segunda capa es objetivo válido, incluso si `BLDCNT`
+no selecciona alfa ni OBJ como primer objetivo. El bit de efectos de
+`WININ`/`WINOUT` permite o bloquea estos efectos en cada región. La ventana
+de objetos sigue como **TODO**; no se implementaron mosaico ni audio.
+
+La prueba host `ppu_test.c` pasó con GCC i686 MINGW32. Incluye alfa entre
+BG0/BG1, BG0/OBJ, OBJ/BG0, BG0/BG2 y BG0/backdrop; backdrop y BG3 como
+primer objetivo; coeficientes 0, 8, 16 y 31; saturación a 31; aclarado y
+oscurecimiento; bits de efectos de WIN0 y WIN1; sprite semitransparente y
+sprites superpuestos. `make -C port exe` enlazó. El build GBA original dio
+**`pokeemerald.gba: OK`** con ARM Binutils 2.43.1.
+
+GDB capturó el frame **2.665** en `build/hito8b-frame-2665.png`, ignorado
+por Git junto con el volcado `.raw`. Antes de renderizar midió
+`REG_BLDCNT = 0x0087`, `REG_BLDALPHA = 0x1F1F`, `REG_BLDY = 31` y
+`REG_DISPCNT = 0x3740`. La imagen muestra una franja blanca entre dos bandas
+negras: el aclarado satura los fondos visibles de esa franja, mientras las
+ventanas dejan fuera el resto. No hay sprites visibles en esa captura.
+
+No se observó otra excepción hasta el frame **4.200**; allí GDB midió
+`DISPCNT = 0x1F40`, `MOSAIC = 0` y `BLDCNT = 0`. Por tanto, no hay un nuevo
+fallo de ejecución medido en ese tramo. El siguiente límite gráfico
+identificado en el código del juego es la **ventana de objetos**:
+`battle_intro.c` activa `DISPCNT_OBJWIN_ON`, pero el PPU aún no calcula su
+máscara desde los sprites OAM ni aplica el byte alto de `WINOUT`. Se verá
+cuando se alcance esa escena; no se observó en la captura de la intro.
