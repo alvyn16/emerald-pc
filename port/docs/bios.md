@@ -9,7 +9,7 @@
 | `RLUnCompWram`, `RLUnCompVram` | Descompresión RLE tipo `0x30`. |
 | `Div`, `DivArm`, `Sqrt`, `ArcTan2` | Cálculo host; división por cero devuelve 0 y registra diagnóstico. `DivArm` invierte el orden de argumentos. |
 | `BgAffineSet`, `ObjAffineSet` | Matrices afines en punto fijo 8.8 a partir de escala y ángulo. |
-| `VBlankIntrWait`, `IntrWait`, `Halt` | Pasan a `PortHost_RunFrame`: procesan eventos SDL, actualizan `REG_KEYINPUT`, despachan VBlank y esperan **59,7275 Hz**. No renderizan el PPU. `IntrWait` todavía ignora las máscaras de otras IRQ. |
+| `VBlankIntrWait`, `IntrWait`, `Halt` | Pasan a `PortHost_RunFrame`: procesan eventos SDL, actualizan `REG_KEYINPUT`, despachan VBlank y esperan **59,7275 Hz**. El frame muestra el PPU básico de modo 0. `IntrWait` todavía ignora las máscaras de otras IRQ. |
 | `RegisterRamReset` | **Stub seguro**: no borra RAM/IO de Windows; la memoria GBA de `VirtualAlloc` nace a cero. Registra un aviso una vez. |
 | `SoftReset` | **Stub seguro**: registra la petición y termina el proceso host, sin saltar a la cabecera GBA. |
 | `MultiBoot` | **Stub seguro** adicional: devuelve error; el cable/link GBA no existe en PC. |

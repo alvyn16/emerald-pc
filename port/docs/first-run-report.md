@@ -137,3 +137,58 @@ El **siguiente fallo observable** es visual: la ventana sigue completamente
 negra porque `PortHost_RunFrame` solo limpia y presenta negro. El juego
 avanza y escribe registros, paletas y VRAM, pero aún no hay emulación del PPU
 que convierta ese estado en píxeles. No se implementó PPU ni audio aquí.
+
+## Hito 6: DMA inmediato, PPU de modo 0 y siguiente excepción
+
+Antes de este hito, `DmaSet` solo escribía los registros `REG_DMA0..3` en
+memoria mapeada: no había copia ni relleno. El parche
+`0006-Route-host-DMA-macros-to-immediate-transfer-backend.patch` desvía la
+macro común a `port/port_dma.c` únicamente bajo `PORT_PC`. El backend copia
+unidades de 16/32 bits, admite origen y destino con incremento, decremento
+o dirección fija, usa 16.384/65.536 unidades cuando el contador vale cero
+(DMA0–2/DMA3) y limpia `DMA_ENABLE` al completar. Conserva el control de
+transferencias programadas para HBlank, VBlank o modo especial, pero aún no
+las dispara. Las escrituras directas de DMA en `m4a.c` pertenecen al audio
+ARM excluido de este ejecutable. `dma_test.c` confirmó copia, relleno,
+decremento, destino fijo y ausencia de disparo HBlank.
+
+`port/port_ppu.c` genera un buffer ARGB8888 de 240×160. En modo 0 dibuja
+fondos de texto de 4 y 8 bpp, bancos de paleta, scroll, flips de tile,
+mapas 256×256/512×256/256×512/512×512 y prioridades. También dibuja
+sprites regulares de 4 y 8 bpp desde OAM, con tamaños, flips, prioridad y
+disposición de tiles 1D/2D. El color 0 de cada tile es transparente; el
+backdrop usa la entrada 0 de la paleta. SDL recibe el buffer mediante una
+textura de 240×160 y lo escala en la ventana. El ciclo host pone
+`REG_VCOUNT = 160` y `DISPSTAT_VBLANK` durante el callback VBlank y vuelve a
+línea 0 al terminar. No simula cada scanline ni genera IRQ VCount/HBlank.
+
+Las pruebas `ppu_test.c` y `frame_test.c` pasaron con GCC i686 MINGW32.
+GDB capturó frames reales del proceso usando la ROM local ignorada:
+
+- Frame 180: fondo selvático verde, 19 colores.
+- Frame 1.200: paisaje de montañas y árboles, 15 colores.
+- Frame 1.800: Rayquaza, el protagonista en bicicleta y otros Pokémon sobre
+  el paisaje, 55 colores. Son visibles tanto fondos como sprites.
+
+Esas capturas están en `build/`, ignorado por Git; no se distribuyen. El
+parche `0006` aplicado sobre el clon limpio con los parches anteriores dio
+el mismo árbol Git que el checkout de trabajo. `make compare` del build GBA
+original volvió a dar **`pokeemerald.gba: OK`** con ARM Binutils 2.43.1.
+
+El primer límite visual posterior aparece al comenzar la siguiente escena:
+`REG_DISPCNT = 0x1441` selecciona **modo 1**, cuyo fondo afín BG2 está fuera
+de este hito. El renderizador deja solo el backdrop blanco. El siguiente
+fallo de ejecución ocurre en el frame **2.235**, antes de llegar al 2.400:
+
+```
+SIGFPE: Task_Scene3_SpinPokeball
+        RunTasks → MainCB2_Intro → CallCallbacks → AgbMain
+```
+
+`Task_Scene3_Load` pone `tZoomDiv = 0` y `tZoomDivSpeed = 0`. La primera
+llamada a `Task_Scene3_SpinPokeball` aún deja el divisor en cero y evalúa
+`SAFE_DIV(0x10000, tZoomDiv)`. En este build host `UBFIX` no está definido,
+por lo que `SAFE_DIV` se expande a una división directa; x86 produce
+`SIGFPE`. Este fallo pertenece a la compatibilidad de la lógica de la
+introducción, separado del PPU. No se modificó esa lógica ni se implementó
+el modo afín, las ventanas, la mezcla o el audio en este hito.
