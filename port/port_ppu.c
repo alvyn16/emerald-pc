@@ -68,6 +68,57 @@ static void RenderBackground(uint32_t *pixels, unsigned bg)
     }
 }
 
+static int32_t SignExtend28(uint32_t value)
+{
+    value &= 0x0fffffffu;
+    return (value & 0x08000000u) ? (int32_t)(value | 0xf0000000u) : (int32_t)value;
+}
+
+static void RenderAffineBackground(uint32_t *pixels, unsigned bg)
+{
+    const uint16_t control = ((const volatile uint16_t *)REG_ADDR_BG0CNT)[bg];
+    const unsigned size = 128u << ((control >> 14) & 3);
+    const unsigned tilesWide = size / 8;
+    const unsigned screenBase = ((control >> 8) & 31) * 0x800;
+    const unsigned charBase = ((control >> 2) & 3) * 0x4000;
+    const int wrap = (control & BGCNT_WRAP) != 0;
+    const uintptr_t registers = REG_ADDR_BG2PA + (bg - 2) * 0x10;
+    const volatile int16_t *matrix = (const volatile int16_t *)registers;
+    const int32_t referenceX = SignExtend28(*(const volatile uint32_t *)(registers + 8));
+    const int32_t referenceY = SignExtend28(*(const volatile uint32_t *)(registers + 12));
+    const int32_t pa = matrix[0], pb = matrix[1], pc = matrix[2], pd = matrix[3];
+
+    for (int y = 0; y < PORT_SCREEN_HEIGHT; ++y)
+    {
+        const int64_t lineX = referenceX + pb * y;
+        const int64_t lineY = referenceY + pd * y;
+        for (int x = 0; x < PORT_SCREEN_WIDTH; ++x)
+        {
+            int sourceX = (int)((lineX + pa * x) >> 8);
+            int sourceY = (int)((lineY + pc * x) >> 8);
+            if (wrap)
+            {
+                sourceX &= size - 1;
+                sourceY &= size - 1;
+            }
+            else if (sourceX < 0 || sourceY < 0 || sourceX >= (int)size || sourceY >= (int)size)
+                continue;
+
+            const unsigned mapOffset = screenBase + (sourceY / 8) * tilesWide + sourceX / 8;
+            if (mapOffset >= 0x10000)
+                continue;
+            const unsigned tile = VRAM[mapOffset];
+            const unsigned tileOffset = charBase + tile * 64
+                    + (sourceY & 7) * 8 + (sourceX & 7);
+            if (tileOffset >= 0x10000)
+                continue;
+            const unsigned index = VRAM[tileOffset];
+            if (index != 0)
+                pixels[y * PORT_SCREEN_WIDTH + x] = ExpandColor(PALETTE[index]);
+        }
+    }
+}
+
 static void SpriteDimensions(unsigned shape, unsigned size, unsigned *width, unsigned *height)
 {
     static const uint8_t widths[3][4] = {
@@ -89,31 +140,62 @@ static void RenderSprites(uint32_t *pixels, unsigned priority, uint16_t displayC
         const uint16_t attr1 = OAM[sprite * 4 + 1];
         const uint16_t attr2 = OAM[sprite * 4 + 2];
         const unsigned shape = (attr0 >> 14) & 3;
-        if ((attr0 & 0x0100) || (attr0 & 0x0200) || shape == 3 ||
+        const int affine = (attr0 & 0x0100) != 0;
+        const int doubleSize = affine && (attr0 & 0x0200);
+        if ((!affine && (attr0 & 0x0200)) || shape == 3 ||
             ((attr0 >> 10) & 3) == 2 || ((attr2 >> 10) & 3) != priority)
             continue;
 
         unsigned width, height;
         SpriteDimensions(shape, (attr1 >> 14) & 3, &width, &height);
+        const unsigned renderWidth = doubleSize ? width * 2 : width;
+        const unsigned renderHeight = doubleSize ? height * 2 : height;
         int originX = attr1 & 0x1ff;
         int originY = attr0 & 0xff;
         if (originX >= 256) originX -= 512;
         if (originY >= 160) originY -= 256;
+        if (doubleSize)
+        {
+            originX -= width / 2;
+            originY -= height / 2;
+        }
+        int pa = 256, pb = 0, pc = 0, pd = 256;
+        if (affine)
+        {
+            const unsigned matrix = (attr1 >> 9) & 31;
+            pa = (int16_t)OAM[matrix * 16 + 3];
+            pb = (int16_t)OAM[matrix * 16 + 7];
+            pc = (int16_t)OAM[matrix * 16 + 11];
+            pd = (int16_t)OAM[matrix * 16 + 15];
+        }
         const unsigned bpp8 = (attr0 & 0x2000) != 0;
         const unsigned tileStep = bpp8 ? 2 : 1;
         const unsigned tileBase = (attr2 & 0x3ff) & (bpp8 ? ~1u : ~0u);
         const unsigned rowStride = oneDimensional ? (width / 8) * tileStep : 32;
 
-        for (unsigned sy = 0; sy < height; ++sy)
+        for (unsigned sy = 0; sy < renderHeight; ++sy)
         {
             const int screenY = originY + (int)sy;
             if (screenY < 0 || screenY >= PORT_SCREEN_HEIGHT) continue;
-            const unsigned tileY = (attr1 & 0x2000) ? height - 1 - sy : sy;
-            for (unsigned sx = 0; sx < width; ++sx)
+            for (unsigned sx = 0; sx < renderWidth; ++sx)
             {
                 const int screenX = originX + (int)sx;
                 if (screenX < 0 || screenX >= PORT_SCREEN_WIDTH) continue;
-                const unsigned tileX = (attr1 & 0x1000) ? width - 1 - sx : sx;
+                int tileX, tileY;
+                if (affine)
+                {
+                    const int centeredX = (int)sx - (int)renderWidth / 2;
+                    const int centeredY = (int)sy - (int)renderHeight / 2;
+                    tileX = (int)width / 2 + ((pa * centeredX + pb * centeredY) >> 8);
+                    tileY = (int)height / 2 + ((pc * centeredX + pd * centeredY) >> 8);
+                    if (tileX < 0 || tileY < 0 || tileX >= (int)width || tileY >= (int)height)
+                        continue;
+                }
+                else
+                {
+                    tileX = (attr1 & 0x1000) ? (int)width - 1 - (int)sx : (int)sx;
+                    tileY = (attr1 & 0x2000) ? (int)height - 1 - (int)sy : (int)sy;
+                }
                 const unsigned tileNumber = tileBase + (tileY / 8) * rowStride
                         + (tileX / 8) * tileStep;
                 const unsigned offset = 0x10000 + tileNumber * 32
@@ -141,17 +223,21 @@ void PortPpu_Render(uint32_t *pixels)
     for (unsigned i = 0; i < PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT; ++i)
         pixels[i] = backdrop;
 
-    if ((displayControl & 7) != DISPCNT_MODE_0 ||
-        (displayControl & DISPCNT_FORCED_BLANK))
+    const unsigned mode = displayControl & 7;
+    if (mode > DISPCNT_MODE_2 || (displayControl & DISPCNT_FORCED_BLANK))
         return;
 
     for (int priority = 3; priority >= 0; --priority)
     {
         for (int bg = 3; bg >= 0; --bg)
         {
-            if ((displayControl & (DISPCNT_BG0_ON << bg)) &&
-                ((((volatile uint16_t *)REG_ADDR_BG0CNT)[bg] & 3) == priority))
+            if (!(displayControl & (DISPCNT_BG0_ON << bg)) ||
+                ((((volatile uint16_t *)REG_ADDR_BG0CNT)[bg] & 3) != priority))
+                continue;
+            if (mode == DISPCNT_MODE_0 || (mode == DISPCNT_MODE_1 && bg < 2))
                 RenderBackground(pixels, bg);
+            else if (bg >= 2 && (mode == DISPCNT_MODE_2 || bg == 2))
+                RenderAffineBackground(pixels, bg);
         }
         if (displayControl & DISPCNT_OBJ_ON)
             RenderSprites(pixels, priority, displayControl);

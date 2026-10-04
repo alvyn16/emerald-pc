@@ -77,6 +77,97 @@ int main(void)
     PortPpu_Render(sFrame);
     assert(sFrame[10 * PORT_SCREEN_WIDTH + 10] == 0xffff0000u);
 
+    memset(vram, 0, 0x18000);
+    for (int i = 0; i < 128; ++i) oam[i * 4] = 0x0200;
+    memset(vram + 0x4000, 1, 64);
+    memset(vram + 0x4040, 2, 64);
+    memset(vram + 0x4080, 3, 64);
+    vram[1] = 1;
+    vram[15] = 2;
+    REG_BG2CNT = BGCNT_CHARBASE(1) | BGCNT_SCREENBASE(0) | BGCNT_AFF128x128;
+    REG_BG2PA = 256;
+    REG_BG2PB = 0;
+    REG_BG2PC = 0;
+    REG_BG2PD = 256;
+    REG_BG2X = 0;
+    REG_BG2Y = 0;
+    REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_BG2_ON;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xffff0000u);
+
+    REG_BG2X = 8 << 8;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff0000ffu);
+
+    vram[0x4000 + 7] = 3;
+    REG_BG2PA = 0;
+    REG_BG2PB = (uint16_t)-256;
+    REG_BG2PC = 256;
+    REG_BG2PD = 0;
+    PortPpu_Render(sFrame);
+    assert(sFrame[PORT_SCREEN_WIDTH] == 0xff00ff00u);
+    REG_BG2PA = 256;
+    REG_BG2PB = 0;
+    REG_BG2PC = 0;
+    REG_BG2PD = 256;
+
+    REG_BG2X = (uint32_t)(-8 * 256) & 0x0fffffff;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff000000u);
+    REG_BG2CNT |= BGCNT_WRAP;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff00ff00u);
+
+    REG_BG2CNT = BGCNT_CHARBASE(1) | BGCNT_AFF1024x1024 | BGCNT_WRAP;
+    vram[127] = 2;
+    REG_BG2X = 1023 << 8;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff00ff00u);
+
+    REG_BG2CNT = BGCNT_PRIORITY(1) | BGCNT_CHARBASE(1);
+    REG_BG2X = 0;
+    REG_BG3CNT = BGCNT_PRIORITY(0) | BGCNT_CHARBASE(2) | BGCNT_SCREENBASE(3);
+    memset(vram + 0x8000, 2, 64);
+    REG_BG3PA = 256;
+    REG_BG3PB = 0;
+    REG_BG3PC = 0;
+    REG_BG3PD = 256;
+    REG_BG3X = 0;
+    REG_BG3Y = 0;
+    REG_DISPCNT = DISPCNT_MODE_2 | DISPCNT_BG2_ON | DISPCNT_BG3_ON;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff0000ffu);
+
+    REG_DISPCNT = DISPCNT_MODE_0 | DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP;
+    memset(vram + 0x10000, 0x11, 32);
+    palette[256 + 1] = 0x001f;
+    oam[0] = 0x0100 | 10;
+    oam[1] = 10;
+    oam[2] = 0;
+    oam[3] = 256;
+    oam[7] = 0;
+    oam[11] = 0;
+    oam[15] = 256;
+    PortPpu_Render(sFrame);
+    assert(sFrame[10 * PORT_SCREEN_WIDTH + 10] == 0xffff0000u);
+
+    oam[0] |= 0x0200;
+    oam[3] = 128;
+    oam[15] = 128;
+    PortPpu_Render(sFrame);
+    assert(sFrame[6 * PORT_SCREEN_WIDTH + 6] == 0xffff0000u);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff000000u);
+
+    oam[0] &= ~0x0200;
+    memset(vram + 0x10000, 0, 32);
+    vram[0x10000 + 2] = 0x01;
+    oam[3] = 0;
+    oam[7] = (uint16_t)-256;
+    oam[11] = 256;
+    oam[15] = 0;
+    PortPpu_Render(sFrame);
+    assert(sFrame[14 * PORT_SCREEN_WIDTH + 10] == 0xffff0000u);
+
     VirtualFree(oam, 0, MEM_RELEASE);
     VirtualFree(vram, 0, MEM_RELEASE);
     VirtualFree(palette, 0, MEM_RELEASE);
