@@ -1,0 +1,25 @@
+From 68983b48f40fccff4a648ed0c8c29f3936be97c6 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 4 Oct 2026 00:37:16 -0400
+Subject: [PATCH] Use safe division for host intro code
+
+---
+ include/global.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/global.h b/include/global.h
+index f624850..7e9a04c 100644
+--- a/include/global.h
++++ b/include/global.h
+@@ -84,7 +84,7 @@
+ 
+ // Used in cases where division by 0 can occur in the retail version.
+ // Avoids invalid opcodes on some emulators, and the otherwise UB.
+-#ifdef UBFIX
++#if defined(UBFIX) || defined(PORT_PC)
+ #define SAFE_DIV(a, b) (((b) != 0) ? (a) / (b) : 0)
+ #else
+ #define SAFE_DIV(a, b) ((a) / (b))
+-- 
+2.51.0.windows.2
+

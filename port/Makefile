@@ -82,7 +82,7 @@ $(OBJECT_DIR)/%.o: $(POKEEMERALD)/src/%.c | check-tools
 	}
 
 $(OBJECT_DIR)/agb_flash.o $(OBJECT_DIR)/agb_flash_1m.o: host_flash.h
-$(OBJECTS): $(POKEEMERALD)/include/gba/macro.h
+$(OBJECTS): $(POKEEMERALD)/include/gba/macro.h $(POKEEMERALD)/include/global.h
 
 $(DATA_OBJECT_DIR)/%.o: $(POKEEMERALD)/data/%.s | check-tools
 	@mkdir -p $(DATA_OBJECT_DIR) $(DATA_RAW_OBJECT_DIR)
