@@ -192,3 +192,41 @@ por lo que `SAFE_DIV` se expande a una división directa; x86 produce
 `SIGFPE`. Este fallo pertenece a la compatibilidad de la lógica de la
 introducción, separado del PPU. No se modificó esa lógica ni se implementó
 el modo afín, las ventanas, la mezcla o el audio en este hito.
+
+## Hito 7: división segura y escenas afines
+
+El parche `0007-Use-safe-division-for-host-intro-code.patch` hace que
+`SAFE_DIV` compruebe el divisor cuando se compila con `PORT_PC`, igual que
+cuando se activa `UBFIX`. La rama GBA conserva el comportamiento anterior.
+El host dejó atrás el antiguo `SIGFPE` del frame 2.235.
+
+El PPU de `port/port_ppu.c` ahora renderiza BG2 en modo 1 y BG2/BG3 en
+modo 2. Usa las matrices con signo `PA/PB/PC/PD`, las referencias de 28 bits
+`BG2X/Y` y `BG3X/Y`, mapas afines de 128, 256, 512 y 1.024 píxeles y el
+bit de wraparound de `BGxCNT`. Mantiene la prioridad entre fondos y objetos.
+Los sprites afines toman sus cuatro parámetros de la matriz elegida en OAM;
+admiten rotación, escala y doble tamaño. Las pruebas host con memoria
+sintética verificaron matriz identidad y rotada, desplazamiento, referencia
+negativa, wrap, mapa de 1.024 píxeles, BG3 en modo 2, sprite afín, doble
+tamaño y rotación. `make -C port exe` y esa prueba pasaron en MINGW32.
+
+Las capturas reales de la intro, guardadas solo en `build/` (ignorado por
+Git), muestran:
+
+- `hito7-frame-2400.png`: escena rosa con la Poké Ball ampliada y elementos
+  afines; 16 colores.
+- `hito7-frame-3000.png`: escena oscura con contornos amarillos; 4 colores.
+- `hito7-frame-4200.png`: regreso al paisaje selvático; 19 colores.
+
+GDB alcanzó los frames 2.400, 3.000 y 4.200 sin nueva excepción. El
+**siguiente fallo observado es visual**: en el frame 2.400,
+`REG_DISPCNT = 0x3641` tiene `WIN0_ON` activo, pero el renderizador todavía
+ignora las ventanas, así que dibuja píxeles fuera de la máscara prevista.
+La mezcla de color también sigue sin emular; las escenas con fundidos no
+reproducen aún su aspecto GBA. No se encontró otro fallo de ejecución en los
+primeros 4.200 frames sin input. Ventanas, mezcla, audio y DMA HBlank quedan
+fuera de este hito.
+
+El parche `0007` aplicado al clon de verificación después de los seis
+anteriores produjo el mismo árbol Git que el checkout de trabajo. El build
+GBA original dio **`pokeemerald.gba: OK`** con ARM Binutils 2.43.1.
