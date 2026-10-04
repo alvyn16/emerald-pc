@@ -1,0 +1,35 @@
+From 5fbb2cd178b85fa2e688e5a721f55ec8f6ef6882 Mon Sep 17 00:00:00 2001
+From: emerald-pc <port@local.invalid>
+Date: Sat, 3 Oct 2026 22:51:02 -0400
+Subject: [PATCH] Skip RFU hardware initialization on host
+
+---
+ src/link_rfu_2.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/link_rfu_2.c b/src/link_rfu_2.c
+index 6b20cf9..0a6ce06 100644
+--- a/src/link_rfu_2.c
++++ b/src/link_rfu_2.c
+@@ -315,6 +315,10 @@ void ResetLinkRfuGFLayer(void)
+ 
+ void InitRFU(void)
+ {
++#ifdef PORT_PC
++    // Serial RFU hardware and its timer are unavailable on the host.
++    return;
++#else
+     IntrFunc serialIntr = gIntrTable[1];
+     IntrFunc timerIntr = gIntrTable[2];
+     InitRFUAPI();
+@@ -324,6 +328,7 @@ void InitRFU(void)
+     gIntrTable[1] = serialIntr;
+     gIntrTable[2] = timerIntr;
+     REG_IME = INTR_FLAG_VBLANK;
++#endif
+ }
+ 
+ void InitRFUAPI(void)
+-- 
+2.51.0.windows.2
+
