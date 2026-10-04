@@ -34,3 +34,14 @@ build/emerald-pc-diagnostic.exe
 orden de frames y las llamadas VBlank permanecen. `EMERALD_PC_STOP_FRAME`
 cierra el proceso limpiamente tras el frame indicado. Para inspeccionar un
 fallo, ejecute el mismo programa y entorno bajo GDB de MINGW32.
+
+Para repetir el recorrido completo hasta Villa Raíz después de ajustar el
+reloj, genere el guion sin guardar datos del juego en Git:
+
+```sh
+python port/tests/gameplay_smoke.py build/gameplay-smoke.inputs
+export EMERALD_PC_INPUT_SCRIPT=build/gameplay-smoke.inputs
+export EMERALD_PC_FAST=1
+export EMERALD_PC_STOP_FRAME=30500
+build/emerald-pc-diagnostic.exe
+```

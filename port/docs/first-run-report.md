@@ -329,19 +329,22 @@ del profesor Birch en 1.203, nueva partida en 7.014 y `CB2_Overworld` en
 texto de las cajas en 9.000. Con RIGHT y DOWN, el protagonista sale a
 **Villa Raíz**: el frame **12.500** muestra el mapa exterior, la madre y el
 camión. El recorrido continúa a la casa (14.000) y, con UP, al dormitorio de
-la segunda planta (19.000). Se observó movimiento controlado por el guion y
-no hubo excepción hasta el frame 22.000. Un intento adicional de interactuar
-con el reloj no lo alcanzó: las capturas de 19.500 y 22.000 son idénticas
-(44 colores), mientras GDB sigue en `CB2_Overworld` con BG2/BG3 y paletas
-cargados. No se trata de un bloqueo del motor. La secuencia del reloj y el
-resto de la historia todavía no se recorrieron.
+la segunda planta (19.000). El guion interactúa con el reloj, elige YES en la
+confirmación y deja que termine el diálogo de la madre (20.000). Después del
+evento de la televisión en la planta baja (27.000), el personaje camina hasta
+la salida. El frame **30.500** lo muestra de nuevo en el mapa exterior, con
+control por dirección y `CB2_Overworld` activo. No hubo excepción ni espera
+infinita hasta ese frame. El generador `port/tests/gameplay_smoke.py` produjo
+las mismas 614 entradas que se usaron en el recorrido medido.
 
 Las capturas ampliadas `build/hito9-frame-1080.png` (título),
 `build/hito9-frame-1800.png` (Birch), `build/hito9-frame-4900.png` (nombre),
 `build/hito9-frame-7500.png` (camión), `build/hito9-route-12500.png`
 (exterior), `build/hito9-route-14000.png` (casa) y
-`build/hito9-stairs-19000.png` (dormitorio) están en `build/`, ignorado por
-Git. También se guardaron allí los guiones y registros GDB para repetir el
+`build/hito9-stairs-19000.png` (dormitorio),
+`build/hito9-clock2-19500.png` (confirmación del reloj) y
+`build/hito9-world-free-30500.png` (exterior tras el reloj) están en `build/`,
+ignorado por Git. También se guardaron allí los guiones y registros GDB para repetir el
 diagnóstico. Los parches `0008` a `0013` se aplicaron a un clon limpio junto
 con `0001` a `0007`; su árbol Git final coincide exactamente con el checkout
 de trabajo (`5fbe81f4033bbac5a2192bede821976b93db982e`).
