@@ -1,0 +1,25 @@
+From 25a7e8f10e2db0b64e1d0c9b1345cc340a18d641 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 4 Oct 2026 13:36:32 -0400
+Subject: [PATCH] Pass valid zero trainer ID on PC
+
+---
+ src/frontier_util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/frontier_util.c b/src/frontier_util.c
+index 66fb74d..2a2ba2d 100644
+--- a/src/frontier_util.c
++++ b/src/frontier_util.c
+@@ -2385,7 +2385,7 @@ void ClearRankingHallRecords(void)
+     s32 i, j, k;
+ 
+     // UB: Passing 0 as a pointer instead of a pointer holding a value of 0.
+-#ifdef UBFIX
++#if defined(UBFIX) || defined(PORT_PC)
+     u8 emptyId[TRAINER_ID_LENGTH] = {0};
+     #define ZERO emptyId
+ #else
+-- 
+2.51.0.windows.2
+
