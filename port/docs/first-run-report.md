@@ -108,3 +108,32 @@ VBlank ni ejecuta el despachador ARM `IntrMain`: la memoria IO y la tabla de
 interrupciones son solo reservas/estados iniciales. Por eso el bit nunca cambia
 y el hilo principal queda en ese bucle, sin procesar eventos SDL. Emular esa
 IRQ queda para un hito posterior; no se cambió video, PPU ni audio aquí.
+
+## Hito 5: VBlank cooperativo y siguiente límite visible
+
+El parche `0005-Use-cooperative-host-frame-in-WaitForVBlank.patch` cambia
+`WaitForVBlank` solo bajo `PORT_PC`: limpia el bit y llama a
+`PortHost_RunFrame` en lugar de girar esperando una IRQ física. La función
+host procesa eventos SDL, termina limpiamente al recibir `SDL_QUIT` o cierre
+de ventana, traduce el teclado a `REG_KEYINPUT` (activo en bajo), espera con
+el contador de alta resolución de SDL a **59,7275 FPS**, ejecuta
+`gIntrTable[4]` (la entrada VBlank real de `gIntrTableTemplate`) y asegura
+`INTR_FLAG_VBLANK` en `gMain.intrCheck`. `VBlankIntrWait`, `IntrWait` y `Halt`
+usan la misma ruta. Teclas: flechas = cruceta, Z/X = A/B, Enter/Retroceso =
+Start/Select y A/S = L/R. `IntrWait` no emula todavía otras máscaras de IRQ.
+
+La prueba host `frame_test.c` verificó la conversión de Z y flecha arriba,
+la liberación de las teclas, 1.002 llamadas al callback VBlank, el ritmo
+simulado de 1.000 frames y la salida ante `SDL_QUIT` sin despachar otro frame.
+GDB alcanzó la llamada 601 a
+`PortHost_RunFrame` después de **600 VBlanks**: `gMain.vblankCounter1 = 600`,
+`gMain.vblankCounter2 = 600` y `gMain.callback2` no era nulo. No hubo
+excepción ni bloqueo nuevo en ese intervalo. `make compare` del build GBA
+original dio `pokeemerald.gba: OK` con ARM Binutils 2.43.1. El parche `0005`
+aplicado sobre el clon limpio con los cuatro parches anteriores produjo el
+mismo árbol Git que el checkout de trabajo.
+
+El **siguiente fallo observable** es visual: la ventana sigue completamente
+negra porque `PortHost_RunFrame` solo limpia y presenta negro. El juego
+avanza y escribe registros, paletas y VRAM, pero aún no hay emulación del PPU
+que convierta ese estado en píxeles. No se implementó PPU ni audio aquí.
