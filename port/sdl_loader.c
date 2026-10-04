@@ -34,6 +34,10 @@ int Port_LoadSDL2(void)
     LOAD(DestroyWindow);
     LOAD(CreateRenderer);
     LOAD(DestroyRenderer);
+    LOAD(CreateTexture);
+    LOAD(DestroyTexture);
+    LOAD(UpdateTexture);
+    LOAD(RenderCopy);
     LOAD(RenderSetLogicalSize);
     LOAD(SetRenderDrawColor);
     LOAD(RenderClear);

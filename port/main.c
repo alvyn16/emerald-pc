@@ -14,11 +14,13 @@ extern void AgbMain(void);
 
 static SDL_Window *sWindow;
 static SDL_Renderer *sRenderer;
+static SDL_Texture *sTexture;
 
 void Port_ExitCleanly(void)
 {
     fprintf(stderr, "PC: window closed; exiting cleanly\n");
-    Port_AttachRenderer(NULL);
+    Port_AttachRenderer(NULL, NULL);
+    portSDL.DestroyTexture(sTexture);
     portSDL.DestroyRenderer(sRenderer);
     portSDL.DestroyWindow(sWindow);
     portSDL.Quit();
@@ -49,7 +51,7 @@ int main(void)
         return 1;
     }
 
-    SDL_Window *window = portSDL.CreateWindow("emerald-pc: milestone 2",
+    SDL_Window *window = portSDL.CreateWindow("emerald-pc",
                                          SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                          240 * 4, 160 * 4, SDL_WINDOW_SHOWN);
     if (window == NULL)
@@ -72,9 +74,22 @@ int main(void)
         return 1;
     }
 
-    Port_AttachRenderer(renderer);
+    SDL_Texture *texture = portSDL.CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
+                                                SDL_TEXTUREACCESS_STREAMING, 240, 160);
+    if (texture == NULL)
+    {
+        fprintf(stderr, "SDL texture failed: %s\n", portSDL.GetError());
+        portSDL.DestroyRenderer(renderer);
+        portSDL.DestroyWindow(window);
+        portSDL.Quit();
+        Port_FreeGbaMemory();
+        return 1;
+    }
+
+    Port_AttachRenderer(renderer, texture);
     sWindow = window;
     sRenderer = renderer;
+    sTexture = texture;
     portSDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
     portSDL.RenderClear(renderer);
     portSDL.RenderPresent(renderer);
@@ -82,7 +97,8 @@ int main(void)
     AgbMain();
     fprintf(stderr, "PC: AgbMain returned\n");
 
-    Port_AttachRenderer(NULL);
+    Port_AttachRenderer(NULL, NULL);
+    portSDL.DestroyTexture(texture);
     portSDL.DestroyRenderer(renderer);
     portSDL.DestroyWindow(window);
     portSDL.Quit();

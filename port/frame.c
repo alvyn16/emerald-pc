@@ -6,6 +6,7 @@
 #include "main.h"
 #include "gba/io_reg.h"
 #include "platform.h"
+#include "port_ppu.h"
 #include "sdl_loader.h"
 
 /* gIntrTableTemplate in upstream main.c puts VBlank at index four. */
@@ -14,14 +15,29 @@
 #define FRAME_RATE_DENOMINATOR 10000u
 
 static SDL_Renderer *sRenderer;
+static SDL_Texture *sTexture;
+static uint32_t sPixels[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
 static Uint64 sNextFrameTick;
 static Uint64 sFrameRemainder;
 
-void Port_AttachRenderer(SDL_Renderer *renderer)
+void Port_AttachRenderer(SDL_Renderer *renderer, SDL_Texture *texture)
 {
     sRenderer = renderer;
+    sTexture = texture;
     sNextFrameTick = 0;
     sFrameRemainder = 0;
+}
+
+static void SetVideoLine(unsigned line, int vblank)
+{
+    uint16_t status = REG_DISPSTAT;
+    status &= ~(DISPSTAT_VBLANK | DISPSTAT_HBLANK | DISPSTAT_VCOUNT);
+    if (vblank)
+        status |= DISPSTAT_VBLANK;
+    if ((status >> 8) == line)
+        status |= DISPSTAT_VCOUNT;
+    REG_VCOUNT = line;
+    REG_DISPSTAT = status;
 }
 
 static void UpdateKeyInput(void)
@@ -75,6 +91,7 @@ static void WaitForFrameDeadline(void)
 
 void PortHost_RunFrame(void)
 {
+    SetVideoLine(0, 0);
     SDL_Event event;
     while (portSDL.PollEvent(&event))
     {
@@ -84,15 +101,20 @@ void PortHost_RunFrame(void)
     }
     UpdateKeyInput();
     WaitForFrameDeadline();
+    SetVideoLine(160, 1);
 
     if (gIntrTable[VBLANK_INTR_INDEX] != NULL)
         gIntrTable[VBLANK_INTR_INDEX]();
     gMain.intrCheck |= INTR_FLAG_VBLANK;
 
-    if (sRenderer != NULL)
+    if (sRenderer != NULL && sTexture != NULL)
     {
+        PortPpu_Render(sPixels);
+        portSDL.UpdateTexture(sTexture, NULL, sPixels, PORT_SCREEN_WIDTH * sizeof(uint32_t));
         portSDL.SetRenderDrawColor(sRenderer, 0, 0, 0, 255);
         portSDL.RenderClear(sRenderer);
+        portSDL.RenderCopy(sRenderer, sTexture, NULL, NULL);
         portSDL.RenderPresent(sRenderer);
     }
+    SetVideoLine(0, 0);
 }

@@ -13,6 +13,10 @@ struct PortSDL
     __typeof__(&SDL_DestroyWindow) DestroyWindow;
     __typeof__(&SDL_CreateRenderer) CreateRenderer;
     __typeof__(&SDL_DestroyRenderer) DestroyRenderer;
+    __typeof__(&SDL_CreateTexture) CreateTexture;
+    __typeof__(&SDL_DestroyTexture) DestroyTexture;
+    __typeof__(&SDL_UpdateTexture) UpdateTexture;
+    __typeof__(&SDL_RenderCopy) RenderCopy;
     __typeof__(&SDL_RenderSetLogicalSize) RenderSetLogicalSize;
     __typeof__(&SDL_SetRenderDrawColor) SetRenderDrawColor;
     __typeof__(&SDL_RenderClear) RenderClear;

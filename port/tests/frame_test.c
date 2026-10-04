@@ -10,6 +10,7 @@
 #include "main.h"
 #include "gba/io_reg.h"
 #include "platform.h"
+#include "port_ppu.h"
 #include "sdl_loader.h"
 #undef main
 
@@ -43,8 +44,14 @@ static const Uint8 *MockGetKeyboardState(int *count)
 static Uint64 GetPerformanceFrequency(void) { return 1000000; }
 static Uint64 GetPerformanceCounter(void) { return sCounter += 1000; }
 static void Delay(Uint32 milliseconds) { sCounter += milliseconds * 1000; }
-static void VBlank(void) { sVBlanks++; }
+static void VBlank(void)
+{
+    assert(REG_VCOUNT == 160);
+    assert(REG_DISPSTAT & DISPSTAT_VBLANK);
+    sVBlanks++;
+}
 void Port_ExitCleanly(void) { longjmp(sExit, 1); }
+void PortPpu_Render(uint32_t *pixels) { (void)pixels; }
 
 int main(void)
 {
@@ -57,13 +64,15 @@ int main(void)
     portSDL.GetPerformanceCounter = GetPerformanceCounter;
     portSDL.Delay = Delay;
     gIntrTable[4] = VBlank;
-    Port_AttachRenderer(NULL);
+    Port_AttachRenderer(NULL, NULL);
 
     sKeys[SDL_SCANCODE_Z] = 1;
     sKeys[SDL_SCANCODE_UP] = 1;
     PortHost_RunFrame();
     assert(REG_KEYINPUT == (KEYS_MASK & ~(A_BUTTON | DPAD_UP)));
     assert(gMain.intrCheck & INTR_FLAG_VBLANK);
+    assert(REG_VCOUNT == 0);
+    assert(!(REG_DISPSTAT & DISPSTAT_VBLANK));
     assert(sVBlanks == 1);
 
     memset(sKeys, 0, sizeof(sKeys));
