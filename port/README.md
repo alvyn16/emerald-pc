@@ -3,7 +3,8 @@
 Código propio del host i686: memoria GBA, ROM del usuario, flash persistida
 en `saves/`, BIOS parcial, DMA inmediato, VBlank cooperativo y renderizador
 SDL2 de modos 0, 1 y 2 con fondos de texto, fondos afines y sprites regulares
-y afines. El audio sigue silenciado. Ventanas, mezcla y DMA por HBlank faltan.
+y afines, con máscaras WIN0/WIN1 para fondos y objetos. El audio sigue
+silenciado. La ventana de objetos, la mezcla y DMA por HBlank faltan.
 
 Compilar desde MINGW32: `make -C port exe`. El diagnóstico de la primera
 ejecución y el siguiente fallo están en `docs/first-run-report.md`.

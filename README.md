@@ -1,6 +1,6 @@
 # emerald-pc
 
-Port nativo experimental a PC con SDL2 de Pokémon Emerald, basado en la decompilación de [pret/pokeemerald](https://github.com/pret/pokeemerald). Aún no es jugable: dibuja fondos de texto y afines y sprites regulares y afines de la introducción, pero faltan ventanas, mezcla y audio, entre otras funciones de la GBA.
+Port nativo experimental a PC con SDL2 de Pokémon Emerald, basado en la decompilación de [pret/pokeemerald](https://github.com/pret/pokeemerald). Aún no es jugable: dibuja fondos de texto y afines, sprites regulares y afines, y aplica WIN0/WIN1 en la introducción. Faltan la ventana de objetos, la mezcla y el audio, entre otras funciones de la GBA.
 
 Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Este repositorio no distribuye ROMs, saves, assets ni código de pokeemerald. Es un proyecto de fans no afiliado a Nintendo, Game Freak ni The Pokémon Company.
 

@@ -230,3 +230,36 @@ fuera de este hito.
 El parche `0007` aplicado al clon de verificación después de los seis
 anteriores produjo el mismo árbol Git que el checkout de trabajo. El build
 GBA original dio **`pokeemerald.gba: OK`** con ARM Binutils 2.43.1.
+
+## Hito 8a: ventanas WIN0 y WIN1
+
+El PPU host usa `WIN0H/V` y `WIN1H/V` para delimitar rectángulos. El borde
+izquierdo/superior es inclusivo y el derecho/inferior, exclusivo. Cuando el
+segundo borde es menor que el primero, la ventana continúa desde el borde de
+la pantalla hasta el origen; dos bordes iguales producen una ventana vacía.
+`DISPCNT` activa cada ventana. `WININ` selecciona las capas visibles en cada
+una, con WIN0 por encima de WIN1; `WINOUT` selecciona las capas fuera de
+ambas. Las máscaras cubren BG0–BG3 y OBJ, también sobre fondos afines.
+La ventana de objetos (`OBJWIN_ON` y el byte alto de `WINOUT`) queda como
+**TODO**: aún no se calculan sus píxeles desde OAM. El bit de efectos de color
+de `WININ`/`WINOUT` se aplicará cuando exista mezcla.
+
+La prueba host `ppu_test.c` pasó con GCC i686 MINGW32. Cubre solapamiento y
+precedencia, bordes exclusivos, recorrido horizontal y vertical por el borde
+de la pantalla, ventana vacía, ventanas desactivadas, máscaras positivas de
+`WINOUT`, sprites y BG2 afín. `make -C port exe` enlazó y el build GBA
+original conservó **`pokeemerald.gba: OK`** con ARM Binutils 2.43.1.
+
+GDB alcanzó los frames 2.400 y 3.000 sin excepción. Las capturas ampliadas
+`build/hito8a-frame-2400.png` y `build/hito8a-frame-3000.png` permanecen en
+`build/`, ignorado por Git. En el frame 2.400 se ve la escena rosa de la
+Poké Ball recortada a una franja horizontal: aparecen bandas negras arriba y
+abajo que no estaban en la captura del hito 7. En el frame 3.000 se ve una
+escena oscura con contornos amarillos, también recortada por las ventanas.
+
+El siguiente límite observado es **visual**, no una excepción. En el frame
+2.665, al entrar en `PortPpu_Render` después de `Task_Scene3_LoadClouds1`, GDB
+midió `REG_BLDCNT = 0x0087`, `REG_BLDY = 0x001F` y
+`REG_DISPCNT = 0x3740`: el juego pide aclarado de BG0–BG2, pero el
+renderizador todavía ignora la mezcla. No se implementaron mezcla ni audio
+en este hito.
