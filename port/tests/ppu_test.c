@@ -155,8 +155,8 @@ int main(void)
     oam[3] = 128;
     oam[15] = 128;
     PortPpu_Render(sFrame);
-    assert(sFrame[6 * PORT_SCREEN_WIDTH + 6] == 0xffff0000u);
-    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff000000u);
+    assert(sFrame[10 * PORT_SCREEN_WIDTH + 10] == 0xffff0000u);
+    assert(sFrame[9 * PORT_SCREEN_WIDTH + 9] == 0xff000000u);
 
     oam[0] &= ~0x0200;
     memset(vram + 0x10000, 0, 32);

@@ -213,11 +213,8 @@ static void RenderSprites(unsigned priority, uint16_t displayControl)
         int originY = attr0 & 0xff;
         if (originX >= 256) originX -= 512;
         if (originY >= 160) originY -= 256;
-        if (doubleSize)
-        {
-            originX -= width / 2;
-            originY -= height / 2;
-        }
+        // For a double-size affine OBJ, OAM x/y already address the enlarged
+        // bounding box. Upstream BuildOamBuffer subtracts the full size.
         int pa = 256, pb = 0, pc = 0, pd = 256;
         if (affine)
         {
