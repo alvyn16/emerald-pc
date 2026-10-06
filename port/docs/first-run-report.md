@@ -354,3 +354,33 @@ siguen pendientes de hitos gráficos futuros.
 La prueba de entrada pasó con GCC i686 y `-Wall -Wextra -Werror`; ambos
 ejecutables enlazaron. La compilación GBA original terminó con
 **`pokeemerald.gba: OK`** usando ARM Binutils 2.43.1.
+
+## PC del dormitorio y selección del inicial
+
+La ruta de diagnóstico llegó al PC del dormitorio en el frame 26.321. Al
+elegir «Item Storage» → «Deposit Item», GDB encontró el bloqueo en
+`CB2_Bag` → `SetupBagMenu` → `LoadBagMenu_Graphics` →
+`FreeTempTileDataBuffersIfPossible` → `IsDma3ManagerBusyWithBgCopy`.
+`CB2_Bag` ejecutaba un bucle síncrono que impedía el VBlank necesario para
+vaciar la cola DMA3. El parche `0014`, solo bajo `PORT_PC`, ejecuta
+`PortHost_RunFrame()` entre los pasos de carga de la bolsa. Con el mismo guion,
+`CB2_BagMenuRun` empieza en el frame 26.530. Una Poción añadida **solo en la
+sesión aislada de GDB** se seleccionó en el frame 26.580: se llamaron
+`TryDepositItem` y `AddPCItem`, y `Task_RemoveItemFromBag` se ejecutó en el
+frame 26.581. El proceso alcanzó el frame 26.750 y salió normalmente. La ROM
+original y el save del usuario no se modificaron en esta prueba.
+
+En la captura del usuario, el círculo blanco de la selección del inicial
+estaba desplazado arriba y a la izquierda. `BuildOamBuffer` ya coloca un
+sprite afín de doble tamaño en la esquina del cuadro ampliado; el PPU host
+restaba otra vez la mitad del tamaño y desplazaba el efecto. Se eliminó esa
+segunda resta en `port/port_ppu.c`. La prueba de sprite afín de doble tamaño
+comprueba ahora la coordenada OAM real y pasa con GCC i686. No apareció una
+nueva excepción en el recorrido hasta el frame 26.750; quedan pendientes
+pruebas de otras opciones y objetos del PC.
+
+`make -C port exe` y `make -C port diagnostic-exe` enlazaron. El build GBA
+original devolvió **`pokeemerald.gba: OK`** con ARM Binutils 2.43.1. Los
+parches `0001` a `0014` se aplicaron a un checkout limpio de la revisión base;
+el hash del árbol resultante coincide con el checkout de trabajo:
+`ba59c2e86fafcc9c799e24c3dacd30046ad6d97b`.
