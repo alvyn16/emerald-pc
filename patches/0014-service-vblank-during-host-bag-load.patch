@@ -1,0 +1,38 @@
+From 29e6f4eacf9239efa34342bf93b9722e68d083dd Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Mon, 5 Oct 2026 20:13:35 -0400
+Subject: [PATCH] Service VBlank while host bag graphics load
+
+---
+ src/item_menu.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/item_menu.c b/src/item_menu.c
+index 86b1bf9..5687b79 100755
+--- a/src/item_menu.c
++++ b/src/item_menu.c
+@@ -1,4 +1,7 @@
+ #include "global.h"
++#ifdef PORT_PC
++#include "platform.h"
++#endif
+ #include "item_menu.h"
+ #include "battle.h"
+ #include "battle_controllers.h"
+@@ -669,7 +672,12 @@ void VBlankCB_BagMenuRun(void)
+ static void CB2_Bag(void)
+ {
+     while(MenuHelpers_ShouldWaitForLinkRecv() != TRUE && SetupBagMenu() != TRUE && MenuHelpers_IsLinkActive() != TRUE)
+-        {};
++    {
++#ifdef PORT_PC
++        // The GBA services queued tile DMA in VBlank while this loop runs.
++        PortHost_RunFrame();
++#endif
++    }
+ }
+ 
+ static bool8 SetupBagMenu(void)
+-- 
+2.51.0.windows.2
+
