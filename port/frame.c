@@ -8,6 +8,7 @@
 #include "platform.h"
 #include "port_ppu.h"
 #include "sdl_loader.h"
+#include "speed_menu.h"
 #ifdef PORT_DIAGNOSTIC
 #include "input_script.h"
 #endif
@@ -73,7 +74,8 @@ static void WaitForFrameDeadline(void)
 {
     const Uint64 frequency = portSDL.GetPerformanceFrequency();
     const Uint64 scaled = frequency * FRAME_RATE_DENOMINATOR;
-    const Uint64 wholeTicks = scaled / FRAME_RATE_NUMERATOR;
+    const Uint64 divisor = FRAME_RATE_NUMERATOR * (Uint64)PortSpeedMenu_Multiplier();
+    const Uint64 wholeTicks = scaled / divisor;
     Uint64 now = portSDL.GetPerformanceCounter();
 
     if (sNextFrameTick == 0 || now > sNextFrameTick + wholeTicks)
@@ -83,11 +85,11 @@ static void WaitForFrameDeadline(void)
     }
 
     sNextFrameTick += wholeTicks;
-    sFrameRemainder += scaled % FRAME_RATE_NUMERATOR;
-    if (sFrameRemainder >= FRAME_RATE_NUMERATOR)
+    sFrameRemainder += scaled % divisor;
+    if (sFrameRemainder >= divisor)
     {
         sNextFrameTick++;
-        sFrameRemainder -= FRAME_RATE_NUMERATOR;
+        sFrameRemainder -= divisor;
     }
 
     while ((now = portSDL.GetPerformanceCounter()) < sNextFrameTick)
@@ -99,17 +101,52 @@ static void WaitForFrameDeadline(void)
     }
 }
 
-void PortHost_RunFrame(void)
+static void PollHostEvents(void)
 {
-    SetVideoLine(0, 0);
     SDL_Event event;
     while (portSDL.PollEvent(&event))
     {
         if (event.type == SDL_QUIT ||
             (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE))
             Port_ExitCleanly();
+        PortSpeedMenu_HandleEvent(&event);
     }
-    UpdateKeyInput();
+}
+
+static void PresentFrame(void)
+{
+    if (sRenderer == NULL || sTexture == NULL)
+        return;
+
+    PortPpu_Render(sPixels);
+    PortSpeedMenu_Draw(sPixels);
+    portSDL.UpdateTexture(sTexture, NULL, sPixels, PORT_SCREEN_WIDTH * sizeof(uint32_t));
+    portSDL.SetRenderDrawColor(sRenderer, 0, 0, 0, 255);
+    portSDL.RenderClear(sRenderer);
+    portSDL.RenderCopy(sRenderer, sTexture, NULL, NULL);
+    portSDL.RenderPresent(sRenderer);
+}
+
+void PortHost_RunFrame(void)
+{
+    SetVideoLine(0, 0);
+    PollHostEvents();
+    if (PortSpeedMenu_IsOpen())
+    {
+        REG_KEYINPUT = KEYS_MASK;
+        while (PortSpeedMenu_IsOpen())
+        {
+            PresentFrame();
+            portSDL.Delay(16);
+            PollHostEvents();
+        }
+        sNextFrameTick = 0;
+        sFrameRemainder = 0;
+    }
+    else
+    {
+        UpdateKeyInput();
+    }
 #ifdef PORT_DIAGNOSTIC
     if (!PortInputScript_Fast())
 #endif
@@ -120,15 +157,7 @@ void PortHost_RunFrame(void)
         gIntrTable[VBLANK_INTR_INDEX]();
     gMain.intrCheck |= INTR_FLAG_VBLANK;
 
-    if (sRenderer != NULL && sTexture != NULL)
-    {
-        PortPpu_Render(sPixels);
-        portSDL.UpdateTexture(sTexture, NULL, sPixels, PORT_SCREEN_WIDTH * sizeof(uint32_t));
-        portSDL.SetRenderDrawColor(sRenderer, 0, 0, 0, 255);
-        portSDL.RenderClear(sRenderer);
-        portSDL.RenderCopy(sRenderer, sTexture, NULL, NULL);
-        portSDL.RenderPresent(sRenderer);
-    }
+    PresentFrame();
     SetVideoLine(0, 0);
 #ifdef PORT_DIAGNOSTIC
     if (PortInputScript_StopFrame() != 0 &&
