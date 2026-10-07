@@ -10,3 +10,4 @@ HBlank faltan.
 
 Compilar desde MINGW32: `make -C port exe`. El diagnóstico de la primera
 ejecución y el siguiente fallo están en `docs/first-run-report.md`.
+El menú de velocidad se abre con P y permite elegir entre 1× y 4×.

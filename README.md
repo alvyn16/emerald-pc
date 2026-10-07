@@ -26,3 +26,10 @@ El ejecutable carga solo en memoria el único `.gba` de `roms/`; nunca modifica
 el archivo original. El guardado experimental usa `saves/emerald-pc.sav`,
 ignorado por Git. El estado del arranque y el siguiente bloqueo medido con
 GDB están en `port/docs/first-run-report.md`.
+
+## Velocidad de juego
+
+Pulsa **P** durante el juego para abrir el menú de velocidad. El juego se
+pausa mientras está abierto. Usa **↑/↓** para elegir **1×, 2×, 3× o 4×** y
+**Enter** para activar la opción. **Esc** o **P** cierran el menú sin cambiar
+la velocidad. La opción queda activa hasta cerrar el programa.
