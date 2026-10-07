@@ -22,6 +22,10 @@ make -C port exe
 ./build/emerald-pc.exe
 ```
 
+La compilación copia `SDL2.dll` junto al ejecutable en `build/`. Después
+puedes abrir `build/emerald-pc.exe` directamente desde el Explorador de
+Windows; conserva ambos archivos en la misma carpeta.
+
 El ejecutable carga solo en memoria el único `.gba` de `roms/`; nunca modifica
 el archivo original. El guardado experimental usa `saves/emerald-pc.sav`,
 ignorado por Git. El estado del arranque y el siguiente bloqueo medido con
