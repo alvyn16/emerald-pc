@@ -10,6 +10,8 @@ HOST_ARCH ?= i686
 PKG_CONFIG ?= pkg-config
 
 SDL2_CFLAGS := $(shell $(PKG_CONFIG) --cflags sdl2)
+SDL2_DLL := $(shell $(PKG_CONFIG) --variable=prefix sdl2)/bin/SDL2.dll
+RUNTIME_DLL := ../build/SDL2.dll
 SOURCES := $(shell find $(POKEEMERALD)/src -type f -name '*.c' | sort)
 CHECKS := $(patsubst $(POKEEMERALD)/src/%.c,check/%,$(SOURCES))
 HOST_CPPFLAGS := -std=gnu11 -E -DMODERN=0 -DPORT_PC -include stdlib.h -iquote include -I. -I../port $(SDL2_CFLAGS)
@@ -51,9 +53,12 @@ syntax: $(CHECKS)
 objects: $(OBJECTS)
 data-objects: $(DATA_OBJECTS)
 song-objects: $(SONG_OBJECTS)
-exe: $(EXE)
+exe: $(EXE) $(RUNTIME_DLL)
 diagnostic-exe:
 	@$(MAKE) DIAGNOSTIC=1 exe
+
+$(RUNTIME_DLL): $(SDL2_DLL) | check-tools
+	@cp "$<" "$@"
 
 $(EXE): $(HOST_EXE_OBJECTS) $(DATA_OBJECTS) $(SONG_OBJECTS) $(addprefix ./,$(PORT_EXE_SOURCES)) host_flash.h Makefile
 	@find $(OBJECT_DIR) $(DATA_OBJECT_DIR) $(SONG_OBJECT_DIR) -name '*.o' > ../build/host-exe-objects.rsp
