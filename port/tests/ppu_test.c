@@ -447,6 +447,34 @@ int main(void)
     PortPpu_RenderLine(80, sLineFrame + 80 * PORT_SCREEN_WIDTH);
     assert(sLineFrame[80 * PORT_SCREEN_WIDTH] == 0xff0000ffu);
 
+    memset(vram, 0, 0x18000);
+    memset(io, 0, 0x1000);
+    for (int i = 0; i < 128; ++i) oam[i * 4] = 0x0200;
+    memset(vram + 0x4000, 0x11, 32);
+    memset(vram + 0x8000, 0x22, 32);
+    memset(vram + 0x10000, 0x11, 32);
+    REG_BG0CNT = BGCNT_PRIORITY(1) | BGCNT_CHARBASE(1);
+    REG_BG1CNT = BGCNT_PRIORITY(0) | BGCNT_CHARBASE(2) | BGCNT_SCREENBASE(1);
+    oam[0] = 0x0800; // OAM mode 2: window shape, not a visible OBJ.
+    oam[1] = 0;
+    oam[2] = 0;
+    REG_WINOUT = WINOUT_WIN01_BG0 | WINOUT_WINOBJ_BG1;
+    REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_BG1_ON |
+                  DISPCNT_OBJ_ON | DISPCNT_OBJWIN_ON;
+    PortPpu_Render(sFrame);
+    assert(sFrame[0] == 0xff0000ffu);
+    assert(sFrame[9] == 0xffff0000u);
+    REG_WIN0H = 4;
+    REG_WIN0V = 8;
+    REG_WININ = WININ_WIN0_BG0;
+    REG_DISPCNT |= DISPCNT_WIN0_ON;
+    PortPpu_Render(sFrame);
+    assert(sFrame[2] == 0xffff0000u);
+    assert(sFrame[6] == 0xff0000ffu);
+    REG_DISPCNT &= ~DISPCNT_OBJWIN_ON;
+    PortPpu_Render(sFrame);
+    assert(sFrame[6] == 0xffff0000u);
+
     VirtualFree(oam, 0, MEM_RELEASE);
     VirtualFree(vram, 0, MEM_RELEASE);
     VirtualFree(palette, 0, MEM_RELEASE);

@@ -9,6 +9,7 @@
 #define OAM ((const uint16_t *)0x07000000u)
 
 static uint8_t sWindowMask[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
+static uint8_t sObjWindow[PORT_SCREEN_WIDTH];
 typedef struct {
     uint16_t color;
     uint8_t layer;
@@ -52,11 +53,12 @@ static void BuildWindowMasks(uint16_t displayControl, unsigned y)
         for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
         {
             unsigned mask = windows ? (outside & 0x3f) : 0x3f;
+            if ((windows & DISPCNT_OBJWIN_ON) && sObjWindow[x])
+                mask = (outside >> 8) & 0x3f;
             if (inWin1Y && WithinWindowAxis(x, win1h))
                 mask = (inside >> 8) & 0x3f;
             if (inWin0Y && WithinWindowAxis(x, win0h))
                 mask = inside & 0x3f;
-            // TODO: OBJ window pixels use the high byte of WINOUT.
             sWindowMask[y * PORT_SCREEN_WIDTH + x] = (uint8_t)mask;
         }
 }
@@ -193,7 +195,7 @@ static void SpriteDimensions(unsigned shape, unsigned size, unsigned *width, uns
     *height = heights[shape][size];
 }
 
-static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y)
+static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y, int windowOnly)
 {
     const unsigned oneDimensional = (displayControl & DISPCNT_OBJ_1D_MAP) != 0;
     for (int sprite = 127; sprite >= 0; --sprite)
@@ -205,8 +207,8 @@ static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y
         const unsigned objectMode = (attr0 >> 10) & 3;
         const int affine = (attr0 & 0x0100) != 0;
         const int doubleSize = affine && (attr0 & 0x0200);
-        if ((!affine && (attr0 & 0x0200)) || shape == 3 ||
-            objectMode == 2 || objectMode == 3 || ((attr2 >> 10) & 3) != priority)
+        if ((!affine && (attr0 & 0x0200)) || shape == 3 || objectMode == 3 ||
+            (windowOnly ? objectMode != 2 : objectMode == 2 || ((attr2 >> 10) & 3) != priority))
             continue;
 
         unsigned width, height;
@@ -242,7 +244,7 @@ static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y
             {
                 const int screenX = originX + (int)sx;
                 if (screenX < 0 || screenX >= PORT_SCREEN_WIDTH) continue;
-                if (!(sWindowMask[screenY * PORT_SCREEN_WIDTH + screenX] & 0x10)) continue;
+                if (!windowOnly && !(sWindowMask[screenY * PORT_SCREEN_WIDTH + screenX] & 0x10)) continue;
                 int tileX, tileY;
                 if (affine)
                 {
@@ -268,6 +270,11 @@ static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y
                 const unsigned index = bpp8 ? data : ((data >> ((tileX & 1) * 4)) & 15);
                 if (index != 0)
                 {
+                    if (windowOnly)
+                    {
+                        sObjWindow[screenX] = 1;
+                        continue;
+                    }
                     const unsigned paletteIndex = bpp8 ? index : ((attr2 >> 12) * 16 + index);
                     PlotPixel(screenY * PORT_SCREEN_WIDTH + screenX,
                               PALETTE[256 + paletteIndex], 4, objectMode == 1);
@@ -368,6 +375,11 @@ void PortPpu_RenderLine(unsigned y, uint32_t *row)
             sSecond[i] = (PixelLayer){0, 6, 0};
         }
 
+        for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
+            sObjWindow[x] = 0;
+        if ((displayControl & (DISPCNT_OBJWIN_ON | DISPCNT_OBJ_ON)) ==
+            (DISPCNT_OBJWIN_ON | DISPCNT_OBJ_ON))
+            RenderSprites(0, displayControl, y, 1);
         BuildWindowMasks(displayControl, y);
 
     const unsigned mode = displayControl & 7;
@@ -386,7 +398,7 @@ void PortPpu_RenderLine(unsigned y, uint32_t *row)
                     RenderAffineBackground(bg, y);
             }
             if (displayControl & DISPCNT_OBJ_ON)
-                RenderSprites(priority, displayControl, y);
+                RenderSprites(priority, displayControl, y, 0);
         }
     }
         ResolvePixels(row, y);
