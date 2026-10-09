@@ -12,6 +12,7 @@
 #include "platform.h"
 #include "port_ppu.h"
 #include "sdl_loader.h"
+#include "speed_menu.h"
 #undef main
 
 struct PortSDL portSDL;
@@ -22,10 +23,20 @@ static Uint8 sKeys[SDL_NUM_SCANCODES];
 static Uint64 sCounter;
 static unsigned sVBlanks;
 static int sQuitEvent;
+static SDL_Keycode sMenuKeys[2];
+static unsigned sMenuKeyCount;
+static unsigned sMenuKeyIndex;
 static jmp_buf sExit;
 
 static int PollEvent(SDL_Event *event)
 {
+    if (sMenuKeyIndex < sMenuKeyCount)
+    {
+        memset(event, 0, sizeof(*event));
+        event->type = SDL_KEYDOWN;
+        event->key.keysym.sym = sMenuKeys[sMenuKeyIndex++];
+        return 1;
+    }
     if (!sQuitEvent)
         return 0;
     sQuitEvent = 0;
@@ -88,13 +99,29 @@ int main(void)
     assert(elapsed >= expected - 2000 && elapsed <= expected + 2000);
     assert(sVBlanks == 1002);
 
+    // Confirming with Enter may leave the physical key held for later frames.
+    sMenuKeys[0] = SDLK_p;
+    sMenuKeys[1] = SDLK_RETURN;
+    sMenuKeyCount = 2;
+    sKeys[SDL_SCANCODE_RETURN] = 1;
+    PortHost_RunFrame();
+    assert(!PortSpeedMenu_IsOpen());
+    assert(REG_KEYINPUT & START_BUTTON);
+    PortHost_RunFrame();
+    assert(REG_KEYINPUT & START_BUTTON);
+    sKeys[SDL_SCANCODE_RETURN] = 0;
+    PortHost_RunFrame();
+    sKeys[SDL_SCANCODE_RETURN] = 1;
+    PortHost_RunFrame();
+    assert(!(REG_KEYINPUT & START_BUTTON));
+
     sQuitEvent = 1;
     if (setjmp(sExit) == 0)
     {
         PortHost_RunFrame();
         assert(0 && "SDL_QUIT must exit before the callback");
     }
-    assert(sVBlanks == 1002);
+    assert(sVBlanks == 1006);
     VirtualFree(io, 0, MEM_RELEASE);
     return 0;
 }

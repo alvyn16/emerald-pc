@@ -23,6 +23,7 @@ static SDL_Texture *sTexture;
 static uint32_t sPixels[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
 static Uint64 sNextFrameTick;
 static Uint64 sFrameRemainder;
+static unsigned sSuppressedMenuKeys;
 #ifdef PORT_DIAGNOSTIC
 static unsigned sDiagnosticFrame;
 #endif
@@ -62,6 +63,12 @@ static void UpdateKeyInput(void)
     if (keys[SDL_SCANCODE_DOWN]) pressed |= DPAD_DOWN;
     if (keys[SDL_SCANCODE_S]) pressed |= R_BUTTON;
     if (keys[SDL_SCANCODE_A]) pressed |= L_BUTTON;
+
+    // Menu navigation must not become GBA input until the key is released.
+    if (!keys[SDL_SCANCODE_RETURN]) sSuppressedMenuKeys &= ~START_BUTTON;
+    if (!keys[SDL_SCANCODE_UP]) sSuppressedMenuKeys &= ~DPAD_UP;
+    if (!keys[SDL_SCANCODE_DOWN]) sSuppressedMenuKeys &= ~DPAD_DOWN;
+    pressed &= ~sSuppressedMenuKeys;
 
 #ifdef PORT_DIAGNOSTIC
     if (PortInputScript_GetPressed(++sDiagnosticFrame, &pressed))
@@ -110,6 +117,8 @@ static void PollHostEvents(void)
             (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE))
             Port_ExitCleanly();
         PortSpeedMenu_HandleEvent(&event);
+        if (PortSpeedMenu_IsOpen())
+            sSuppressedMenuKeys |= START_BUTTON | DPAD_UP | DPAD_DOWN;
     }
 }
 
