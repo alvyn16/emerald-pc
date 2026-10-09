@@ -41,6 +41,43 @@ int main(void)
     assert(untouched == 0);
     assert(REG_DMA0CNT_H & DMA_ENABLE);
 
+    uint16_t scanlineValues[] = {11, 22, 33};
+    PortDma_Set(0, scanlineValues, (void *)REG_ADDR_BG0HOFS,
+                ((DMA_ENABLE | DMA_START_HBLANK | DMA_REPEAT | DMA_DEST_RELOAD) << 16) | 1);
+    for (unsigned i = 0; i < 3; ++i)
+    {
+        PortDma_OnHBlank();
+        assert(REG_BG0HOFS == scanlineValues[i]);
+        assert(REG_DMA0CNT_H & DMA_ENABLE);
+    }
+    REG_DMA0CNT_H &= ~DMA_ENABLE;
+    PortDma_OnHBlank();
+    assert(REG_BG0HOFS == 33);
+
+    REG_BG1HOFS = 0;
+    PortDma_Set(0, scanlineValues, (void *)REG_ADDR_BG1HOFS,
+                ((DMA_ENABLE | DMA_START_HBLANK) << 16) | 1);
+    PortDma_OnHBlank();
+    assert(REG_BG1HOFS == 11);
+    assert(!(REG_DMA0CNT_H & DMA_ENABLE));
+    PortDma_OnHBlank();
+    assert(REG_BG1HOFS == 11);
+
+    REG_BG2HOFS = 0;
+    PortDma_Set(3, scanlineValues, (void *)REG_ADDR_BG2HOFS,
+                ((DMA_ENABLE | DMA_START_VBLANK) << 16) | 2);
+    PortDma_OnHBlank();
+    assert(REG_BG2HOFS == 0);
+    PortDma_OnVBlank();
+    assert(REG_BG2HOFS == 11 && REG_BG2VOFS == 22);
+
+    REG_DMA1CNT_H = DMA_ENABLE | DMA_START_SPECIAL | DMA_REPEAT;
+    REG_DMA2CNT_H = DMA_ENABLE | DMA_START_HBLANK;
+    PortDma_OnHBlank();
+    PortDma_OnVBlank();
+    assert(REG_DMA1CNT_H & DMA_ENABLE);
+    assert(REG_DMA2CNT_H & DMA_ENABLE);
+
     VirtualFree(io, 0, MEM_RELEASE);
     return 0;
 }
