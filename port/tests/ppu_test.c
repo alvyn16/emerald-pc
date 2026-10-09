@@ -8,6 +8,7 @@
 #include "port_ppu.h"
 
 static uint32_t sFrame[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
+static uint32_t sLineFrame[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
 
 static void *Map(uintptr_t address, size_t size)
 {
@@ -406,6 +407,45 @@ int main(void)
     PortPpu_Render(sFrame);
     assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff7b7b00u);
     // The lower OBJ is hidden before blending; BG0 is the second layer.
+
+    PortPpu_Render(sFrame);
+    PortPpu_BeginFrame();
+    for (unsigned y = 0; y < PORT_SCREEN_HEIGHT; ++y)
+        PortPpu_RenderLine(y, sLineFrame + y * PORT_SCREEN_WIDTH);
+    assert(memcmp(sFrame, sLineFrame, sizeof(sFrame)) == 0);
+
+    memset(vram, 0, 0x18000);
+    memset(io, 0, 0x1000);
+    for (unsigned row = 0; row < 8; ++row)
+        vram[0x4000 + row * 4] = 0x21;
+    palette[1] = 0x001f;
+    palette[2] = 0x7c00;
+    REG_BG0CNT = BGCNT_CHARBASE(1);
+    REG_DISPCNT = DISPCNT_BG0_ON;
+    PortPpu_BeginFrame();
+    REG_BG0HOFS = 0;
+    PortPpu_RenderLine(0, sLineFrame);
+    REG_BG0HOFS = 1;
+    PortPpu_RenderLine(1, sLineFrame + PORT_SCREEN_WIDTH);
+    assert(sLineFrame[0] == 0xffff0000u);
+    assert(sLineFrame[PORT_SCREEN_WIDTH] == 0xff0000ffu);
+
+    memset(vram, 0, 0x18000);
+    memset(vram + 0x4000, 1, 64);
+    memset(vram + 0x4040, 2, 64);
+    for (unsigned mapRow = 0; mapRow < 16; ++mapRow)
+        vram[mapRow * 16 + 1] = 1;
+    REG_BG2CNT = BGCNT_CHARBASE(1);
+    REG_BG2PA = REG_BG2PD = 256;
+    REG_BG2PB = REG_BG2PC = 0;
+    REG_BG2X = REG_BG2Y = 0;
+    REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_BG2_ON;
+    PortPpu_BeginFrame();
+    for (unsigned y = 0; y < 80; ++y)
+        PortPpu_RenderLine(y, sLineFrame + y * PORT_SCREEN_WIDTH);
+    REG_BG2X = 8 << 8;
+    PortPpu_RenderLine(80, sLineFrame + 80 * PORT_SCREEN_WIDTH);
+    assert(sLineFrame[80 * PORT_SCREEN_WIDTH] == 0xff0000ffu);
 
     VirtualFree(oam, 0, MEM_RELEASE);
     VirtualFree(vram, 0, MEM_RELEASE);

@@ -78,8 +78,8 @@ endef
 $(foreach name,$(TEST_NAMES),$(eval $(call BUILD_TEST,$(name))))
 
 test: $(addprefix $(TEST_DIR)/,$(addsuffix .exe,$(TEST_NAMES)))
-	@set -e; for name in $(TEST_NAMES); do \
-		cd .. && build/tests/$$name.exe && cd port && echo "PASS $$name"; \
+	@for name in $(TEST_NAMES); do \
+		(cd .. && build/tests/$$name.exe) || exit 1; echo "PASS $$name"; \
 	done
 syntax: $(CHECKS)
 objects: $(OBJECTS)

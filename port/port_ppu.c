@@ -17,6 +17,8 @@ typedef struct {
 
 static PixelLayer sTop[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
 static PixelLayer sSecond[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
+static int32_t sAffineX[2], sAffineY[2];
+static uint32_t sAffineRegX[2], sAffineRegY[2];
 
 static void PlotPixel(unsigned position, uint16_t color, unsigned layer, int semiTransparent)
 {
@@ -37,7 +39,7 @@ static int WithinWindowAxis(unsigned position, uint16_t bounds)
     return 0;
 }
 
-static void BuildWindowMasks(uint16_t displayControl)
+static void BuildWindowMasks(uint16_t displayControl, unsigned y)
 {
     const unsigned windows = displayControl &
             (DISPCNT_WIN0_ON | DISPCNT_WIN1_ON | DISPCNT_OBJWIN_ON);
@@ -45,8 +47,6 @@ static void BuildWindowMasks(uint16_t displayControl)
     const uint16_t win1h = REG_WIN1H, win1v = REG_WIN1V;
     const uint16_t inside = REG_WININ, outside = REG_WINOUT;
 
-    for (unsigned y = 0; y < PORT_SCREEN_HEIGHT; ++y)
-    {
         const int inWin0Y = (windows & DISPCNT_WIN0_ON) && WithinWindowAxis(y, win0v);
         const int inWin1Y = (windows & DISPCNT_WIN1_ON) && WithinWindowAxis(y, win1v);
         for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
@@ -59,7 +59,6 @@ static void BuildWindowMasks(uint16_t displayControl)
             // TODO: OBJ window pixels use the high byte of WINOUT.
             sWindowMask[y * PORT_SCREEN_WIDTH + x] = (uint8_t)mask;
         }
-    }
 }
 
 static uint16_t ReadVram16(unsigned offset)
@@ -78,7 +77,7 @@ static uint32_t ExpandColor(uint16_t color)
            | ((green << 3 | green >> 2) << 8) | (blue << 3 | blue >> 2);
 }
 
-static void RenderBackground(unsigned bg)
+static void RenderBackground(unsigned bg, unsigned y)
 {
     const uint16_t control = ((const volatile uint16_t *)REG_ADDR_BG0CNT)[bg];
     const uint16_t *scroll = (const uint16_t *)(uintptr_t)REG_ADDR_BG0HOFS;
@@ -91,8 +90,6 @@ static void RenderBackground(unsigned bg)
     const unsigned hscroll = scroll[bg * 2] & 0x1ff;
     const unsigned vscroll = scroll[bg * 2 + 1] & 0x1ff;
 
-    for (unsigned y = 0; y < PORT_SCREEN_HEIGHT; ++y)
-    {
         const unsigned mapY = (y + vscroll) & (height - 1);
         const unsigned tileY = mapY >> 3;
         for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
@@ -121,7 +118,6 @@ static void RenderBackground(unsigned bg)
                 PlotPixel(y * PORT_SCREEN_WIDTH + x, PALETTE[paletteIndex], bg, 0);
             }
         }
-    }
 }
 
 static int32_t SignExtend28(uint32_t value)
@@ -130,7 +126,7 @@ static int32_t SignExtend28(uint32_t value)
     return (value & 0x08000000u) ? (int32_t)(value | 0xf0000000u) : (int32_t)value;
 }
 
-static void RenderAffineBackground(unsigned bg)
+static void RenderAffineBackground(unsigned bg, unsigned y)
 {
     const uint16_t control = ((const volatile uint16_t *)REG_ADDR_BG0CNT)[bg];
     const unsigned size = 128u << ((control >> 14) & 3);
@@ -140,14 +136,23 @@ static void RenderAffineBackground(unsigned bg)
     const int wrap = (control & BGCNT_WRAP) != 0;
     const uintptr_t registers = REG_ADDR_BG2PA + (bg - 2) * 0x10;
     const volatile int16_t *matrix = (const volatile int16_t *)registers;
-    const int32_t referenceX = SignExtend28(*(const volatile uint32_t *)(registers + 8));
-    const int32_t referenceY = SignExtend28(*(const volatile uint32_t *)(registers + 12));
-    const int32_t pa = matrix[0], pb = matrix[1], pc = matrix[2], pd = matrix[3];
-
-    for (int y = 0; y < PORT_SCREEN_HEIGHT; ++y)
+    const unsigned index = bg - 2;
+    const uint32_t regX = *(const volatile uint32_t *)(registers + 8);
+    const uint32_t regY = *(const volatile uint32_t *)(registers + 12);
+    if (regX != sAffineRegX[index])
     {
-        const int64_t lineX = referenceX + pb * y;
-        const int64_t lineY = referenceY + pd * y;
+        sAffineRegX[index] = regX;
+        sAffineX[index] = SignExtend28(regX);
+    }
+    if (regY != sAffineRegY[index])
+    {
+        sAffineRegY[index] = regY;
+        sAffineY[index] = SignExtend28(regY);
+    }
+    const int32_t pa = matrix[0], pc = matrix[2];
+
+        const int64_t lineX = sAffineX[index];
+        const int64_t lineY = sAffineY[index];
         for (int x = 0; x < PORT_SCREEN_WIDTH; ++x)
         {
             if (!(sWindowMask[y * PORT_SCREEN_WIDTH + x] & (1u << bg)))
@@ -174,7 +179,6 @@ static void RenderAffineBackground(unsigned bg)
             if (index != 0)
                 PlotPixel(y * PORT_SCREEN_WIDTH + x, PALETTE[index], bg, 0);
         }
-    }
 }
 
 static void SpriteDimensions(unsigned shape, unsigned size, unsigned *width, unsigned *height)
@@ -189,7 +193,7 @@ static void SpriteDimensions(unsigned shape, unsigned size, unsigned *width, uns
     *height = heights[shape][size];
 }
 
-static void RenderSprites(unsigned priority, uint16_t displayControl)
+static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y)
 {
     const unsigned oneDimensional = (displayControl & DISPCNT_OBJ_1D_MAP) != 0;
     for (int sprite = 127; sprite >= 0; --sprite)
@@ -229,10 +233,11 @@ static void RenderSprites(unsigned priority, uint16_t displayControl)
         const unsigned tileBase = (attr2 & 0x3ff) & (bpp8 ? ~1u : ~0u);
         const unsigned rowStride = oneDimensional ? (width / 8) * tileStep : 32;
 
-        for (unsigned sy = 0; sy < renderHeight; ++sy)
+        const int sy = (int)y - originY;
+        if (sy < 0 || sy >= (int)renderHeight)
+            continue;
         {
-            const int screenY = originY + (int)sy;
-            if (screenY < 0 || screenY >= PORT_SCREEN_HEIGHT) continue;
+            const int screenY = y;
             for (unsigned sx = 0; sx < renderWidth; ++sx)
             {
                 const int screenX = originX + (int)sx;
@@ -304,7 +309,7 @@ static uint16_t AdjustBrightness(uint16_t color, unsigned evy, int lighten)
     return result;
 }
 
-static void ResolvePixels(uint32_t *pixels)
+static void ResolvePixels(uint32_t *pixels, unsigned y)
 {
     const uint16_t blendControl = REG_BLDCNT;
     const uint16_t alpha = REG_BLDALPHA;
@@ -313,8 +318,9 @@ static void ResolvePixels(uint32_t *pixels)
     const unsigned evb = ClampCoefficient((alpha >> 8) & 31);
     const unsigned evy = ClampCoefficient(REG_BLDY & 31);
 
-    for (unsigned i = 0; i < PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT; ++i)
+    for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
     {
+        const unsigned i = y * PORT_SCREEN_WIDTH + x;
         const PixelLayer top = sTop[i], second = sSecond[i];
         uint16_t color = top.color;
         if (sWindowMask[i] & 0x20)
@@ -327,27 +333,42 @@ static void ResolvePixels(uint32_t *pixels)
             else if ((blendControl & (1u << top.layer)) && effect >= 2)
                 color = AdjustBrightness(color, evy, effect == 2);
         }
-        pixels[i] = ExpandColor(color);
+        pixels[x] = ExpandColor(color);
     }
 }
 
-void PortPpu_Render(uint32_t *pixels)
+void PortPpu_BeginFrame(void)
 {
+    for (unsigned i = 0; i < 2; ++i)
+    {
+        const uintptr_t registers = REG_ADDR_BG2PA + i * 0x10;
+        sAffineRegX[i] = *(const volatile uint32_t *)(registers + 8);
+        sAffineRegY[i] = *(const volatile uint32_t *)(registers + 12);
+        sAffineX[i] = SignExtend28(sAffineRegX[i]);
+        sAffineY[i] = SignExtend28(sAffineRegY[i]);
+    }
+}
+
+void PortPpu_RenderLine(unsigned y, uint32_t *row)
+{
+    if (y >= PORT_SCREEN_HEIGHT)
+        return;
     const uint16_t displayControl = REG_DISPCNT;
     if (displayControl & DISPCNT_FORCED_BLANK)
     {
-        for (unsigned i = 0; i < PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT; ++i)
-            pixels[i] = 0xffffffffu;
-        return;
+        for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
+            row[x] = 0xffffffffu;
     }
-
-    for (unsigned i = 0; i < PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT; ++i)
+    else
     {
-        sTop[i] = (PixelLayer){PALETTE[0], 5, 0};
-        sSecond[i] = (PixelLayer){0, 6, 0};
-    }
+        for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
+        {
+            const unsigned i = y * PORT_SCREEN_WIDTH + x;
+            sTop[i] = (PixelLayer){PALETTE[0], 5, 0};
+            sSecond[i] = (PixelLayer){0, 6, 0};
+        }
 
-    BuildWindowMasks(displayControl);
+        BuildWindowMasks(displayControl, y);
 
     const unsigned mode = displayControl & 7;
     if (mode <= DISPCNT_MODE_2)
@@ -360,13 +381,27 @@ void PortPpu_Render(uint32_t *pixels)
                     ((((volatile uint16_t *)REG_ADDR_BG0CNT)[bg] & 3) != priority))
                     continue;
                 if (mode == DISPCNT_MODE_0 || (mode == DISPCNT_MODE_1 && bg < 2))
-                    RenderBackground(bg);
+                    RenderBackground(bg, y);
                 else if (bg >= 2 && (mode == DISPCNT_MODE_2 || bg == 2))
-                    RenderAffineBackground(bg);
+                    RenderAffineBackground(bg, y);
             }
             if (displayControl & DISPCNT_OBJ_ON)
-                RenderSprites(priority, displayControl);
+                RenderSprites(priority, displayControl, y);
         }
     }
-    ResolvePixels(pixels);
+        ResolvePixels(row, y);
+    }
+    for (unsigned i = 0; i < 2; ++i)
+    {
+        const volatile int16_t *matrix = (const volatile int16_t *)(REG_ADDR_BG2PA + i * 0x10);
+        sAffineX[i] += matrix[1];
+        sAffineY[i] += matrix[3];
+    }
+}
+
+void PortPpu_Render(uint32_t *pixels)
+{
+    PortPpu_BeginFrame();
+    for (unsigned y = 0; y < PORT_SCREEN_HEIGHT; ++y)
+        PortPpu_RenderLine(y, pixels + y * PORT_SCREEN_WIDTH);
 }

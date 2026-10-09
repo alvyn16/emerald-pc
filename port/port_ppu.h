@@ -7,5 +7,7 @@
 #define PORT_SCREEN_HEIGHT 160
 
 void PortPpu_Render(uint32_t *pixels);
+void PortPpu_BeginFrame(void);
+void PortPpu_RenderLine(unsigned y, uint32_t *row);
 
 #endif
