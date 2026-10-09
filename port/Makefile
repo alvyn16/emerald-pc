@@ -39,7 +39,7 @@ SONG_INCLUDE_DIR := ../build/host-song-includes
 SONG_OBJECTS := $(patsubst $(POKEEMERALD)/sound/songs/midi/%.s,$(SONG_OBJECT_DIR)/%.o,$(SONG_SOURCES))
 HOST_EXE_SOURCES := $(filter-out $(addprefix $(POKEEMERALD)/src/,librfu_intr.c m4a.c multiboot.c),$(SOURCES))
 HOST_EXE_OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(HOST_EXE_SOURCES))
-PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c speed_menu.c sdl_loader.c audio_silent.c arm_stubs.c host_flash.c port_dma.c port_ppu.c
+PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c speed_menu.c port_timer.c sdl_loader.c audio_silent.c arm_stubs.c host_flash.c port_dma.c port_ppu.c
 EXE := ../build/emerald-pc.exe
 
 ifeq ($(DIAGNOSTIC),1)
@@ -53,15 +53,16 @@ endif
 # Host-only unit tests. Keep each binary's dependencies explicit so changes
 # to a port module rebuild the test that exercises it.
 TEST_DIR := ../build/tests
-TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu speed_menu
+TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu speed_menu timer
 TEST_bios_SOURCES := bios.c tests/bios_test.c
 TEST_dma_SOURCES := port_dma.c tests/dma_test.c
-TEST_frame_SOURCES := frame.c speed_menu.c tests/frame_test.c
+TEST_frame_SOURCES := frame.c speed_menu.c port_timer.c tests/frame_test.c
 TEST_gba_memory_SOURCES := gba_memory.c tests/gba_memory_test.c
 TEST_host_flash_SOURCES := host_flash.c tests/host_flash_test.c
 TEST_input_script_SOURCES := input_script.c tests/input_script_test.c
 TEST_ppu_SOURCES := port_ppu.c tests/ppu_test.c
 TEST_speed_menu_SOURCES := speed_menu.c tests/speed_menu_test.c
+TEST_timer_SOURCES := port_timer.c tests/timer_test.c
 TEST_bios_LIBS := -lm
 TEST_gba_memory_LIBS := -lpsapi
 TEST_CFLAGS := -std=gnu11 -Wall -Wextra -Werror -DMODERN=0 -DPORT_PC \

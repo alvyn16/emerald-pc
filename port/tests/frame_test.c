@@ -79,7 +79,9 @@ int main(void)
 
     sKeys[SDL_SCANCODE_Z] = 1;
     sKeys[SDL_SCANCODE_UP] = 1;
+    REG_TM1CNT_H = TIMER_ENABLE;
     PortHost_RunFrame();
+    assert(REG_TM1CNT_L != 0);
     assert(REG_KEYINPUT == (KEYS_MASK & ~(A_BUTTON | DPAD_UP)));
     assert(gMain.intrCheck & INTR_FLAG_VBLANK);
     assert(REG_VCOUNT == 0);

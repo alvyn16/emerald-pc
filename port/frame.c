@@ -9,6 +9,7 @@
 #include "port_ppu.h"
 #include "sdl_loader.h"
 #include "speed_menu.h"
+#include "port_timer.h"
 #ifdef PORT_DIAGNOSTIC
 #include "input_script.h"
 #endif
@@ -23,6 +24,8 @@ static SDL_Texture *sTexture;
 static uint32_t sPixels[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
 static Uint64 sNextFrameTick;
 static Uint64 sFrameRemainder;
+static Uint64 sTimerLastTick;
+static Uint64 sTimerCycleRemainder;
 static unsigned sSuppressedMenuKeys;
 #ifdef PORT_DIAGNOSTIC
 static unsigned sDiagnosticFrame;
@@ -34,6 +37,9 @@ void Port_AttachRenderer(SDL_Renderer *renderer, SDL_Texture *texture)
     sTexture = texture;
     sNextFrameTick = 0;
     sFrameRemainder = 0;
+    sTimerLastTick = 0;
+    sTimerCycleRemainder = 0;
+    PortTimer_Reset();
 }
 
 static void SetVideoLine(unsigned line, int vblank)
@@ -89,6 +95,7 @@ static void WaitForFrameDeadline(void)
     {
         sNextFrameTick = now;
         sFrameRemainder = 0;
+        sTimerLastTick = 0;
     }
 
     sNextFrameTick += wholeTicks;
@@ -160,6 +167,23 @@ void PortHost_RunFrame(void)
     if (!PortInputScript_Fast())
 #endif
         WaitForFrameDeadline();
+#ifdef PORT_DIAGNOSTIC
+    PortTimer_Advance(PORT_CYCLES_PER_FRAME);
+#else
+    // A faster display rate also advances the emulated clock faster.
+    // Retain the small host timing variation used by the game's RNG seed.
+    const Uint64 now = portSDL.GetPerformanceCounter();
+    const Uint64 frequency = portSDL.GetPerformanceFrequency();
+    Uint64 elapsed = sTimerLastTick == 0 ? frequency * FRAME_RATE_DENOMINATOR / FRAME_RATE_NUMERATOR : now - sTimerLastTick;
+    const Uint64 multiplier = PortSpeedMenu_Multiplier();
+    const Uint64 maxElapsed = 2 * frequency * FRAME_RATE_DENOMINATOR / (FRAME_RATE_NUMERATOR * multiplier);
+    if (elapsed > maxElapsed)
+        elapsed = maxElapsed;
+    sTimerLastTick = now;
+    const Uint64 scaled = elapsed * 16777216u * multiplier + sTimerCycleRemainder;
+    PortTimer_Advance((uint32_t)(scaled / frequency));
+    sTimerCycleRemainder = scaled % frequency;
+#endif
     SetVideoLine(160, 1);
 
     if (gIntrTable[VBLANK_INTR_INDEX] != NULL)
