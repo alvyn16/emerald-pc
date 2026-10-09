@@ -7,6 +7,7 @@
 #include "gba/io_reg.h"
 #include "platform.h"
 #include "port_ppu.h"
+#include "port_dma.h"
 #include "sdl_loader.h"
 #include "speed_menu.h"
 #include "port_timer.h"
@@ -129,12 +130,13 @@ static void PollHostEvents(void)
     }
 }
 
-static void PresentFrame(void)
+static void PresentFrame(int render)
 {
     if (sRenderer == NULL || sTexture == NULL)
         return;
 
-    PortPpu_Render(sPixels);
+    if (render)
+        PortPpu_Render(sPixels);
     PortSpeedMenu_Draw(sPixels);
     portSDL.UpdateTexture(sTexture, NULL, sPixels, PORT_SCREEN_WIDTH * sizeof(uint32_t));
     portSDL.SetRenderDrawColor(sRenderer, 0, 0, 0, 255);
@@ -152,7 +154,7 @@ void PortHost_RunFrame(void)
         REG_KEYINPUT = KEYS_MASK;
         while (PortSpeedMenu_IsOpen())
         {
-            PresentFrame();
+            PresentFrame(1);
             portSDL.Delay(16);
             PollHostEvents();
         }
@@ -185,12 +187,34 @@ void PortHost_RunFrame(void)
     sTimerCycleRemainder = scaled % frequency;
 #endif
     SetVideoLine(160, 1);
+    PortDma_OnVBlank();
 
     if (gIntrTable[VBLANK_INTR_INDEX] != NULL)
         gIntrTable[VBLANK_INTR_INDEX]();
     gMain.intrCheck |= INTR_FLAG_VBLANK;
 
-    PresentFrame();
+    PortPpu_BeginFrame();
+    for (unsigned y = 0; y < PORT_SCREEN_HEIGHT; ++y)
+    {
+        SetVideoLine(y, 0);
+        if ((REG_DISPSTAT & (DISPSTAT_VCOUNT | DISPSTAT_VCOUNT_INTR)) ==
+                (DISPSTAT_VCOUNT | DISPSTAT_VCOUNT_INTR) &&
+            (REG_IME & 1) && (REG_IE & INTR_FLAG_VCOUNT) && gIntrTable[0] != NULL)
+        {
+            gIntrTable[0]();
+            gMain.intrCheck |= INTR_FLAG_VCOUNT;
+        }
+        PortPpu_RenderLine(y, sPixels + y * PORT_SCREEN_WIDTH);
+        REG_DISPSTAT |= DISPSTAT_HBLANK;
+        PortDma_OnHBlank();
+        if ((REG_DISPSTAT & DISPSTAT_HBLANK_INTR) && (REG_IME & 1) &&
+            (REG_IE & INTR_FLAG_HBLANK) && gIntrTable[3] != NULL)
+        {
+            gIntrTable[3]();
+            gMain.intrCheck |= INTR_FLAG_HBLANK;
+        }
+    }
+    PresentFrame(0);
     SetVideoLine(0, 0);
 #ifdef PORT_DIAGNOSTIC
     if (PortInputScript_StopFrame() != 0 &&

@@ -22,6 +22,11 @@ IntrFunc gIntrTable[14];
 static Uint8 sKeys[SDL_NUM_SCANCODES];
 static Uint64 sCounter;
 static unsigned sVBlanks;
+static unsigned sHBlanks;
+static unsigned sVCounts;
+static unsigned sRenderedLines;
+static unsigned sHBlankDma;
+static unsigned sVBlankDma;
 static int sQuitEvent;
 static SDL_Keycode sMenuKeys[2];
 static unsigned sMenuKeyCount;
@@ -61,8 +66,29 @@ static void VBlank(void)
     assert(REG_DISPSTAT & DISPSTAT_VBLANK);
     sVBlanks++;
 }
+static void HBlank(void)
+{
+    assert(REG_VCOUNT < 160);
+    assert(REG_DISPSTAT & DISPSTAT_HBLANK);
+    sHBlanks++;
+}
+static void VCount(void)
+{
+    assert(REG_VCOUNT == 42);
+    assert(REG_DISPSTAT & DISPSTAT_VCOUNT);
+    sVCounts++;
+}
 void Port_ExitCleanly(void) { longjmp(sExit, 1); }
 void PortPpu_Render(uint32_t *pixels) { (void)pixels; }
+void PortPpu_BeginFrame(void) { }
+void PortPpu_RenderLine(unsigned y, uint32_t *row)
+{
+    (void)row;
+    assert(REG_VCOUNT == y);
+    sRenderedLines++;
+}
+void PortDma_OnHBlank(void) { sHBlankDma++; }
+void PortDma_OnVBlank(void) { sVBlankDma++; }
 
 int main(void)
 {
@@ -124,6 +150,21 @@ int main(void)
         assert(0 && "SDL_QUIT must exit before the callback");
     }
     assert(sVBlanks == 1006);
+    assert(sRenderedLines == 1006 * 160);
+    assert(sHBlankDma == 1006 * 160);
+    assert(sVBlankDma == 1006);
+
+    gIntrTable[0] = VCount;
+    gIntrTable[3] = HBlank;
+    REG_DISPSTAT = DISPSTAT_HBLANK_INTR | DISPSTAT_VCOUNT_INTR | (42 << 8);
+    REG_IE = INTR_FLAG_HBLANK | INTR_FLAG_VCOUNT;
+    REG_IME = 1;
+    PortHost_RunFrame();
+    assert(sHBlanks == 160);
+    assert(sVCounts == 1);
+    REG_IE = 0;
+    PortHost_RunFrame();
+    assert(sHBlanks == 160 && sVCounts == 1);
     VirtualFree(io, 0, MEM_RELEASE);
     return 0;
 }
