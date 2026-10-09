@@ -6,6 +6,7 @@
 #undef main
 
 #include "gba_memory.h"
+#include "host_flash.h"
 #include "platform.h"
 #include "sdl_loader.h"
 #ifdef PORT_DIAGNOSTIC
@@ -23,6 +24,7 @@ void Port_ExitCleanly(void)
 {
     fprintf(stderr, "PC: window closed; exiting cleanly\n");
     Port_AttachRenderer(NULL, NULL);
+    PortFlash_Close();
     portSDL.DestroyTexture(sTexture);
     portSDL.DestroyRenderer(sRenderer);
     portSDL.DestroyWindow(sWindow);

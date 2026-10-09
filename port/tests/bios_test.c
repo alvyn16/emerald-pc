@@ -8,6 +8,8 @@
 
 static int frames;
 void PortHost_RunFrame(void) { frames++; }
+int PortReset_Restart(void) { return 0; }
+void Port_ExitCleanly(void) { }
 
 extern s32 DivArm(s32 denominator, s32 numerator);
 

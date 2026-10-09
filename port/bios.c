@@ -9,6 +9,7 @@
 #include "gba/multiboot.h"
 #include "gba/syscall.h"
 #include "platform.h"
+#include "port_reset.h"
 
 #define BIOS_COUNT_MASK 0x001FFFFFu
 #define BIOS_SOURCE_FIXED 0x01000000u
@@ -223,8 +224,15 @@ void ObjAffineSet(struct ObjAffineSrcData *source, void *destination, s32 count,
 
 void SoftReset(u32 resetFlags)
 {
-    fprintf(stderr, "BIOS: SoftReset(0x%02X) requested; leaving host process\n", resetFlags);
+#ifdef PORT_DIAGNOSTIC
+    fprintf(stderr, "BIOS: SoftReset(0x%02X) ends diagnostic run\n", resetFlags);
     exit(EXIT_SUCCESS);
+#else
+    fprintf(stderr, "BIOS: SoftReset(0x%02X) relaunching host\n", resetFlags);
+    if (PortReset_Restart() != 0)
+        exit(EXIT_FAILURE);
+    Port_ExitCleanly();
+#endif
 }
 
 void RegisterRamReset(u32 resetFlags)
