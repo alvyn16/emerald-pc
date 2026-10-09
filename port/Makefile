@@ -48,7 +48,37 @@ EXE := ../build/emerald-pc-diagnostic.exe
 PORT_CPPFLAGS := -DPORT_DIAGNOSTIC -g
 endif
 
-.PHONY: syntax objects data-objects song-objects exe diagnostic-exe link-probe check-tools
+.PHONY: syntax objects data-objects song-objects exe diagnostic-exe link-probe check-tools test
+
+# Host-only unit tests. Keep each binary's dependencies explicit so changes
+# to a port module rebuild the test that exercises it.
+TEST_DIR := ../build/tests
+TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu speed_menu
+TEST_bios_SOURCES := bios.c tests/bios_test.c
+TEST_dma_SOURCES := port_dma.c tests/dma_test.c
+TEST_frame_SOURCES := frame.c speed_menu.c tests/frame_test.c
+TEST_gba_memory_SOURCES := gba_memory.c tests/gba_memory_test.c
+TEST_host_flash_SOURCES := host_flash.c tests/host_flash_test.c
+TEST_input_script_SOURCES := input_script.c tests/input_script_test.c
+TEST_ppu_SOURCES := port_ppu.c tests/ppu_test.c
+TEST_speed_menu_SOURCES := speed_menu.c tests/speed_menu_test.c
+TEST_bios_LIBS := -lm
+TEST_gba_memory_LIBS := -lpsapi
+TEST_CFLAGS := -std=gnu11 -Wall -Wextra -Werror -DMODERN=0 -DPORT_PC \
+	-I. -iquote $(POKEEMERALD)/include $(SDL2_CFLAGS) -Umain \
+	-Wl,--image-base=0x10000000 -Wl,--disable-dynamicbase
+
+define BUILD_TEST
+$(TEST_DIR)/$(1).exe: $$(TEST_$(1)_SOURCES) Makefile | check-tools
+	@mkdir -p $(TEST_DIR)
+	@$$(HOST_CC) $$(TEST_CFLAGS) $$(TEST_$(1)_SOURCES) -o $$@ $$(TEST_$(1)_LIBS)
+endef
+$(foreach name,$(TEST_NAMES),$(eval $(call BUILD_TEST,$(name))))
+
+test: $(addprefix $(TEST_DIR)/,$(addsuffix .exe,$(TEST_NAMES)))
+	@set -e; for name in $(TEST_NAMES); do \
+		cd .. && build/tests/$$name.exe && cd port && echo "PASS $$name"; \
+	done
 syntax: $(CHECKS)
 objects: $(OBJECTS)
 data-objects: $(DATA_OBJECTS)
