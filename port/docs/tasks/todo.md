@@ -21,11 +21,11 @@ idéntico. No tocar el plan anterior del usuario.
 
 ### T02 — consolidar main (S)
 
-- [ ] Integrar únicamente la cadena revisada; usar fast-forward si sigue
+- [x] Integrar únicamente la cadena revisada; usar fast-forward si sigue
   siendo posible y revisar cualquier divergencia antes de resolverla.
-- [ ] Comprobar que main contiene el arreglo 0016 y todos los módulos reales,
+- [x] Comprobar que main contiene el arreglo 0016 y todos los módulos reales,
   sin ROMs, saves, recursos ni binarios en archivos o historial saliente.
-- [ ] Registrar hash final y ramas incluidas; mostrar ls-files antes de una
+- [x] Registrar hash integrado y ramas incluidas; mostrar ls-files antes de una
   publicación solicitada. No hacer force-push ni borrar ramas de respaldo.
 
 Dependencias: T01. Archivos: historial Git e informe de integración.
@@ -33,7 +33,7 @@ Verificación: misma batería en main; revisión previa a merge.
 
 ### Checkpoint A
 
-- [ ] Base integrada verificable; GBA compare OK; test host y combate PASS.
+- [x] Base integrada verificable; GBA compare OK; test host y combate PASS.
 
 ## Hito 22 — estabilidad y aviso de descompresión
 

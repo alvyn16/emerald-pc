@@ -61,3 +61,12 @@ y `build/integration-gba-compare.log` (`pokeemerald.gba: OK`).
 Se revisaron los nombres de archivos salientes y no se encontraron ROMs,
 saves, assets, binarios ni fuentes de pokeemerald fuera de los parches.
 El plan antiguo no rastreado del usuario permanece sin cambios.
+
+## Integración local
+
+`main` avanzó mediante `git merge --ff-only codex/milestone-21-integration`
+a `b884358`: incluye la cadena de hitos 7–20 y el arreglo de separación
+`37b066e`. No hubo conflictos ni push. El registro posterior de este
+resultado también se integra mediante fast-forward. La comprobación de
+archivos rastreados admite únicamente port/, patches/, AGENTS.md,
+README.md, setup.ps1 y .gitignore, sin extensiones de recursos o binarios.
