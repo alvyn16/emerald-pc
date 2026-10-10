@@ -384,3 +384,101 @@ original devolvió **`pokeemerald.gba: OK`** con ARM Binutils 2.43.1. Los
 parches `0001` a `0014` se aplicaron a un checkout limpio de la revisión base;
 el hash del árbol resultante coincide con el checkout de trabajo:
 `ba59c2e86fafcc9c799e24c3dacd30046ad6d97b`.
+
+## Hito 13: pruebas host unificadas
+
+`make -C port test` compila y ejecuta suites con fuentes explícitas y
+`-Wall -Wextra -Werror`. El objetivo propaga el primer fallo. Empezó con
+8 suites y termina estos hitos con 13; los binarios y archivos temporales
+se guardan en `build/`. No necesitan una ROM para ejecutarse.
+
+## Hito 14: temporizadores
+
+`port_timer.c` observa TM0–TM3 y emula prescaler, habilitación, recarga,
+desbordamiento y cascada. La suite cubre también recarga estando detenido
+y un avance de `UINT32_MAX` ciclos, sin overflow del cálculo host.
+El modo normal usa tiempo host a 2^24 Hz escalado por la velocidad; el
+diagnóstico usa 280.896 ciclos por frame. No implementa IRQ de timer y no
+puede detectar una escritura idéntica al último valor observado.
+El recorrido de 30.500 frames terminó con código 0.
+
+## Hito 15: reinicio suave
+
+`SoftReset` normal cierra el save, relanza la ruta y línea de comandos
+Unicode del propio ejecutable y termina limpiamente. El diagnóstico sale
+para evitar reiniciar el guion. La suite con spawner sustituido comprobó
+ruta/argumentos, cierre previo del save y fallo de creación de proceso.
+El relanzamiento real con las teclas queda como comprobación manual.
+El recorrido de 30.500 frames terminó con código 0.
+
+## Hito 16: render por línea y HBlank
+
+Cada frame ejecuta VBlank, luego 160 líneas de render con DMA HBlank e IRQ
+HBlank/VCount habilitadas por IME/IE/DISPSTAT. Los fondos afines mantienen
+referencias internas que avanzan con PB/PD y se recargan al cambiar BGxX/Y.
+Las suites comprobaron equivalencia frame/líneas, scroll entre filas,
+recarga afín, DMA repetido, destino recargado y enmascaramiento de IRQ.
+
+Comparación secuencial de 30.500 frames sin límite de FPS: hito 15
+**60,087 s**, hito 16 **70,477 s**, ambos salida 0; relación **1,173×**
+(límite del plan: 1,5×). La metodología y commits se describen en
+`milestones-13-19-review.md`. No se emulan HBlank en líneas 160–227.
+
+## Hito 17: OBJWIN y mosaico
+
+Los sprites OAM modo 2 aportan máscara sin dibujarse; precedencia
+WIN0 > WIN1 > OBJWIN > exterior. El mosaico afecta texto, fondos afines
+y sprites; se probaron 1×1 y 4×4, ventanas superpuestas y color/efectos.
+Se corrigió el producto afín firmado para matrices negativas. El mosaico
+de sprites continúa siendo una aproximación. El recorrido de 30.500
+frames terminó con código 0 en **79,372 s**.
+
+## Hito 18: audio PCM y PSG
+
+El parche `0015` deja compilar `m4a.c` bajo `PORT_PC` omitiendo copia de
+Thumb a RAM, SWI, esperas VCOUNT y DMA/FIFO físico. El GBA conserva su ruta.
+El motor host propio ejecuta secuencias m4a, mezcla PCM con envolvente,
+paneo, bucles, muestras comprimidas y reverberación; PSG sintetiza cuadrada,
+onda y ruido. SDL reproduce S16 estéreo a 48 kHz; la velocidad 2×–4×
+acelera y eleva el tono. Las suites m4a/PSG/audio pasan, incluido fallo de
+dispositivo y límite de cola con backend falso.
+
+El recorrido de 30.500 frames terminó con código 0 en **78,606 s**.
+`build/hito18-audio.wav` contiene **510,651 s** de audio; en frames
+1.000–1.100, RMS normalizado **0,0724753**, pico **18.915**, sin muestras
+saturadas. Falta la escucha humana para validar fidelidad musical. El modelo
+PSG no observa varias escrituras de bancos de onda dentro del mismo frame.
+
+Los 15 parches se aplicaron a un checkout limpio; el árbol coincide con el
+de trabajo: `0e1297df733a73e688c8bd6448982e8f479d4dec`. Repetir `setup.ps1`
+no aplicó duplicados. `make compare` devolvió **`pokeemerald.gba: OK`**
+con ARM Binutils 2.43.1. No apareció una excepción nueva en el recorrido
+conocido; todavía falta comprobar rutas de juego fuera de él.
+
+### Capturas finales y siguiente fallo
+
+GDB volcó el framebuffer al salir en los frames 2.400 (intro, sin entrada),
+1.100 (título, con guion) y 30.500 (Villa Raíz, con guion):
+`build/hito18-intro-2400.png`, `build/hito18-title-1100.png` y
+`build/hito18-world-30500.png`. Se revisaron visualmente: intro con bandas
+negras, título completo y protagonista en el exterior con casas y NPC.
+La comparación host histórica hito 15/16 en frame 2.400 dio 0 píxeles
+distintos, pero ambos muestran un destello blanco, por lo que no certifica
+todos los efectos gráficos. El audio real cambia los tiempos de la intro.
+
+**Siguiente fallo:** no se encontró una nueva excepción en el guion hasta
+30.500 frames. No se asigna una causa hipotética; habrá que diagnosticar el
+próximo fallo que aparezca en otra ruta. Siguen pendientes las limitaciones
+enumeradas en `milestones-13-19-review.md`.
+
+## Hito 19: documentación y arranque desde Windows
+
+README y toolchain describen controles, pruebas, velocidad, sonido y límites
+actuales. `make -C port exe test` volvió a terminar con las 13 suites PASS.
+Se lanzó el ejecutable normal desde el directorio temporal de Windows,
+sin depender del cwd del proyecto: cargó la ROM, encontró `build/SDL2.dll`,
+creó la ventana SDL e inició `AgbMain`. Se envió `WM_CLOSE` únicamente a
+esa ventana de prueba y el proceso terminó por `Port_ExitCleanly`, cerrando
+audio y save. Los registros están en `build/hito19-windows-launch.*.log`.
+El lanzador de prueba ocultó las ventanas al arrancar; esta comprobación
+valida carga/cierre y las capturas anteriores validan el framebuffer.

@@ -37,3 +37,31 @@ El build GBA usa `agbcc` de `pokeemerald/tools/agbcc` y un **Binutils ARM 2.43.1
 El ejecutable carga `SDL2.dll` **después** de reservar las direcciones de memoria GBA con `VirtualAlloc`. `make -C port exe` copia la DLL i686 instalada en `build/SDL2.dll`, junto al `.exe`, para permitir abrirlo desde el Explorador o PowerShell sin configurar `PATH`. La DLL permanece en `build/`, ignorado por Git. El linker fija la imagen en `0x10000000` y desactiva ASLR para dejar libres las direcciones GBA. GDB i686 es una herramienta de diagnóstico opcional, instalada aquí para la primera ejecución.
 
 MINGW32 y MINGW64 deben mantenerse separados: el `.exe` PC, SDL2 y todas sus DLL se compilan en 32 bits; el preprocesador upstream ya construido es x86-64. El repositorio público no incluye ninguna ROM, recurso ni toolchain upstream.
+
+## Pruebas y diagnóstico
+
+Desde la raíz del proyecto, en MINGW32:
+
+```sh
+make -C port exe
+make -C port test
+make -C port diagnostic-exe
+python port/tests/gameplay_smoke.py build/gameplay-smoke.txt
+EMERALD_PC_INPUT_SCRIPT=build/gameplay-smoke.txt \
+EMERALD_PC_FAST=1 EMERALD_PC_STOP_FRAME=30500 \
+EMERALD_PC_AUDIO_DUMP=build/audio.wav ./build/emerald-pc-diagnostic.exe
+```
+
+El generador del guion requiere Python 3; puede ejecutarse también desde
+PowerShell antes del comando MSYS2. `test` compila con `-Wall -Wextra
+-Werror` y ejecuta 13 suites: BIOS, DMA, frame, memoria, flash, entrada por
+guion, PPU, menú de velocidad, temporizadores, reinicio, m4a, PSG y audio.
+Los binarios quedan en `build/tests/` y sus archivos temporales en `build/`.
+Las pruebas unitarias no usan la ROM; construir el ejecutable y el motor
+m4a requiere los recursos locales de pokeemerald.
+
+La entrada por guion, el modo sin limitación de FPS, la parada por frame y
+el volcado WAV existen solo en `emerald-pc-diagnostic.exe`. El ejecutable
+normal usa el teclado y conserva el temporizador de ~59,7275 FPS (o el
+multiplicador elegido con P). El WAV se finaliza al cerrar normalmente el
+proceso; una terminación forzada puede dejar la cabecera incompleta.
