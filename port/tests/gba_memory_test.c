@@ -7,6 +7,8 @@ int main(void)
 {
     if (Port_InitGbaMemory() != 0)
         return 1;
+    if (*(volatile uint16_t *)0x04000000u != 0x0080u)
+        return 4;
     if (*(volatile uint16_t *)0x04000130u != 0x03FFu)
         return 2;
     *(volatile uint32_t *)0x02000000u = 0x12345678u;

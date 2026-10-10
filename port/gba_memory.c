@@ -170,5 +170,7 @@ int Port_InitGbaMemory(void)
 
     /* On GBA, one bits in KEYINPUT indicate released keys. */
     *(volatile uint16_t *)0x04000130u = 0x03FFu;
+    /* BIOS starts with forced blank, allowing GPU setup before the first IRQ. */
+    *(volatile uint16_t *)0x04000000u = 0x0080u;
     return 0;
 }
