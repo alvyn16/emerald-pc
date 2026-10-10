@@ -1,0 +1,48 @@
+From 0ed009c0babc9c80ea58a0f1095754a2d31d9d47 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sat, 10 Oct 2026 14:49:58 -0400
+Subject: [PATCH] Validate host save sector identifiers before indexing slot
+ data
+
+---
+ src/save.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/src/save.c b/src/save.c
+index 3f519fb..d5289c5 100644
+--- a/src/save.c
++++ b/src/save.c
+@@ -495,6 +495,11 @@ static u8 CopySaveSlotData(u16 sectorId, struct SaveSectorLocation *locations)
+         ReadFlashSector(i + slotOffset, gReadWriteSector);
+ 
+         id = gReadWriteSector->id;
++#ifdef PORT_PC
++        // Corrupt or erased sector footers must not index outside locations.
++        if (id >= NUM_SECTORS_PER_SLOT)
++            continue;
++#endif
+         if (id == 0)
+             gLastWrittenSector = i;
+ 
+@@ -530,6 +535,10 @@ static u8 GetSaveValidStatus(const struct SaveSectorLocation *locations)
+         if (gReadWriteSector->signature == SECTOR_SIGNATURE)
+         {
+             signatureValid = TRUE;
++#ifdef PORT_PC
++            if (gReadWriteSector->id >= NUM_SECTORS_PER_SLOT)
++                continue;
++#endif
+             checksum = CalculateChecksum(gReadWriteSector->data, locations[gReadWriteSector->id].size);
+             if (gReadWriteSector->checksum == checksum)
+             {
+@@ -562,6 +571,10 @@ static u8 GetSaveValidStatus(const struct SaveSectorLocation *locations)
+         if (gReadWriteSector->signature == SECTOR_SIGNATURE)
+         {
+             signatureValid = TRUE;
++#ifdef PORT_PC
++            if (gReadWriteSector->id >= NUM_SECTORS_PER_SLOT)
++                continue;
++#endif
+             checksum = CalculateChecksum(gReadWriteSector->data, locations[gReadWriteSector->id].size);
+             if (gReadWriteSector->checksum == checksum)
+             {

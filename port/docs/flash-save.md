@@ -33,3 +33,53 @@ build/host-flash-test-i686.exe
 Resultado medido: `host flash read/write/erase/persistence OK`. La prueba
 usa y elimina solo un `.sav` temporal de `build/`; no toca el save de
 `saves/`.
+
+## Guardado del juego y recuperación — T06
+
+Desde MINGW32, después de preparar `wild_battle_smoke.py`:
+
+```sh
+make -C port exe diagnostic-exe
+python port/tests/save_game_smoke.py
+```
+
+El fixture aislado prepara Torchic nivel 5, 7 pociones, dinero y una variable
+de progreso mediante GDB. Abre el menú real y confirma sus diálogos con A.
+Guarda dos veces (contador 1, dinero 12.345, variable 1; contador 2,
+dinero 23.456, variable 2). Al cerrar y reabrir otro proceso comprueba mapa
+0.9, especie, equipo, cantidad de objetos, dinero, flag de Pokémon recibido
+y variable. Recalcula los checksums de los 14 sectores de cada slot usando
+sus tamaños leídos de la tabla del binario. No es una partida del usuario.
+
+Resultados PASS en `build/save-game-regression/`:
+
+- Reapertura selecciona contador 2 y sus campos.
+- Checksum alterado o ID 0xffff en el slot reciente: estado ERROR (255),
+  con recuperación del contador 1 y sus campos.
+- Tercer guardado interrumpido antes del quinto sector mediante GDB kill,
+  sin ejecutar el cierre host: recupera contador 2 y sus campos.
+- Tamaño incorrecto y archivo de solo lectura: arranque devuelve 1 con
+  causa explícita antes de crear ventana; contenido intacto.
+- Suite flash: propietario exclusivo (error 32), solo lectura (error 5),
+  tamaño incorrecto y operaciones sin buffer disponible rechazan escrituras.
+
+0021 valida los IDs antes de indexar `locations` y calcular el checksum;
+mantiene el comportamiento GBA. Compare OK, árbol de los 21 parches idéntico
+en el checkout de reproducción: `7116809b753c1bd8c6d1279c5db8a88ac2c68edc`.
+`--reload-only` reutiliza los dos slots y tamaños ya preparados en build/
+para repetir fallos de carga sin recorrer otra vez la partida nueva.
+
+### Garantías y límites
+
+No se hace un reemplazo atómico del archivo completo: Emerald alterna y
+valida dos slots, el backend trabaja sobre el mapeo. FlushViewOfFile fuerza
+el mapeo por sector; FlushFileBuffers se llama al cerrar. Los retornos del
+flush por sector se propagan como error; los del cierre no se comunican al
+juego. El byte final de firma puede esperar al cierre/flush posterior.
+Estas pruebas cubren cierre limpio y terminación durante sectores, no cortes
+eléctricos, disco lleno, fallos físicos ni interrupción en cada byte de firma.
+Una escritura rechazada al abrir no equivale a una falla de disco a mitad
+del guardado. Reset real alrededor del save se verifica aparte en T07.
+
+El save original conserva SHA-256
+`B5A41C3758763BBEC72769FAB4A2533BF2DB0B6312D93D25A695F9E4B9E02260`.

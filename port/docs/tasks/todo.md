@@ -92,9 +92,9 @@ documentado, no todos los combates ni los 67 candidatos de callbacks.
 
 ### T06 — guardado completo y recuperación (M)
 
-- [ ] Guardar desde el juego, cerrar, reabrir y comprobar mapa, equipo,
+- [x] Guardar desde el juego, cerrar, reabrir y comprobar mapa, equipo,
   objetos, dinero y progreso en una partida de prueba aislada.
-- [ ] Simular fallo de escritura/tamaño inválido/corrupción de un slot en
+- [x] Simular fallo de escritura/tamaño inválido/corrupción de un slot en
   copias, verificar errores y recuperación del slot válido si corresponde.
 - [ ] Probar cierre/reset alrededor del guardado sin truncar el original;
   documentar garantías y límites reales de flush/recuperación.
@@ -102,6 +102,11 @@ documentado, no todos los combates ni los 67 candidatos de callbacks.
 Dependencias: T04. Archivos: `port/host_flash.c`, `port/tests/host_flash_test.c`,
 harness de juego, `flash-save.md`. Verificación: reapertura con checksums
 y campos semánticos, no solo tamaño del archivo.
+
+T06: `save_game_smoke.py`, `host_flash_test.c` y `flash-save.md` documentan
+dos diálogos, reapertura, corrupción, escritura interrumpida y rechazo de
+save no disponible. Cierre e interrupción PASS; reset real aún depende de
+T07. No se prometen garantías frente a cortes eléctricos.
 
 ### T07 — reinicio real del ejecutable (M)
 
