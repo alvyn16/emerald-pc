@@ -1,0 +1,29 @@
+From cac99eeb49d7883d2b49eef3e51ccd75d841859b Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sat, 10 Oct 2026 14:38:45 -0400
+Subject: [PATCH] Service host frames during summary screen loading
+
+---
+ src/pokemon_summary_screen.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/src/pokemon_summary_screen.c b/src/pokemon_summary_screen.c
+index 9640778..f30b806 100644
+--- a/src/pokemon_summary_screen.c
++++ b/src/pokemon_summary_screen.c
+@@ -1169,7 +1169,14 @@ static void VBlank(void)
+ 
+ static void CB2_InitSummaryScreen(void)
+ {
+-    while (MenuHelpers_ShouldWaitForLinkRecv() != TRUE && LoadGraphics() != TRUE && MenuHelpers_IsLinkActive() != TRUE);
++    while (MenuHelpers_ShouldWaitForLinkRecv() != TRUE && LoadGraphics() != TRUE && MenuHelpers_IsLinkActive() != TRUE)
++    {
++#ifdef PORT_PC
++        // Deferred DMA copies are completed by the cooperative VBlank service.
++        extern void PortHost_RunFrame(void);
++        PortHost_RunFrame();
++#endif
++    }
+ }
+ 
+ static bool8 LoadGraphics(void)
