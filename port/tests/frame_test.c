@@ -13,6 +13,7 @@
 #include "port_ppu.h"
 #include "sdl_loader.h"
 #include "speed_menu.h"
+#include "port_irq.h"
 #undef main
 
 struct PortSDL portSDL;
@@ -65,6 +66,7 @@ static void VBlank(void)
     assert(REG_VCOUNT == 160);
     assert(REG_DISPSTAT & DISPSTAT_VBLANK);
     sVBlanks++;
+    gMain.intrCheck |= INTR_FLAG_VBLANK;
 }
 static void HBlank(void)
 {
@@ -96,6 +98,13 @@ int main(void)
     void *io = VirtualAlloc((void *)0x04000000, 4096,
                             MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     assert(io == (void *)0x04000000);
+    void *iwram = VirtualAlloc((void *)0x03000000, 32768,
+                               MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    assert(iwram == (void *)0x03000000);
+    PortIrq_Reset();
+    REG_IE = INTR_FLAG_VBLANK;
+    REG_IME = 1;
+    REG_DISPSTAT = DISPSTAT_VBLANK_INTR;
     portSDL.PollEvent = PollEvent;
     portSDL.GetKeyboardState = MockGetKeyboardState;
     portSDL.GetPerformanceFrequency = GetPerformanceFrequency;
@@ -166,6 +175,16 @@ int main(void)
     REG_IE = 0;
     PortHost_RunFrame();
     assert(sHBlanks == 160 && sVCounts == 1);
+    assert(PortIrq_Pending() == (INTR_FLAG_HBLANK | INTR_FLAG_VCOUNT));
+    PortIrq_Reset();
+    REG_DISPSTAT = DISPSTAT_VBLANK_INTR;
+    REG_IE = INTR_FLAG_VBLANK;
+    REG_IME = 0;
+    gMain.intrCheck = 0;
+    PortHost_RunFrame();
+    assert(sVBlanks == 1006 && INTR_CHECK == 0 && gMain.intrCheck == 0);
+    assert(PortIrq_Pending() == INTR_FLAG_VBLANK);
     VirtualFree(io, 0, MEM_RELEASE);
+    VirtualFree(iwram, 0, MEM_RELEASE);
     return 0;
 }

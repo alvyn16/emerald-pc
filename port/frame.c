@@ -12,14 +12,13 @@
 #include "speed_menu.h"
 #include "port_timer.h"
 #include "port_audio.h"
+#include "port_irq.h"
 #ifdef PORT_DIAGNOSTIC
 #include <stdio.h>
 #include "battle.h"
 #include "input_script.h"
 #endif
 
-/* gIntrTableTemplate in upstream main.c puts VBlank at index four. */
-#define VBLANK_INTR_INDEX 4
 #define FRAME_RATE_NUMERATOR 597275u
 #define FRAME_RATE_DENOMINATOR 10000u
 
@@ -192,9 +191,9 @@ void PortHost_RunFrame(void)
     SetVideoLine(160, 1);
     PortDma_OnVBlank();
 
-    if (gIntrTable[VBLANK_INTR_INDEX] != NULL)
-        gIntrTable[VBLANK_INTR_INDEX]();
-    gMain.intrCheck |= INTR_FLAG_VBLANK;
+    if (REG_DISPSTAT & DISPSTAT_VBLANK_INTR)
+        PortIrq_Raise(INTR_FLAG_VBLANK);
+    PortIrq_Dispatch();
     PortAudio_SubmitFrame();
 
     PortPpu_BeginFrame();
@@ -202,21 +201,15 @@ void PortHost_RunFrame(void)
     {
         SetVideoLine(y, 0);
         if ((REG_DISPSTAT & (DISPSTAT_VCOUNT | DISPSTAT_VCOUNT_INTR)) ==
-                (DISPSTAT_VCOUNT | DISPSTAT_VCOUNT_INTR) &&
-            (REG_IME & 1) && (REG_IE & INTR_FLAG_VCOUNT) && gIntrTable[0] != NULL)
-        {
-            gIntrTable[0]();
-            gMain.intrCheck |= INTR_FLAG_VCOUNT;
-        }
+                (DISPSTAT_VCOUNT | DISPSTAT_VCOUNT_INTR))
+            PortIrq_Raise(INTR_FLAG_VCOUNT);
+        PortIrq_Dispatch();
         PortPpu_RenderLine(y, sPixels + y * PORT_SCREEN_WIDTH);
         REG_DISPSTAT |= DISPSTAT_HBLANK;
         PortDma_OnHBlank();
-        if ((REG_DISPSTAT & DISPSTAT_HBLANK_INTR) && (REG_IME & 1) &&
-            (REG_IE & INTR_FLAG_HBLANK) && gIntrTable[3] != NULL)
-        {
-            gIntrTable[3]();
-            gMain.intrCheck |= INTR_FLAG_HBLANK;
-        }
+        if (REG_DISPSTAT & DISPSTAT_HBLANK_INTR)
+            PortIrq_Raise(INTR_FLAG_HBLANK);
+        PortIrq_Dispatch();
     }
     PresentFrame(0);
     SetVideoLine(0, 0);

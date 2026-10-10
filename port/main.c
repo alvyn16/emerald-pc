@@ -10,6 +10,7 @@
 #include "port_audio.h"
 #include "platform.h"
 #include "sdl_loader.h"
+#include "port_irq.h"
 #ifdef PORT_DIAGNOSTIC
 #include "input_script.h"
 #endif
@@ -52,6 +53,7 @@ int main(void)
 #endif
     if (Port_InitGbaMemory() != 0)
         return 1;
+    PortIrq_Reset();
     if (Port_LoadGbaRom() != 0)
     {
         Port_FreeGbaMemory();

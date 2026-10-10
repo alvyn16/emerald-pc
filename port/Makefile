@@ -41,7 +41,7 @@ SONG_INCLUDE_DIR := ../build/host-song-includes
 SONG_OBJECTS := $(patsubst $(POKEEMERALD)/sound/songs/midi/%.s,$(SONG_OBJECT_DIR)/%.o,$(SONG_SOURCES))
 HOST_EXE_SOURCES := $(filter-out $(addprefix $(POKEEMERALD)/src/,librfu_intr.c multiboot.c),$(SOURCES))
 HOST_EXE_OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(HOST_EXE_SOURCES))
-PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c speed_menu.c port_timer.c port_reset.c sdl_loader.c m4a_engine.c port_psg.c port_audio.c arm_stubs.c host_flash.c port_dma.c port_ppu.c
+PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c speed_menu.c port_timer.c port_reset.c sdl_loader.c m4a_engine.c port_psg.c port_audio.c arm_stubs.c host_flash.c port_dma.c port_ppu.c port_irq.c
 M4A_LDFLAGS := -Wl,--defsym,_gNumMusicPlayers=4 -Wl,--defsym,_gMaxLines=0
 EXE := ../build/emerald-pc.exe
 
@@ -60,7 +60,7 @@ TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu speed_menu t
 TEST_irq_SOURCES := port_irq.c tests/irq_test.c
 TEST_bios_SOURCES := bios.c tests/bios_test.c
 TEST_dma_SOURCES := port_dma.c tests/dma_test.c
-TEST_frame_SOURCES := frame.c speed_menu.c port_timer.c tests/frame_test.c
+TEST_frame_SOURCES := frame.c speed_menu.c port_timer.c port_irq.c tests/frame_test.c
 TEST_gba_memory_SOURCES := gba_memory.c tests/gba_memory_test.c
 TEST_host_flash_SOURCES := host_flash.c tests/host_flash_test.c
 TEST_input_script_SOURCES := input_script.c tests/input_script_test.c
