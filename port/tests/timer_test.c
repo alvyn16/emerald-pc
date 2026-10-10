@@ -38,6 +38,7 @@ int main(void)
     REG_TM0CNT_L = 0xfffc;
     REG_TM0CNT_H = 0;
     PortTimer_Advance(0);
+    assert(REG_TM0CNT_L == 0xfffc);
     REG_TM0CNT_H = TIMER_ENABLE;
     PortTimer_Advance(7);
     assert(REG_TM0CNT_L == 0xffff);
@@ -57,6 +58,13 @@ int main(void)
     assert(REG_TM2CNT_L == 0);
     PortTimer_Advance(1);
     assert(REG_TM2CNT_L == 1);
+
+    Reset();
+    REG_TM0CNT_L = 0xffff;
+    REG_TM0CNT_H = TIMER_ENABLE;
+    REG_TM1CNT_H = TIMER_ENABLE | 4;
+    PortTimer_Advance(UINT32_MAX);
+    assert(REG_TM0CNT_L == 0xffff && REG_TM1CNT_L == 0xffff);
 
     VirtualFree(io, 0, MEM_RELEASE);
     return 0;

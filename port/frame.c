@@ -177,8 +177,8 @@ void PortHost_RunFrame(void)
     // Retain the small host timing variation used by the game's RNG seed.
     const Uint64 now = portSDL.GetPerformanceCounter();
     const Uint64 frequency = portSDL.GetPerformanceFrequency();
-    Uint64 elapsed = sTimerLastTick == 0 ? frequency * FRAME_RATE_DENOMINATOR / FRAME_RATE_NUMERATOR : now - sTimerLastTick;
     const Uint64 multiplier = PortSpeedMenu_Multiplier();
+    Uint64 elapsed = sTimerLastTick == 0 ? frequency * FRAME_RATE_DENOMINATOR / (FRAME_RATE_NUMERATOR * multiplier) : now - sTimerLastTick;
     const Uint64 maxElapsed = 2 * frequency * FRAME_RATE_DENOMINATOR / (FRAME_RATE_NUMERATOR * multiplier);
     if (elapsed > maxElapsed)
         elapsed = maxElapsed;

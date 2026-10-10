@@ -22,7 +22,7 @@ void PortTimer_Reset(void)
 
 static uint32_t AddTicks(struct TimerState *timer, uint32_t ticks)
 {
-    uint32_t total = (uint32_t)timer->counter + ticks;
+    uint64_t total = (uint64_t)timer->counter + ticks;
     if (total < 0x10000u)
     {
         timer->counter = total;
@@ -53,7 +53,10 @@ void PortTimer_Advance(uint32_t cycles)
         // Memory-mapped writes cannot be trapped here. A changed CNT_L
         // value is treated as a new reload; equal-value writes are invisible.
         if (observed != timer->lastWritten)
+        {
             timer->reload = observed;
+            if (!enabled) timer->counter = observed;
+        }
         if (enabled && !wasEnabled)
         {
             timer->counter = timer->reload;
@@ -66,7 +69,7 @@ void PortTimer_Advance(uint32_t cycles)
             else
             {
                 const uint32_t divider = prescaler[control & 3];
-                const uint32_t accumulated = cycles + timer->dividerRemainder;
+                const uint64_t accumulated = (uint64_t)cycles + timer->dividerRemainder;
                 ticks = accumulated / divider;
                 timer->dividerRemainder = accumulated % divider;
             }
