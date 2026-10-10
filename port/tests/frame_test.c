@@ -89,6 +89,7 @@ void PortPpu_RenderLine(unsigned y, uint32_t *row)
 }
 void PortDma_OnHBlank(void) { sHBlankDma++; }
 void PortDma_OnVBlank(void) { sVBlankDma++; }
+void PortAudio_SubmitFrame(void) { }
 
 int main(void)
 {

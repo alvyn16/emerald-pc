@@ -493,4 +493,9 @@ void SoundMain(void)
 }
 
 void PortM4a_GetLastMix(const int8_t **left, const int8_t **right, unsigned *samples)
-{ *left = sLeft; *right = sRight; *samples = sMixSamples; }
+{
+    const struct SoundInfo *sound = SOUND_INFO_PTR;
+    *left = sLeft;
+    *right = sRight;
+    *samples = sound != NULL && sound->ident == ID_NUMBER ? sMixSamples : 0;
+}

@@ -226,7 +226,7 @@ void SoftReset(u32 resetFlags)
 {
 #ifdef PORT_DIAGNOSTIC
     fprintf(stderr, "BIOS: SoftReset(0x%02X) ends diagnostic run\n", resetFlags);
-    exit(EXIT_SUCCESS);
+    Port_ExitCleanly();
 #else
     fprintf(stderr, "BIOS: SoftReset(0x%02X) relaunching host\n", resetFlags);
     if (PortReset_Restart() != 0)

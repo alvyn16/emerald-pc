@@ -7,6 +7,7 @@
 
 #include "gba_memory.h"
 #include "host_flash.h"
+#include "port_audio.h"
 #include "platform.h"
 #include "sdl_loader.h"
 #ifdef PORT_DIAGNOSTIC
@@ -25,6 +26,7 @@ void Port_ExitCleanly(void)
     fprintf(stderr, "PC: window closed; exiting cleanly\n");
     Port_AttachRenderer(NULL, NULL);
     PortFlash_Close();
+    PortAudio_Shutdown();
     portSDL.DestroyTexture(sTexture);
     portSDL.DestroyRenderer(sRenderer);
     portSDL.DestroyWindow(sWindow);
@@ -103,10 +105,13 @@ int main(void)
     portSDL.RenderClear(renderer);
     portSDL.RenderPresent(renderer);
     fprintf(stderr, "PC: SDL window ready (240x160, scale 4); entering AgbMain\n");
+    PortAudio_Init();
     AgbMain();
     fprintf(stderr, "PC: AgbMain returned\n");
 
     Port_AttachRenderer(NULL, NULL);
+    PortAudio_Shutdown();
+    PortFlash_Close();
     portSDL.DestroyTexture(texture);
     portSDL.DestroyRenderer(renderer);
     portSDL.DestroyWindow(window);

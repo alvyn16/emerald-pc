@@ -11,6 +11,7 @@
 #include "sdl_loader.h"
 #include "speed_menu.h"
 #include "port_timer.h"
+#include "port_audio.h"
 #ifdef PORT_DIAGNOSTIC
 #include "input_script.h"
 #endif
@@ -192,6 +193,7 @@ void PortHost_RunFrame(void)
     if (gIntrTable[VBLANK_INTR_INDEX] != NULL)
         gIntrTable[VBLANK_INTR_INDEX]();
     gMain.intrCheck |= INTR_FLAG_VBLANK;
+    PortAudio_SubmitFrame();
 
     PortPpu_BeginFrame();
     for (unsigned y = 0; y < PORT_SCREEN_HEIGHT; ++y)

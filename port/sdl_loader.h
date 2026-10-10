@@ -7,6 +7,13 @@ struct PortSDL
 {
     __typeof__(&SDL_SetMainReady) SetMainReady;
     __typeof__(&SDL_Init) Init;
+    __typeof__(&SDL_InitSubSystem) InitSubSystem;
+    __typeof__(&SDL_OpenAudioDevice) OpenAudioDevice;
+    __typeof__(&SDL_CloseAudioDevice) CloseAudioDevice;
+    __typeof__(&SDL_PauseAudioDevice) PauseAudioDevice;
+    __typeof__(&SDL_QueueAudio) QueueAudio;
+    __typeof__(&SDL_GetQueuedAudioSize) GetQueuedAudioSize;
+    __typeof__(&SDL_ClearQueuedAudio) ClearQueuedAudio;
     __typeof__(&SDL_Quit) Quit;
     __typeof__(&SDL_GetError) GetError;
     __typeof__(&SDL_CreateWindow) CreateWindow;
