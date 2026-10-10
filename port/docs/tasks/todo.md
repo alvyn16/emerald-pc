@@ -39,11 +39,11 @@ Verificación: misma batería en main; revisión previa a merge.
 
 ### T03 — diagnóstico de fallos útil (M)
 
-- [ ] Registrar frame, callbacks, mapa/estado de batalla y registros relevantes
+- [x] Registrar frame, callbacks, mapa/estado de batalla y registros relevantes
   en builds de diagnóstico, sin volcar ROM/save ni contenido de assets.
 - [ ] Añadir timeout y detección de falta de avance a los recorridos;
   distinguir espera válida de bloqueo.
-- [ ] Mantener el ejecutable normal sin scripts ni volcados diagnósticos.
+- [x] Mantener el ejecutable normal sin scripts ni volcados diagnósticos.
 
 Dependencias: T02. Archivos: `port/frame.c`, `port/input_script.c`, harness
 de `port/tests/`, `first-run-report.md`. Verificación: timeout inducido en

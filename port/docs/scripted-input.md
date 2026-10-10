@@ -41,6 +41,12 @@ orden de frames y las llamadas VBlank permanecen. `EMERALD_PC_STOP_FRAME`
 cierra el proceso limpiamente tras el frame indicado. Para inspeccionar un
 fallo, ejecute el mismo programa y entorno bajo GDB de MINGW32.
 
+Cada 600 frames, el diagnóstico escribe en stderr el frame, mapa, callbacks,
+flags/resultado de batalla e IE/IME/DISPSTAT. Se vacía el buffer después de
+cada línea para conservar el último estado si el proceso se bloquea. No
+incluye contenido de ROM, recursos ni save. Es un registro periódico de
+frames completados; no es un watchdog ni una traza por instrucción.
+
 Para repetir el recorrido completo hasta Villa Raíz después de ajustar el
 reloj, genere el guion sin guardar datos del juego en Git:
 

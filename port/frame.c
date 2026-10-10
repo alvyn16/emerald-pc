@@ -13,6 +13,8 @@
 #include "port_timer.h"
 #include "port_audio.h"
 #ifdef PORT_DIAGNOSTIC
+#include <stdio.h>
+#include "battle.h"
 #include "input_script.h"
 #endif
 
@@ -219,6 +221,19 @@ void PortHost_RunFrame(void)
     PresentFrame(0);
     SetVideoLine(0, 0);
 #ifdef PORT_DIAGNOSTIC
+    // Metadata only: leave ROM, save and resource contents out of diagnostics.
+    // A stopped sequence of these lines identifies the last completed frame.
+    if (sDiagnosticFrame % 600 == 0)
+    {
+        const struct WarpData *map = gSaveBlock1Ptr ? &gSaveBlock1Ptr->location : NULL;
+        fprintf(stderr, "PC diagnostic: frame=%u map=%d.%d callbacks=%p/%p "
+                "battle=0x%08lx outcome=%u IE=%04x IME=%04x DISPSTAT=%04x\n",
+                sDiagnosticFrame, map ? map->mapGroup : -1, map ? map->mapNum : -1,
+                (void *)gMain.callback1, (void *)gMain.callback2,
+                (unsigned long)gBattleTypeFlags, gBattleOutcome,
+                REG_IE, REG_IME, REG_DISPSTAT);
+        fflush(stderr);
+    }
     if (PortInputScript_StopFrame() != 0 &&
         sDiagnosticFrame >= PortInputScript_StopFrame())
         Port_ExitCleanly();
