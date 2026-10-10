@@ -1,0 +1,23 @@
+From 7ebd2de7b10c1fb6361e7992e7fd437d9842238e Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sat, 10 Oct 2026 14:27:19 -0400
+Subject: [PATCH] Retire host storage VBlank before freeing storage data
+
+---
+ src/pokemon_storage_system.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/pokemon_storage_system.c b/src/pokemon_storage_system.c
+index 6ff9ec8..ca27d4a 100644
+--- a/src/pokemon_storage_system.c
++++ b/src/pokemon_storage_system.c
+@@ -3788,6 +3788,9 @@ static void GiveChosenBagItem(void)
+ 
+ static void FreePokeStorageData(void)
+ {
++#ifdef PORT_PC
++    SetVBlankCallback(NULL);
++#endif
+     TilemapUtil_Free();
+     MultiMove_Free();
+     FREE_AND_SET_NULL(sStorage);

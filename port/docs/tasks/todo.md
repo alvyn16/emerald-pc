@@ -66,9 +66,9 @@ controlado, combate y capturas locales; compare si hay parche.
 
 - [ ] Inventariar callbacks registrados que retienen datos liberables y loops
   de carga que dependen de DMA/VBlank, con archivos y ruta alcanzable.
-- [ ] Corregir una ruta comprobada por commit, limitando cada lote a cinco
+- [x] Corregir una ruta comprobada por commit, limitando cada lote a cinco
   archivos; conservar naming, bolsa y transición ya corregidos.
-- [ ] Añadir regresión de entrada/salida del menú o transición afectada.
+- [x] Añadir regresión de entrada/salida del menú o transición afectada.
 
 Dependencias: T03. Archivos: informe + parches de los consumidores hallados
 + harness focalizado. Verificación: repetición de abrir/cerrar la ruta,

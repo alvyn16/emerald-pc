@@ -596,3 +596,29 @@ Las 13 suites host siguen pasando; `build/trainer-backpic-gba-compare.log`
 contiene `pokeemerald.gba: OK`. Aplicar `0017` al checkout aislado con los
 16 parches anteriores produce el mismo árbol que el checkout de trabajo:
 `de4ac4ca18bc3502e5a3cf4d5eaee31db1db35d9`. También se recompiló y enlazó allí.
+
+## Cierre de almacenamiento Pokémon — parche 0018
+
+La auditoría de callbacks encontró que FreePokeStorageData deja registrado
+VBlankCB_PokeStorage, que consulta `sStorage->bg2_X`. Se reprodujo en un
+fixture aislado: EnterPokeStorage(2), 500 frames de carga, liberar datos y
+servir el siguiente frame antes de ejecutar CB2_ExitPokeStorage. El binario
+anterior recibió SIGSEGV en VBlankCB_PokeStorage en frame **31.000**.
+El fixture prueba la ventana de vida útil, no una partida del usuario.
+
+0018 retira VBlank antes de liberar sStorage, exclusivamente con PORT_PC.
+El build host y las 13 suites pasan; el build GBA da `pokeemerald.gba: OK`
+en `build/storage-gba-compare.log`. Aplicar 0018 sobre los 17 parches previos
+en el checkout aislado y recompilar reproduce el mismo árbol:
+`830b2344fd47636788defbbbc028642d5996c313`.
+
+El inventario del primer lote está en `callback-lifetime-audit.md`.
+Hay 67 archivos que registran callbacks de vídeo; no se afirma que todos
+contengan errores ni que todas sus pantallas estén probadas. Quedan como
+candidatos los loops de carga de resumen/equipo, pendientes de reproducción.
+
+La repetición pasó: callback retirado antes del frame cooperativo, vuelta
+a Villa Raíz y frame **31.500**, sin señal ni proceso de prueba superviviente.
+Log: `build/wild-battle-regression/storage.log`. La primera tentativa del
+harness se detuvo por su propio límite 31.000, no por otra excepción del
+juego; se movió ese límite antes de servir el frame y se repitió la prueba.
