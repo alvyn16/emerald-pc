@@ -1,13 +1,33 @@
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
+#include <setjmp.h>
+#define NOMINMAX
+#include <windows.h>
 
 #include "gba/types.h"
 #include "gba/multiboot.h"
 #include "gba/syscall.h"
+#include "gba/io_reg.h"
+#include "gba/defines.h"
+#include "port_irq.h"
+#include "port_bios.h"
 
 static int frames;
-void PortHost_RunFrame(void) { frames++; }
+static unsigned eventFrame;
+static u16 eventFlags;
+static unsigned closeFrame;
+static jmp_buf closeJump;
+void (*gIntrTable[14])(void);
+void PortHost_RunFrame(void)
+{
+    ++frames;
+    if (closeFrame && frames == (int)closeFrame)
+        longjmp(closeJump, 1); // Model the frame pump's SDL close path.
+    if (frames == (int)eventFrame)
+        PortIrq_Raise(eventFlags);
+    PortIrq_Dispatch();
+}
 int PortReset_Restart(void) { return 0; }
 void Port_ExitCleanly(void) { }
 
@@ -15,6 +35,8 @@ extern s32 DivArm(s32 denominator, s32 numerator);
 
 int main(void)
 {
+    assert(VirtualAlloc((void *)0x03000000, 32768, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE));
+    assert(VirtualAlloc((void *)REG_BASE, 4096, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE));
     u16 fill = 0x1234;
     u16 filled[4] = {0};
     CpuSet(&fill, filled, 0x01000004);
@@ -72,7 +94,64 @@ int main(void)
     assert(objResult[0] == 256 && objResult[1] == 0);
     assert(objResult[2] == 0 && objResult[3] == 256);
 
+    PortIrq_Reset();
+    REG_IE = INTR_FLAG_VBLANK;
+    eventFrame = 1;
+    eventFlags = INTR_FLAG_VBLANK;
     VBlankIntrWait();
     assert(frames == 1);
+    assert(REG_IME == 1 && !(INTR_CHECK & INTR_FLAG_VBLANK));
+
+    INTR_CHECK = INTR_FLAG_VBLANK | INTR_FLAG_TIMER0;
+    IntrWait(0, INTR_FLAG_TIMER0);
+    assert(frames == 1 && INTR_CHECK == INTR_FLAG_VBLANK);
+    eventFrame = 3;
+    IntrWait(1, INTR_FLAG_VBLANK);
+    assert(frames == 3 && INTR_CHECK == 0);
+
+    // An enabled but different IRQ cannot satisfy the requested wait.
+    PortIrq_Reset();
+    frames = 0;
+    eventFrame = 1;
+    eventFlags = INTR_FLAG_TIMER0;
+    REG_IE = INTR_FLAG_TIMER0 | INTR_FLAG_VBLANK;
+    closeFrame = 3;
+    if (setjmp(closeJump) == 0)
+    {
+        IntrWait(1, INTR_FLAG_VBLANK);
+        assert(0 && "Wrong IRQ satisfied IntrWait");
+    }
+    assert(frames == 3 && INTR_CHECK == INTR_FLAG_TIMER0);
+
+    // A requested source with IE=0 stays pending and does not become a BIOS flag.
+    PortIrq_Reset();
+    frames = 0;
+    REG_IE = 0;
+    eventFlags = INTR_FLAG_VBLANK;
+    if (setjmp(closeJump) == 0)
+    {
+        IntrWait(1, INTR_FLAG_VBLANK);
+        assert(0 && "Masked IRQ satisfied IntrWait");
+    }
+    assert(frames == 3 && INTR_CHECK == 0 && PortIrq_Pending() == INTR_FLAG_VBLANK);
+
+    // Halt wakes with IME=0; even an IRQ acknowledged in the pump wakes it.
+    PortIrq_Reset();
+    frames = 0;
+    REG_IE = INTR_FLAG_VBLANK;
+    REG_IME = 0;
+    eventFrame = 2;
+    closeFrame = 0;
+    Halt();
+    assert(frames == 2 && INTR_CHECK == 0 && REG_IME == 0);
+    Halt(); // Existing enabled pending request returns immediately.
+    assert(frames == 2);
+    PortIrq_Reset();
+    frames = 0;
+    REG_IME = 1;
+    Halt();
+    assert(frames == 2 && INTR_CHECK == INTR_FLAG_VBLANK && PortIrq_Pending() == 0);
+    VirtualFree((void *)REG_BASE, 0, MEM_RELEASE);
+    VirtualFree((void *)0x03000000, 0, MEM_RELEASE);
     return 0;
 }

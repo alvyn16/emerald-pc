@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdint.h>
 #include <string.h>
 #include <windows.h>
 #include "gba/m4a_internal.h"
@@ -17,6 +18,9 @@ const struct ToneData voicegroup_dummy = {0};
 void PortHost_RunFrame(void) { }
 int PortReset_Restart(void) { return 0; }
 void Port_ExitCleanly(void) { }
+// BIOS waits are not exercised by this audio-only fixture.
+uint64_t PortIrq_WakeCounter(void) { return 0; }
+uint16_t PortIrq_Pending(void) { return 0; }
 
 int main(void)
 {

@@ -10,6 +10,10 @@
 #include "gba/syscall.h"
 #include "platform.h"
 #include "port_reset.h"
+#include "port_irq.h"
+#include "port_bios.h"
+#include "gba/io_reg.h"
+#include "gba/defines.h"
 
 #define BIOS_COUNT_MASK 0x001FFFFFu
 #define BIOS_SOURCE_FIXED 0x01000000u
@@ -247,19 +251,25 @@ void RegisterRamReset(u32 resetFlags)
 
 void VBlankIntrWait(void)
 {
-    PortHost_RunFrame();
+    IntrWait(1, INTR_FLAG_VBLANK);
 }
 
 void IntrWait(u32 discard, u32 flags)
 {
-    (void)discard;
-    (void)flags;
-    PortHost_RunFrame();
+    const u16 mask = (u16)flags;
+    REG_IME = 1;
+    if (discard)
+        INTR_CHECK &= ~mask;
+    while (!(INTR_CHECK & mask))
+        PortHost_RunFrame();
+    INTR_CHECK &= ~mask;
 }
 
 void Halt(void)
 {
-    PortHost_RunFrame();
+    const uint64_t wake = PortIrq_WakeCounter();
+    while (!(PortIrq_Pending() & REG_IE) && PortIrq_WakeCounter() == wake)
+        PortHost_RunFrame();
 }
 
 int MultiBoot(struct MultiBootParam *parameters)

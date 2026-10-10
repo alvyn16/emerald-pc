@@ -58,7 +58,7 @@ endif
 TEST_DIR := ../build/tests
 TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu speed_menu timer reset m4a_engine psg audio irq
 TEST_irq_SOURCES := port_irq.c tests/irq_test.c
-TEST_bios_SOURCES := bios.c tests/bios_test.c
+TEST_bios_SOURCES := bios.c port_irq.c tests/bios_test.c
 TEST_dma_SOURCES := port_dma.c tests/dma_test.c
 TEST_frame_SOURCES := frame.c speed_menu.c port_timer.c port_irq.c tests/frame_test.c
 TEST_gba_memory_SOURCES := gba_memory.c tests/gba_memory_test.c
