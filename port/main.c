@@ -38,8 +38,13 @@ void Port_ExitCleanly(void)
 int main(void)
 {
 #ifdef PORT_DIAGNOSTIC
+    const char *windowTitle = "emerald-pc [DIAGNOSTIC - TEST ONLY]";
+    fprintf(stderr, "PC: DIAGNOSTIC build; scripted input may be active\n");
     if (PortInputScript_Init() != 0)
         return 1;
+#else
+    const char *windowTitle = "emerald-pc";
+    fprintf(stderr, "PC: normal game build; keyboard input only\n");
 #endif
     if (Port_InitGbaMemory() != 0)
         return 1;
@@ -62,7 +67,7 @@ int main(void)
         return 1;
     }
 
-    SDL_Window *window = portSDL.CreateWindow("emerald-pc",
+    SDL_Window *window = portSDL.CreateWindow(windowTitle,
                                          SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                          240 * 4, 160 * 4, SDL_WINDOW_SHOWN);
     if (window == NULL)

@@ -6,6 +6,7 @@ SHELL := bash
 
 POKEEMERALD := ../pokeemerald
 HOST_CC ?= gcc
+HOST_NM ?= nm
 HOST_ARCH ?= i686
 PKG_CONFIG ?= pkg-config
 
@@ -49,7 +50,7 @@ EXE := ../build/emerald-pc-diagnostic.exe
 PORT_CPPFLAGS := -DPORT_DIAGNOSTIC -g
 endif
 
-.PHONY: syntax objects data-objects song-objects exe diagnostic-exe link-probe check-tools test
+.PHONY: syntax objects data-objects song-objects exe diagnostic-exe link-probe check-tools test verify-normal
 
 # Host-only unit tests. Keep each binary's dependencies explicit so changes
 # to a port module rebuild the test that exercises it.
@@ -91,6 +92,17 @@ objects: $(OBJECTS)
 data-objects: $(DATA_OBJECTS)
 song-objects: $(SONG_OBJECTS)
 exe: $(EXE) $(RUNTIME_DLL)
+ifneq ($(DIAGNOSTIC),1)
+exe: verify-normal
+endif
+
+# Fail if test-only input or debugger frame controls leak into the playable binary.
+verify-normal: ../build/emerald-pc.exe
+	@$(HOST_NM) --defined-only $< > ../build/normal-symbols.txt
+	@if grep -E '_(PortInputScript_[[:alnum:]_]+|sDiagnosticFrame|sStopFrame)$$' ../build/normal-symbols.txt; then \
+		echo 'ERROR: diagnostic controls found in normal executable'; exit 1; \
+	fi
+	@echo 'PASS normal executable: no diagnostic input/frame controls'
 diagnostic-exe:
 	@$(MAKE) DIAGNOSTIC=1 exe
 

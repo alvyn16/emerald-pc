@@ -62,7 +62,12 @@ static int SavePath(char *path, size_t capacity)
                 (unsigned long)GetLastError());
         return -1;
     }
-    if (snprintf(path, capacity, "%s\\emerald-pc.sav", directory) >= (int)capacity)
+#ifdef PORT_DIAGNOSTIC
+    const char *saveName = "emerald-pc-diagnostic.sav";
+#else
+    const char *saveName = "emerald-pc.sav";
+#endif
+    if (snprintf(path, capacity, "%s\\%s", directory, saveName) >= (int)capacity)
         return -1;
     return 0;
 }
@@ -90,8 +95,8 @@ int PortFlash_OpenFile(const char *path)
                         NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (sFile == INVALID_HANDLE_VALUE)
     {
-        fprintf(stderr, "Flash: cannot open saves/emerald-pc.sav (Windows error %lu)\n",
-                (unsigned long)GetLastError());
+        fprintf(stderr, "Flash: cannot open %s (Windows error %lu)\n",
+                path, (unsigned long)GetLastError());
         return -1;
     }
     int created = GetLastError() != ERROR_ALREADY_EXISTS;

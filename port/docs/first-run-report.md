@@ -545,3 +545,29 @@ Durante el combate apareció un aviso no fatal de stream comprimido inválido
 (`expected 0x10`); su origen gráfico queda pendiente de diagnóstico. No se
 confunde ese aviso con la causa del SIGSEGV corregido, ni se afirma haber
 validado todas las transiciones o combates del juego.
+
+## Separación del juego normal y las regresiones — 2026-10-10
+
+El usuario informó un combate al salir de su casa en Villa Raíz. La
+regresión anterior forzaba un combate en esa localidad exclusivamente
+desde GDB; ambas ventanas tenían el mismo título. No se encontró una
+inyección equivalente en los fuentes del juego normal ni una modificación
+de las reglas de encuentros. Esto no demuestra cuál de los procesos vio
+el usuario, ni reproduce su sesión particular.
+
+Se distingue ahora la ventana de diagnóstico con `DIAGNOSTIC - TEST ONLY`,
+y se separa su save como `emerald-pc-diagnostic.sav`. Las regresiones usan
+SDL dummy y no muestran una ventana. La prueba de batalla se prepara ahora
+en Ruta 101, después de comprobar la salida de casa en Villa Raíz.
+
+La prueba del binario normal alcanzó 30.500 iteraciones de ReadKeys,
+mapa **0.9 (Villa Raíz)**, sin llamadas a `BattleSetup_StartWildBattle` y
+con salida limpia. El binario ignora las variables de guion, velocidad
+diagnóstica y frame de parada. `nm` confirma la ausencia de sus funciones
+y variables de diagnóstico. Los pasos y límites de las pruebas se explican
+en `normal-and-diagnostic.md`; los logs están en
+`build/normal-game-regression/` y `build/wild-battle-regression/`.
+
+No se alteró la ROM ni el save original, cuyo SHA-256 sigue siendo
+`B5A41C3758763BBEC72769FAB4A2533BF2DB0B6312D93D25A695F9E4B9E02260`.
+Las 13 suites host pasan y `make compare` devuelve `pokeemerald.gba: OK`.

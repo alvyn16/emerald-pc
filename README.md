@@ -32,6 +32,11 @@ La compilación copia `SDL2.dll` junto al ejecutable en `build/`. Después
 puedes abrir `build/emerald-pc.exe` directamente desde el Explorador de
 Windows; conserva ambos archivos en la misma carpeta.
 
+Para jugar usa **`build/emerald-pc.exe`**. El otro ejecutable,
+`emerald-pc-diagnostic.exe`, se identifica con **DIAGNOSTIC - TEST ONLY**
+y guarda en `saves/emerald-pc-diagnostic.sav`, separado de tu partida.
+Las pruebas automatizadas no abren ventanas visibles.
+
 El ejecutable carga solo en memoria el único `.gba` de `roms/`; nunca modifica
 el archivo original. El guardado experimental usa `saves/emerald-pc.sav`,
 ignorado por Git. El estado del arranque y el siguiente bloqueo medido con

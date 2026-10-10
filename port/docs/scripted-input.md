@@ -4,6 +4,12 @@ Solo `make -C port diagnostic-exe` habilita el guion. El ejecutable normal
 `build/emerald-pc.exe` no incluye este código. La ROM y el guion local pueden
 estar en `roms/` y `build/`, respectivamente; ambas rutas están ignoradas.
 
+La ventana de diagnóstico se identifica como **DIAGNOSTIC - TEST ONLY** y
+usa `saves/emerald-pc-diagnostic.sav`. El juego normal usa
+`saves/emerald-pc.sav`. Las regresiones GDB trabajan en subcarpetas propias
+de `build/` y usan los drivers SDL dummy, sin abrir una ventana de juego.
+No ejecutes guiones GDB de prueba sobre una partida normal.
+
 Defina `EMERALD_PC_INPUT_SCRIPT` con una ruta a un archivo de texto. Cada línea
 tiene `primer_frame ultimo_frame botones`. Los límites son inclusivos, empiezan
 en 1 y deben estar ordenados sin solapamiento. Separe botones simultáneos con
