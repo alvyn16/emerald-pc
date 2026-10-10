@@ -64,7 +64,7 @@ controlado, combate y capturas locales; compare si hay parche.
 
 ### T05 — revisar vidas útiles y cargas síncronas (M por lote)
 
-- [ ] Inventariar callbacks registrados que retienen datos liberables y loops
+- [x] Inventariar callbacks registrados que retienen datos liberables y loops
   de carga que dependen de DMA/VBlank, con archivos y ruta alcanzable.
 - [x] Corregir una ruta comprobada por commit, limitando cada lote a cinco
   archivos; conservar naming, bolsa y transición ya corregidos.
@@ -73,6 +73,11 @@ controlado, combate y capturas locales; compare si hay parche.
 Dependencias: T03. Archivos: informe + parches de los consumidores hallados
 + harness focalizado. Verificación: repetición de abrir/cerrar la ruta,
 timeout y GDB sin acceso a datos liberados.
+
+Evidencia T05: `callback-inventory.md` (67 archivos, 142 registros y 17
+loops candidatos), `callback-lifetime-audit.md` y parches 0018–0020.
+Almacenamiento, equipo y resumen tienen fixtures de regresión PASS;
+los demás candidatos no se declaran libres de fallos por el inventario.
 
 ### Checkpoint B
 

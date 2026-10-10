@@ -9,19 +9,25 @@ las pantallas verificadas por tener un callback parecido.
 | --- | --- | --- |
 | Transici贸n de combate | VBlankCB_Slice / sTransitionData | SIGSEGV reproducido y corregido en 0016; batalla regresada |
 | Cierre de almacenamiento | VBlankCB_PokeStorage / sStorage->bg2_X | SIGSEGV reproducido al servir VBlank despu茅s de FreePokeStorageData; correcci贸n 0018 |
-| Pantalla de resumen | VBlank / OAM y paletas globales | No dereferencia directamente el objeto liberado; cola de copias pendiente de revisar |
-| Equipo | VBlankCB_PartyMenu / OAM y paletas globales | No dereferencia directamente sPartyMenuInternal; no se declara probado todo el ciclo del men煤 |
+| Pantalla de resumen | LoadGraphics / cola de tiles | Bloqueo reproducido en estado 6; 0020 sirve VBlank durante la carga; apertura/cierre PASS |
+| Equipo | AllocPartyMenuBgGfx / cola DMA de fondos | Bloqueo reproducido en estado 8; 0019 sirve VBlank durante la carga; apertura/cierre PASS |
 | Nombre | CleanupNamingScreen / callback liberado | Correcci贸n 0010 conservada |
 | Carga de mapa | DMA diferido dentro de loop s铆ncrono | Correcci贸n 0012 conservada |
 | Carga de bolsa | DMA diferido dentro de loop s铆ncrono | Correcci贸n 0014 conservada |
 
-## Cargas que necesitan una regresi贸n adicional
+## Cargas de resumen y equipo
 
-`CB2_InitSummaryScreen` repite LoadGraphics dentro de una sola llamada.
-Su subcarga usa FreeTempTileDataBuffersIfPossible: hay que verificar si
-requiere servir un frame cooperativo antes de cambiarla.
-`CB2_InitPartyMenu` tiene un loop similar con ShowPartyMenu. Estos son
-candidatos a espera infinita, no fallos ya reproducidos.
+`menu_load_smoke.py summary|party` reproduce ambos bloqueos en frame 30.500.
+Resumen espera FreeTempTileDataBuffersIfPossible; equipo espera
+IsDma3ManagerBusyWithBgCopy. La cola solo progresa en ProcessDma3Requests,
+llamado por VBlankIntr. Los loops s铆ncronos no retornaban al servicio host.
+0019 y 0020 sirven PortHost_RunFrame entre iteraciones, solo bajo PORT_PC.
+Ambos fixtures llegan al men煤 en 31.100 y regresan con B al mapa 0.9 en
+31.600, con salida limpia. No prueban todas las acciones de esos men煤s.
+
+Logs y capturas locales: `build/menu-load-party/` y `build/menu-load-summary/`.
+Las 13 suites host pasan, GBA compare OK y reproducci贸n de los 20 parches
+con 谩rbol id茅ntico `0bb32861903f5d16ce9aa3eff53a8f2cb52ca92c`.
 
 El loop de liberaci贸n de Pok茅mon en Task_ReleaseMon ejecuta un c谩lculo
 incremental de reglas de liberaci贸n; no debe sustituirse a ciegas por una
@@ -46,74 +52,12 @@ recorrer todas las opciones del PC con teclado.
 Resultado del fixture corregido: PASS, vuelta al mapa 0.9 en frame 31.200,
 salida limpia en 31.500. GBA compare OK; 谩rbol de reproducci贸n id茅ntico.
 
-## Archivos candidatos
+## Inventario completo de candidatos
 
-Lista obtenida con `rg -l 'Set(VBlank|HBlank)Callback\(' pokeemerald/src -g '*.c'`.
-
-- `pokeemerald/src/battle_dome.c`
-- `pokeemerald/src/battle_factory_screen.c`
-- `pokeemerald/src/battle_main.c`
-- `pokeemerald/src/battle_pyramid_bag.c`
-- `pokeemerald/src/battle_records.c`
-- `pokeemerald/src/battle_script_commands.c`
-- `pokeemerald/src/battle_transition.c`
-- `pokeemerald/src/berry_blender.c`
-- `pokeemerald/src/berry_crush.c`
-- `pokeemerald/src/berry_fix_program.c`
-- `pokeemerald/src/berry_tag_screen.c`
-- `pokeemerald/src/cable_car.c`
-- `pokeemerald/src/clear_save_data_screen.c`
-- `pokeemerald/src/contest_painting.c`
-- `pokeemerald/src/contest_util.c`
-- `pokeemerald/src/contest.c`
-- `pokeemerald/src/credits.c`
-- `pokeemerald/src/diploma.c`
-- `pokeemerald/src/dodrio_berry_picking.c`
-- `pokeemerald/src/easy_chat.c`
-- `pokeemerald/src/egg_hatch.c`
-- `pokeemerald/src/evolution_scene.c`
-- `pokeemerald/src/field_effect.c`
-- `pokeemerald/src/field_region_map.c`
-- `pokeemerald/src/fldeff_flash.c`
-- `pokeemerald/src/frontier_pass.c`
-- `pokeemerald/src/hall_of_fame.c`
-- `pokeemerald/src/intro.c`
-- `pokeemerald/src/item_menu.c`
-- `pokeemerald/src/link_rfu_2.c`
-- `pokeemerald/src/link.c`
-- `pokeemerald/src/mail.c`
-- `pokeemerald/src/main_menu.c`
-- `pokeemerald/src/main.c`
-- `pokeemerald/src/menu_helpers.c`
-- `pokeemerald/src/move_relearner.c`
-- `pokeemerald/src/mystery_event_menu.c`
-- `pokeemerald/src/mystery_gift_menu.c`
-- `pokeemerald/src/naming_screen.c`
-- `pokeemerald/src/option_menu.c`
-- `pokeemerald/src/overworld.c`
-- `pokeemerald/src/party_menu.c`
-- `pokeemerald/src/pokeblock_feed.c`
-- `pokeemerald/src/pokeblock.c`
-- `pokeemerald/src/pokedex.c`
-- `pokeemerald/src/pokemon_jump.c`
-- `pokeemerald/src/pokemon_storage_system.c`
-- `pokeemerald/src/pokemon_summary_screen.c`
-- `pokeemerald/src/pokenav.c`
-- `pokeemerald/src/rayquaza_scene.c`
-- `pokeemerald/src/region_map.c`
-- `pokeemerald/src/reset_rtc_screen.c`
-- `pokeemerald/src/reshow_battle_screen.c`
-- `pokeemerald/src/roulette.c`
-- `pokeemerald/src/save_failed_screen.c`
-- `pokeemerald/src/shop.c`
-- `pokeemerald/src/slot_machine.c`
-- `pokeemerald/src/start_menu.c`
-- `pokeemerald/src/starter_choose.c`
-- `pokeemerald/src/title_screen.c`
-- `pokeemerald/src/trade.c`
-- `pokeemerald/src/trainer_card.c`
-- `pokeemerald/src/union_room_battle.c`
-- `pokeemerald/src/union_room_chat.c`
-- `pokeemerald/src/use_pokeblock.c`
-- `pokeemerald/src/wallclock.c`
-- `pokeemerald/src/wireless_communication_status_screen.c`
+[callback-inventory.md](callback-inventory.md) registra los 142 callbacks
+no nulos y 17 loops con rutas transitivas hasta sondeos DMA, con ubicaci髇,
+funci髇 y ra韈es liberables detectadas. Se reproduce con
+`python port/tools/audit_callbacks.py`. El an醠isis es l閤ico y local a
+cada archivo: no demuestra ausencia de errores ni cubre llamadas indirectas
+y recursos entre m骴ulos. Los cuatro recorridos comprobados se distinguen
+de los candidatos que todav韆 requieren una prueba de uso.

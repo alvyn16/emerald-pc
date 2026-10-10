@@ -615,10 +615,36 @@ en el checkout aislado y recompilar reproduce el mismo árbol:
 El inventario del primer lote está en `callback-lifetime-audit.md`.
 Hay 67 archivos que registran callbacks de vídeo; no se afirma que todos
 contengan errores ni que todas sus pantallas estén probadas. Quedan como
-candidatos los loops de carga de resumen/equipo, pendientes de reproducción.
+candidatos adicionales en el inventario; los loops de resumen/equipo se
+reprodujeron después y se describen a continuación.
 
 La repetición pasó: callback retirado antes del frame cooperativo, vuelta
 a Villa Raíz y frame **31.500**, sin señal ni proceso de prueba superviviente.
 Log: `build/wild-battle-regression/storage.log`. La primera tentativa del
 harness se detuvo por su propio límite 31.000, no por otra excepción del
 juego; se movió ese límite antes de servir el frame y se repitió la prueba.
+
+## Cargas de equipo y resumen — parches 0019 y 0020
+
+Ambos fixtures se bloqueaban en frame **30.500**, dentro de una única
+llamada del callback. GDB detectó 256 sondeos consecutivos sin avance:
+equipo en `gMain.state=8`, resumen en `gMain.state=6`. Equipo espera la
+cola DMA de fondos en AllocPartyMenuBgGfx; resumen espera las copias de
+tiles en DecompressGraphics. ProcessDma3Requests solo se ejecuta al servir
+VBlank, que estos loops nunca alcanzaban en el host cooperativo.
+
+0019/0020 llaman PortHost_RunFrame entre iteraciones bajo PORT_PC. No
+cambian la ruta GBA. `menu_load_smoke.py party|summary` abre cada pantalla,
+captura en 31.100, cierra con B y verifica CB2_Overworld y mapa **0.9** en
+31.600, sin señales y con salida limpia. Las capturas muestran Torchic,
+sus HP y la ficha de perfil; no prueban todas las opciones del menú.
+Evidencia local: `build/menu-load-party/` y `build/menu-load-summary/`,
+incluyendo `before.log`, `gdb.log` y `menu.png`.
+
+Las 13 suites host pasan; `build/menu-load-gba-compare.log` contiene
+`pokeemerald.gba: OK`. El checkout aislado recompiló/enlazó los dos cambios
+con el mismo árbol de los 20 parches:
+`0bb32861903f5d16ce9aa3eff53a8f2cb52ca92c`.
+Inventario reproducible: `callback-inventory.md`, generado con
+`port/tools/audit_callbacks.py`: 67 archivos, 142 registros no nulos y
+17 loops candidatos. Sus límites de análisis están documentados.
