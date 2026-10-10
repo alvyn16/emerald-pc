@@ -1,0 +1,106 @@
+From 24b7aed218f9b48fca5a5aa72df1d1596e1674bf Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sat, 10 Oct 2026 03:22:57 -0400
+Subject: [PATCH] Run m4a sound driver on host
+
+---
+ src/m4a.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/src/m4a.c b/src/m4a.c
+index 1a2d541..6d7224c 100644
+--- a/src/m4a.c
++++ b/src/m4a.c
+@@ -71,7 +71,9 @@ void m4aSoundInit(void)
+ {
+     s32 i;
+ 
++#ifndef PORT_PC
+     CpuCopy32((void *)((s32)SoundMainRAM & ~1), SoundMainRAM_Buffer, sizeof(SoundMainRAM_Buffer));
++#endif
+ 
+     SoundInit(&gSoundInfo);
+     MPlayExtender(gCgbChans);
+@@ -327,7 +329,9 @@ void MPlayExtender(struct CgbChannel *cgbChans)
+ 
+ static void UNUSED MusicPlayerJumpTableCopy(void)
+ {
++#ifndef PORT_PC
+     asm("swi 0x2A");
++#endif
+ }
+ 
+ void ClearChain(void *x)
+@@ -354,6 +358,7 @@ void SoundInit(struct SoundInfo *soundInfo)
+ {
+     soundInfo->ident = 0;
+ 
++#ifndef PORT_PC
+     if (REG_DMA1CNT & (DMA_REPEAT << 16))
+         REG_DMA1CNT = ((DMA_ENABLE | DMA_START_NOW | DMA_32BIT | DMA_SRC_INC | DMA_DEST_FIXED) << 16) | 4;
+ 
+@@ -362,6 +367,7 @@ void SoundInit(struct SoundInfo *soundInfo)
+ 
+     REG_DMA1CNT_H = DMA_32BIT;
+     REG_DMA2CNT_H = DMA_32BIT;
++#endif
+     REG_SOUNDCNT_X = SOUND_MASTER_ENABLE
+                    | SOUND_4_ON
+                    | SOUND_3_ON
+@@ -372,10 +378,12 @@ void SoundInit(struct SoundInfo *soundInfo)
+                    | SOUND_ALL_MIX_FULL;
+     REG_SOUNDBIAS_H = (REG_SOUNDBIAS_H & 0x3F) | 0x40;
+ 
++#ifndef PORT_PC
+     REG_DMA1SAD = (s32)soundInfo->pcmBuffer;
+     REG_DMA1DAD = (s32)&REG_FIFO_A;
+     REG_DMA2SAD = (s32)soundInfo->pcmBuffer + PCM_DMA_BUF_SIZE;
+     REG_DMA2DAD = (s32)&REG_FIFO_B;
++#endif
+ 
+     SOUND_INFO_PTR = soundInfo;
+     CpuFill32(0, soundInfo, sizeof(struct SoundInfo));
+@@ -420,11 +428,13 @@ void SampleFreqSet(u32 freq)
+ 
+     m4aSoundVSyncOn();
+ 
++#ifndef PORT_PC
+     while (*(vu8 *)REG_ADDR_VCOUNT == 159)
+         ;
+ 
+     while (*(vu8 *)REG_ADDR_VCOUNT != 159)
+         ;
++#endif
+ 
+     REG_TM0CNT_H = TIMER_ENABLE | TIMER_1CLK;
+ }
+@@ -534,6 +544,7 @@ void m4aSoundVSyncOff(void)
+     {
+         soundInfo->ident += 10;
+ 
++#ifndef PORT_PC
+         if (REG_DMA1CNT & (DMA_REPEAT << 16))
+             REG_DMA1CNT = ((DMA_ENABLE | DMA_START_NOW | DMA_32BIT | DMA_SRC_INC | DMA_DEST_FIXED) << 16) | 4;
+ 
+@@ -542,6 +553,7 @@ void m4aSoundVSyncOff(void)
+ 
+         REG_DMA1CNT_H = DMA_32BIT;
+         REG_DMA2CNT_H = DMA_32BIT;
++#endif
+ 
+         CpuFill32(0, soundInfo->pcmBuffer, sizeof(soundInfo->pcmBuffer));
+     }
+@@ -555,8 +567,10 @@ void m4aSoundVSyncOn(void)
+     if (ident == ID_NUMBER)
+         return;
+ 
++#ifndef PORT_PC
+     REG_DMA1CNT_H = DMA_ENABLE | DMA_START_SPECIAL | DMA_32BIT | DMA_REPEAT;
+     REG_DMA2CNT_H = DMA_ENABLE | DMA_START_SPECIAL | DMA_32BIT | DMA_REPEAT;
++#endif
+ 
+     soundInfo->pcmDmaCounter = 0;
+     soundInfo->ident = ident - 10;
+-- 
+2.51.0.windows.2
+

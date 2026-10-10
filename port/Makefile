@@ -37,9 +37,10 @@ SONG_OBJECT_DIR := ../build/host-songs-i686
 SONG_RAW_OBJECT_DIR := ../build/host-songs-i686-raw
 SONG_INCLUDE_DIR := ../build/host-song-includes
 SONG_OBJECTS := $(patsubst $(POKEEMERALD)/sound/songs/midi/%.s,$(SONG_OBJECT_DIR)/%.o,$(SONG_SOURCES))
-HOST_EXE_SOURCES := $(filter-out $(addprefix $(POKEEMERALD)/src/,librfu_intr.c m4a.c multiboot.c),$(SOURCES))
+HOST_EXE_SOURCES := $(filter-out $(addprefix $(POKEEMERALD)/src/,librfu_intr.c multiboot.c),$(SOURCES))
 HOST_EXE_OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(HOST_EXE_SOURCES))
-PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c speed_menu.c port_timer.c port_reset.c sdl_loader.c audio_silent.c arm_stubs.c host_flash.c port_dma.c port_ppu.c
+PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c speed_menu.c port_timer.c port_reset.c sdl_loader.c m4a_engine.c arm_stubs.c host_flash.c port_dma.c port_ppu.c
+M4A_LDFLAGS := -Wl,--defsym,_gNumMusicPlayers=4 -Wl,--defsym,_gMaxLines=0
 EXE := ../build/emerald-pc.exe
 
 ifeq ($(DIAGNOSTIC),1)
@@ -53,7 +54,7 @@ endif
 # Host-only unit tests. Keep each binary's dependencies explicit so changes
 # to a port module rebuild the test that exercises it.
 TEST_DIR := ../build/tests
-TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu speed_menu timer reset
+TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu speed_menu timer reset m4a_engine
 TEST_bios_SOURCES := bios.c tests/bios_test.c
 TEST_dma_SOURCES := port_dma.c tests/dma_test.c
 TEST_frame_SOURCES := frame.c speed_menu.c port_timer.c tests/frame_test.c
@@ -64,6 +65,8 @@ TEST_ppu_SOURCES := port_ppu.c tests/ppu_test.c
 TEST_speed_menu_SOURCES := speed_menu.c tests/speed_menu_test.c
 TEST_timer_SOURCES := port_timer.c tests/timer_test.c
 TEST_reset_SOURCES := port_reset.c host_flash.c tests/reset_test.c
+TEST_m4a_engine_SOURCES := m4a_engine.c bios.c $(OBJECT_DIR)/m4a.o $(OBJECT_DIR)/m4a_tables.o tests/m4a_engine_test.c
+TEST_m4a_engine_LIBS := -lm $(M4A_LDFLAGS)
 TEST_bios_LIBS := -lm
 TEST_gba_memory_LIBS := -lpsapi
 TEST_CFLAGS := -std=gnu11 -Wall -Wextra -Werror -DMODERN=0 -DPORT_PC \
@@ -93,11 +96,11 @@ $(RUNTIME_DLL): $(SDL2_DLL) | check-tools
 	@cp "$<" "$@"
 
 $(EXE): $(HOST_EXE_OBJECTS) $(DATA_OBJECTS) $(SONG_OBJECTS) $(addprefix ./,$(PORT_EXE_SOURCES)) host_flash.h Makefile
-	@find $(OBJECT_DIR) $(DATA_OBJECT_DIR) $(SONG_OBJECT_DIR) -name '*.o' > ../build/host-exe-objects.rsp
+	@printf '%s\n' $(HOST_EXE_OBJECTS) $(DATA_OBJECTS) $(SONG_OBJECTS) > ../build/host-exe-objects.rsp
 	@$(HOST_CC) -std=gnu11 -DMODERN=0 -DPORT_PC $(PORT_CPPFLAGS) -iquote $(POKEEMERALD)/include -I. \
 		-Wl,--image-base=0x10000000 -Wl,--disable-dynamicbase \
 		-o $(EXE) @../build/host-exe-objects.rsp $(PORT_EXE_SOURCES) \
-		$(SDL2_CFLAGS) -lm -lpsapi
+		$(SDL2_CFLAGS) -lm -lpsapi $(M4A_LDFLAGS)
 
 $(CHECKS): | check-tools
 
