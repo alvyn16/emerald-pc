@@ -146,27 +146,39 @@ implementado; T09–T13 permanecen abiertos.
 
 ### T09 — despacho IRQ correcto (M)
 
-- [ ] Modelar solicitudes pendientes, habilitación IE/IME y acknowledgements
+- [x] Modelar solicitudes pendientes, habilitación IE/IME y acknowledgements
   IF con side effects observables, respetando prioridades documentadas.
-- [ ] Separar flag de espera cooperativa de entrega de callbacks enmascarados;
+- [x] Separar flag de espera cooperativa de entrega de callbacks enmascarados;
   evitar callbacks duplicados o reentrada de juego desde otro hilo.
-- [ ] Probar IRQ habilitada, enmascarada, pendiente y reconocida.
+- [x] Probar IRQ habilitada, enmascarada, pendiente y reconocida.
 
 Dependencias: T08, T05. Archivos: nuevo módulo `port/port_irq.*`, `frame.c`,
 test, parche de writes si el inventario lo exige. Verificación: suite IRQ
 y regresiones; no asumir que RAM normal implementa IF.
 
+T09: `port_irq.*`, suites irq/frame, parches 0023/0024. Sin VBlank
+incondicional ni flags BIOS ficticios bajo IME=0. Bootstrap forced blank;
+14 suites PASS, combate con victoria/regreso y compare OK. Reproducción
+con 24 parches y árbol idéntico. T10 aún en verificación; el calendario de
+líneas y eventos timer/DMA se completa en T11–T13.
+
 ### T10 — IntrWait/Halt con máscaras (M)
 
-- [ ] Implementar discard y máscaras de IntrWait sobre el modelo IRQ;
+- [x] Implementar discard y máscaras de IntrWait sobre el modelo IRQ;
   VBlankIntrWait y Halt conservan eventos SDL y salida limpia.
-- [ ] Una IRQ diferente no satisface una espera específica; se conserva una
+- [x] Una IRQ diferente no satisface una espera específica; se conserva una
   IRQ previa solo cuando corresponde al argumento discard.
-- [ ] Probar eventos diferidos, cierre de ventana durante espera y evitar
+- [x] Probar eventos diferidos, cierre de ventana durante espera y evitar
   que una IRQ enmascarada ejecute su callback.
 
 Dependencias: T09. Archivos: `bios.c`, `port_irq.*`, tests BIOS/IRQ.
 Verificación: fixtures de eventos, sin esperas infinitas en test.
+
+T10: bios/irq suites prueban masks/discard, evento distinto, IRQ enmascarada,
+Halt con IME=0 y wake ya reconocido. El cierre durante espera usa un pump
+sintético; frame suite verifica SDL_QUIT real en el servicio. 14 suites,
+normal sin combate al salir, batalla y recuperación de save PASS. T11–T13
+siguen abiertos; no se declara terminado el hito 24 completo.
 
 ### T11 — calendario completo de líneas (M)
 

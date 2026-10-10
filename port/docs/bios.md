@@ -9,20 +9,28 @@
 | `RLUnCompWram`, `RLUnCompVram` | Descompresión RLE tipo `0x30`. |
 | `Div`, `DivArm`, `Sqrt`, `ArcTan2` | Cálculo host; división por cero devuelve 0 y registra diagnóstico. `DivArm` invierte el orden de argumentos. |
 | `BgAffineSet`, `ObjAffineSet` | Matrices afines en punto fijo 8.8 a partir de escala y ángulo. |
-| `VBlankIntrWait`, `IntrWait`, `Halt` | Pasan a `PortHost_RunFrame`: procesan eventos SDL, actualizan `REG_KEYINPUT`, despachan VBlank y esperan **59,7275 Hz**. El frame muestra el PPU básico de modo 0. `IntrWait` todavía ignora las máscaras de otras IRQ. |
-| `RegisterRamReset` | **Stub seguro**: no borra RAM/IO de Windows; la memoria GBA de `VirtualAlloc` nace a cero. Registra un aviso una vez. |
-| `SoftReset` | **Stub seguro**: registra la petición y termina el proceso host, sin saltar a la cabecera GBA. |
+| `VBlankIntrWait`, `IntrWait`, `Halt` | Sirven eventos/frames hasta cumplir la condición IRQ. IntrWait fuerza IME=1, descarta opcionalmente flags previos y consume solo los coincidentes. VBlankIntrWait solicita un VBlank nuevo. Halt espera IE&IF o una nueva solicitud habilitada, sin requerir IME. |
+| `RegisterRamReset` | Stub de reset por flags pendiente de T19. No limpia RAM en mitad de ejecución. El arranque host inicializa memoria, teclas liberadas y DISPCNT forced blank. |
+| `SoftReset` | En el normal relanza mediante CreateProcessW y termina con cleanup; fallo devuelve código 1 con error. Diagnóstico termina su recorrido. Detalles en `reset.md`. |
 | `MultiBoot` | **Stub seguro** adicional: devuelve error; el cable/link GBA no existe en PC. |
 
-Las variantes `Vram` escriben los mismos bytes descomprimidos que las variantes `Wram`; no reproducen restricciones eléctricas del bus VRAM. Los decodificadores comprueban el byte de tipo y rechazan una referencia LZ77 hacia antes del comienzo de la salida. No validan el tamaño total de la entrada comprimida porque la API GBA no proporciona ese tamaño; se usarán con los recursos del juego. `RegisterRamReset` y las esperas no equivalen todavía a todas las interrupciones reales de GBA.
+Las variantes `Vram` escriben los mismos bytes descomprimidos que las variantes `Wram`; no reproducen restricciones eléctricas del bus VRAM. Los decodificadores comprueban el byte de tipo y rechazan una referencia LZ77 hacia antes del comienzo de la salida. No validan el tamaño total de la entrada comprimida porque la API GBA no proporciona ese tamaño; se usarán con los recursos del juego. `RegisterRamReset` sigue pendiente; las esperas usan un modelo cooperativo sin ejecutar instrucciones ARM ni prometer precisión de CPU.
 
 Verificación focalizada (MINGW32):
 
 ```sh
-gcc -std=gnu11 -Wall -Wextra -Werror -DMODERN=0 -DPORT_PC \
-  -iquote pokeemerald/include -Iport \
-  port/bios.c port/tests/bios_test.c -lm -o build/bios-test-i686.exe
-build/bios-test-i686.exe
+make -C port ../build/tests/bios.exe ../build/tests/irq.exe
+build/tests/bios.exe
+build/tests/irq.exe
 ```
 
-Resultado: código de salida **0**. Cubre copia/llenado, LZ77 con referencia solapada, RLE, cálculo, matrices identidad y despacho de una espera de frame.
+Resultado: código de salida **0**. Cubre copia/llenado, LZ77/RLE, rechazo de
+cabecera malformada, cálculo y matrices identidad. Los fixtures IRQ/BIOS
+añaden espera diferida, discard 0/1, consumo parcial, IRQ distinta, fuente
+enmascarada, IME, pending/ack, prioridad y reentrada.
+
+El cierre durante una espera sin objetivo se prueba con un pump sintético
+que sale mediante longjmp; la suite frame prueba SDL_QUIT en el pump real.
+Halt detecta solicitudes ya reconocidas dentro del frame mediante
+PortIrq_WakeCounter; no acepta cualquier frame como motivo de retorno.
+Declaraciones adicionales propias en `port_bios.h`.

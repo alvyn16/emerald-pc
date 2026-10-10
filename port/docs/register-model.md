@@ -1,7 +1,7 @@
 # Registros y contrato host — T08
 
-Estado: inventario/contrato revisados e IRQ T09 implementada; esperas T10
-en verificación. Base del inventario: upstream con parches hasta 0022. El generador
+Estado: inventario/contrato revisados; IRQ T09 y esperas T10 implementadas y
+verificadas. Base del inventario: upstream con parches hasta 0022. El generador
 `python port/tools/audit_registers.py` produce [register-inventory.md](register-inventory.md):
 75 nombres dentro de funciones C, con consumidores y escrituras candidatas.
 Incluye ramas GBA deshabilitadas en host; no es una traza del ejecutable.
@@ -134,4 +134,7 @@ posterior a los hooks gana en 33.365 y termina limpio en 37.000. GBA compare
 OK en `build/irq-ack-rfu-gba-compare.log`; checkout aislado con 24 parches
 recompilado/enlazado y árbol idéntico
 `0db24077d24c9c51701f36e575d466f280bdb3af` (`build/irq-clean-build.log`).
-T10 y el calendario completo T11–T13 todavía requieren sus propios gates.
+T10: `build/irq-wait-build.log`, 14 suites PASS; normal sale de casa sin
+combate (`normal-game-regression/gdb.log`); fixture de batalla gana y sale
+en 37.000 (`wild-battle-regression/gdb.log`); recarga/recuperación de save
+PASS. El calendario completo y dispositivos T11–T13 siguen pendientes.

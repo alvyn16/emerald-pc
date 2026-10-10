@@ -691,3 +691,29 @@ Detalles y límites en `reset.md`. 13 suites PASS; GBA compare OK; checkout
 de reproducción recompilado con árbol de 22 parches idéntico:
 `b55fa9c92f3f8e4b8ec83911bef75951698612cb`. No apareció otro fallo en estas
 rutas; el modelo IRQ/esperas sigue siendo el siguiente trabajo (T08–T12).
+
+## IRQ y esperas cooperativas — T09/T10, parches 0023/0024
+
+El host conserva IF pendiente y aplica IE/IME antes de despachar callbacks,
+según el orden de gIntrTable/IntrMain de Emerald. Reconoce antes de llamar,
+impide reentrada y separa flags BIOS de frame completado. VBlank ya no es
+incondicional. Inicio de DISPCNT con forced blank permite aplicar DISPSTAT
+antes de depender de la primera solicitud IRQ. No se ejecuta crt0 ARM.
+
+0023/0024 convierten las siete escrituras C a IF en REG_IF_ACK; bajo PORT_PC
+llaman al backend, bajo GBA conservan la asignación original. IntrWait ahora
+respeta flags/discard, consume solo los coincidentes y fuerza IME. Halt puede
+despertar con IME=0 y observa solicitudes habilitadas aunque se reconozcan
+dentro del frame. VBlankIntrWait exige un nuevo flag entregado.
+
+14 suites PASS en `build/irq-wait-build.log`. El ejecutable normal pasa salida
+de casa a mapa 0.9 sin batalla; la prueba de Ruta 101 gana y retorna al mapa,
+con salida limpia en 37.000. También pasa `save_game_smoke.py --reload-only`.
+No aparece otra excepción en estos fixtures. Cierre durante espera: pump
+sintético en BIOS y SDL_QUIT en la suite frame, según `bios.md`.
+
+GBA compare OK en `build/irq-ack-rfu-gba-compare.log`. Reproducción con 24
+parches y árbol `0db24077d24c9c51701f36e575d466f280bdb3af`, recompilada en
+`build/irq-clean-build.log`. Modelo y límites en `register-model.md`.
+Siguen pendientes líneas 160–227 completas y eventos IRQ de timers/DMA
+(T11–T13); no se afirma precisión temporal de instrucciones ARM.
