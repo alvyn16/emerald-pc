@@ -3,6 +3,7 @@
 # scaninc only produces dependency files in upstream's Makefile.
 SHELL := bash
 .SHELLFLAGS := -o pipefail -c
+.DELETE_ON_ERROR:
 
 POKEEMERALD := ../pokeemerald
 HOST_CC ?= gcc
