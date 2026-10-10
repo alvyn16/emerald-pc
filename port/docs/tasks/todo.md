@@ -51,11 +51,11 @@ fixture propio; recorrido normal sin regresión.
 
 ### T04 — resolver `expected 0x10` (M)
 
-- [ ] Detener GDB en el rechazo de la cabecera, registrar fuente/destino,
+- [x] Detener GDB en el rechazo de la cabecera, registrar fuente/destino,
   dirección, consumidor y recurso esperado; identificar la causa real.
-- [ ] Corregir productor, tabla o consumidor bajo PORT_PC según la evidencia;
+- [x] Corregir productor, tabla o consumidor bajo PORT_PC según la evidencia;
   no silenciar ni aceptar cualquier cabecera para ocultar el fallo.
-- [ ] Repetir el mismo combate sin ese aviso y con sprites/fondos visibles.
+- [x] Repetir el mismo combate sin ese aviso y con sprites/fondos visibles.
 
 Dependencias: T03. Archivos posibles: `port/bios.c`, pipeline de
 `port/Makefile` o un parche upstream (elegir después del diagnóstico), test

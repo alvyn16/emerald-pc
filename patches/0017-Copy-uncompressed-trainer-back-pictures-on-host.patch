@@ -1,0 +1,22 @@
+From 6a81fc012393f1c675db40819d45c135aff405a1 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sat, 10 Oct 2026 14:17:38 -0400
+Subject: [PATCH] Copy uncompressed trainer back pictures on host
+
+---
+ src/battle_gfx_sfx_util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/battle_gfx_sfx_util.c b/src/battle_gfx_sfx_util.c
+index 1ba42bb..ef18ff4 100644
+--- a/src/battle_gfx_sfx_util.c
++++ b/src/battle_gfx_sfx_util.c
+@@ -710,7 +710,7 @@ void DecompressTrainerFrontPic(u16 frontPicId, u8 battler)
+ void DecompressTrainerBackPic(u16 backPicId, u8 battler)
+ {
+     u8 position = GetBattlerPosition(battler);
+-#ifdef BUGFIX
++#if defined(BUGFIX) || defined(PORT_PC)
+     CpuCopy32(gTrainerBackPicTable[backPicId].data, gMonSpritesGfxPtr->sprites.ptr[position], gTrainerBackPicTable[backPicId].size);
+ #else
+     // Trainer back pics aren't compressed!

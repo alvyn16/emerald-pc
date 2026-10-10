@@ -571,3 +571,28 @@ en `normal-and-diagnostic.md`; los logs están en
 No se alteró la ROM ni el save original, cuyo SHA-256 sigue siendo
 `B5A41C3758763BBEC72769FAB4A2533BF2DB0B6312D93D25A695F9E4B9E02260`.
 Las 13 suites host pasan y `make compare` devuelve `pokeemerald.gba: OK`.
+
+## Imagen trasera del entrenador — parche 0017
+
+GDB detuvo el rechazo de cabecera durante el fixture de combate anterior:
+frame **30.615**, origen `0x10c43fa0` (`gTrainerBackPic_Brendan`), destino
+`0x1037b9ec` (heap). Cadena: `DecompressedLength` → `Lz77Unpack` →
+`LZ77UnCompWram` → `DecompressPicFromTable_2` → `DecompressTrainerBackPic`
+→ `PlayerHandleDrawTrainerPic`. Los primeros bytes de origen eran cero.
+Las direcciones corresponden a ese binario, no a un ABI estable.
+
+La tabla contiene una imagen `.4bpp` **sin comprimir**. Upstream ya explica
+el error y ofrece una copia bajo BUGFIX. El parche `0017` habilita esa misma
+ruta también con PORT_PC; no altera los datos ni acepta cabeceras inválidas
+en la BIOS. El comportamiento GBA permanece igual.
+
+La repetición del fixture en Ruta 101 ganó en frame **33.365** y llegó a
+**37.000** con salida limpia, sin `invalid compressed stream`. La captura
+local `build/trainer-backpic-battle.png` (frame 31.300) muestra al entrenador
+de espaldas, al Poochyena y el fondo de batalla. No se observó otro cierre
+en ese recorrido; esto no valida todos los ataques ni eventos del juego.
+
+Las 13 suites host siguen pasando; `build/trainer-backpic-gba-compare.log`
+contiene `pokeemerald.gba: OK`. Aplicar `0017` al checkout aislado con los
+16 parches anteriores produce el mismo árbol que el checkout de trabajo:
+`de4ac4ca18bc3502e5a3cf4d5eaee31db1db35d9`. También se recompiló y enlazó allí.

@@ -78,6 +78,14 @@ printf "BATTLE END frame=%u outcome=%u\n", sDiagnosticFrame, *(unsigned char *)&
 disable 2
 continue
 end
+break PortHost_RunFrame if sDiagnosticFrame == 31300
+commands
+silent
+printf "BATTLE CAPTURE frame=%u\n", sDiagnosticFrame
+dump binary memory build/wild-battle-regression/battle.raw &sPixels ((char *)&sPixels)+153600
+disable 3
+continue
+end
 continue
 printf "STOP frame=%u\n", sDiagnosticFrame
 bt
@@ -99,6 +107,8 @@ quit
     won = any("BATTLE END frame=" in line and "outcome=1" in line
               for line in text.splitlines())
     if (result or "received signal" in text or not won
+            or "invalid compressed stream" in text
+            or "BATTLE CAPTURE frame=31300" not in text
             or "ROUTE101 fixture frame=31000" not in text
             or "STOP frame=37000" not in text or "exited normally" not in text):
         raise SystemExit(f"Wild battle regression failed; inspect {log}")

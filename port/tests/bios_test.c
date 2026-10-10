@@ -43,6 +43,15 @@ int main(void)
     RLUnCompVram((const u32 *)rl, unpacked);
     assert(memcmp(unpacked, "XXXXX", 5) == 0);
 
+    // Raw tile data must not be accepted as an LZ stream or overwrite output.
+    // Trainer back pictures use the copy consumer instead of this API.
+    const u32 rawTiles[2] = {0, 0};
+    memset(unpacked, 0xa5, sizeof(unpacked));
+    LZ77UnCompWram(rawTiles, unpacked);
+    LZ77UnCompVram(rawTiles, unpacked);
+    for (unsigned i = 0; i < sizeof(unpacked); ++i)
+        assert(unpacked[i] == 0xa5);
+
     assert(Div(-13, 4) == -3);
     assert(DivArm(4, -13) == -3);
     assert(Sqrt(65535) == 255);
