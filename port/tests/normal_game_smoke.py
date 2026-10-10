@@ -9,6 +9,8 @@ import shutil
 import subprocess
 import sys
 
+from process_watchdog import run_logged
+
 
 def main() -> None:
     project = Path(__file__).resolve().parents[2]
@@ -53,6 +55,8 @@ class Keys(gdb.Breakpoint):
     frame = -1
     def stop(self):
         self.frame += 1
+        if self.frame % 3000 == 0:
+            print("NORMAL PROGRESS frame=%d" % self.frame, flush=True)
         if self.frame >= 30500:
             address = int(gdb.parse_and_eval("*(unsigned int *)&gSaveBlock1Ptr"))
             group, number = bytes(gdb.selected_inferior().read_memory(address + 4, 2))
@@ -81,13 +85,11 @@ quit
     script = scratch / "test.gdb"
     script.write_text(commands, encoding="ascii")
     log = scratch / "gdb.log"
-    with log.open("w", encoding="utf-8") as output:
-        result = subprocess.run(["gdb", "-batch", "-x", str(script),
-                                 str(scratch / "build/emerald-pc.exe")],
-                                cwd=project, stdout=output, stderr=subprocess.STDOUT,
-                                timeout=600)
+    result = run_logged(["gdb", "-batch", "-x", str(script),
+                         str(scratch / "build/emerald-pc.exe")],
+                        project, log, "NORMAL PROGRESS frame=")
     text = log.read_text(encoding="utf-8", errors="replace")
-    if (result.returncode or "received signal" in text or "FAIL" in text
+    if (result or "received signal" in text or "FAIL" in text
             or "NORMAL STOP frame=30500 map=0.9" not in text
             or "exited normally" not in text):
         raise SystemExit(f"Normal game regression failed: {log}")

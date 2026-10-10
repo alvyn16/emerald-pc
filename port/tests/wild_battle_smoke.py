@@ -5,6 +5,8 @@ import shutil
 import subprocess
 import sys
 
+from process_watchdog import run_logged
+
 
 def main() -> None:
     project = Path(__file__).resolve().parents[2]
@@ -86,18 +88,17 @@ quit
     script = scratch / "test.gdb"
     script.write_text(commands, encoding="ascii")
     log = scratch / "gdb.log"
-    with log.open("w", encoding="utf-8") as output:
-        result = subprocess.run(
-            ["gdb", "-batch", "-x", str(script),
-             str(scratch / "build" / "emerald-pc-diagnostic.exe")],
-            cwd=project, stdout=output, stderr=subprocess.STDOUT, timeout=600,
-        )
+    result = run_logged(
+        ["gdb", "-batch", "-x", str(script),
+         str(scratch / "build" / "emerald-pc-diagnostic.exe")],
+        project, log, "PC diagnostic: frame=",
+    )
     text = log.read_text(encoding="utf-8", errors="replace")
     if normal_save.read_bytes() != b"\xa5" * 131072:
         raise SystemExit("Diagnostic executable modified the normal save")
     won = any("BATTLE END frame=" in line and "outcome=1" in line
               for line in text.splitlines())
-    if (result.returncode or "received signal" in text or not won
+    if (result or "received signal" in text or not won
             or "ROUTE101 fixture frame=31000" not in text
             or "STOP frame=37000" not in text or "exited normally" not in text):
         raise SystemExit(f"Wild battle regression failed; inspect {log}")

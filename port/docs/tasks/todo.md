@@ -41,7 +41,7 @@ Verificación: misma batería en main; revisión previa a merge.
 
 - [x] Registrar frame, callbacks, mapa/estado de batalla y registros relevantes
   en builds de diagnóstico, sin volcar ROM/save ni contenido de assets.
-- [ ] Añadir timeout y detección de falta de avance a los recorridos;
+- [x] Añadir timeout y detección de falta de avance a los recorridos;
   distinguir espera válida de bloqueo.
 - [x] Mantener el ejecutable normal sin scripts ni volcados diagnósticos.
 

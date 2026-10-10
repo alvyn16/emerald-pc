@@ -47,6 +47,15 @@ cada línea para conservar el último estado si el proceso se bloquea. No
 incluye contenido de ROM, recursos ni save. Es un registro periódico de
 frames completados; no es un watchdog ni una traza por instrucción.
 
+Los harnesses de regresión tienen un watchdog externo: límite total de
+600 segundos y fallo si no reciben un nuevo registro de progreso durante
+60 segundos. Un menú que sigue completando frames no se considera un
+bloqueo por tener el mismo callback. El watchdog conserva el último estado
+y termina únicamente el árbol del proceso de prueba que creó, incluido
+el juego inferior de GDB. El fixture `process_watchdog_test.py` comprueba
+un bloqueo inducido y que no sobreviva su proceso hijo. No captura una
+traza de pila al vencer el plazo; para eso hay que repetir la ruta en GDB.
+
 Para repetir el recorrido completo hasta Villa Raíz después de ajustar el
 reloj, genere el guion sin guardar datos del juego en Git:
 

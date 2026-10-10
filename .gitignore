@@ -5,3 +5,4 @@
 /extracted/
 *.gba
 *.sav
+__pycache__/
