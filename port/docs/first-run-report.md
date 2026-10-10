@@ -670,3 +670,24 @@ acceso previo estaba fuera del array según el código de save.c.
 GBA compare sigue OK (`build/save-id-gba-compare.log`). No se observó otra
 excepción en estos recorridos; reset real y cortes eléctricos no quedan
 probados por ellos.
+
+## Reinicio normal — parche 0022 y limpieza host
+
+La prueba de A+B+Start+Select recibió SIGSEGV en AgbRFU_SoftReset
+(`keyboard-before.log`), al consultar timerSelect con gSTWIStatus NULL.
+RFU está deshabilitado en el host. 0022 conserva el apagado inalámbrico
+para GBA y lo omite en esa ruta de reset bajo PORT_PC.
+
+`reset_game_smoke.py` verifica la combinación y DoSoftReset sobre el
+ejecutable normal: una instancia nueva, velocidad 1×, save contador 2 y
+campos correctos. Ruta con espacios y cwd externo. El segundo caso entra
+en la función del juego mediante GDB, sin pretender cubrir un evento de
+historia. Padre e hijo terminan y el save queda idéntico.
+
+main centraliza la limpieza en atexit para incluir el fallo de relanzamiento.
+La prueba de CreateProcess real con archivo inexistente informa Windows
+error 2, llega a ShutdownHost, termina con código 1 y no deja reemplazo.
+Detalles y límites en `reset.md`. 13 suites PASS; GBA compare OK; checkout
+de reproducción recompilado con árbol de 22 parches idéntico:
+`b55fa9c92f3f8e4b8ec83911bef75951698612cb`. No apareció otro fallo en estas
+rutas; el modelo IRQ/esperas sigue siendo el siguiente trabajo (T08–T12).

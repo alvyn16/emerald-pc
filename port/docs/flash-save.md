@@ -79,7 +79,7 @@ juego. El byte final de firma puede esperar al cierre/flush posterior.
 Estas pruebas cubren cierre limpio y terminación durante sectores, no cortes
 eléctricos, disco lleno, fallos físicos ni interrupción en cada byte de firma.
 Una escritura rechazada al abrir no equivale a una falla de disco a mitad
-del guardado. Reset real alrededor del save se verifica aparte en T07.
+del guardado. Reset real tras los dos saves completos PASS en T07 (`reset.md`).
 
 El save original conserva SHA-256
 `B5A41C3758763BBEC72769FAB4A2533BF2DB0B6312D93D25A695F9E4B9E02260`.
