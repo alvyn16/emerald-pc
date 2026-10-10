@@ -67,6 +67,16 @@ int main(void)
         return 1;
     }
 
+    // GBA disables its main callback when flash identification fails. On PC,
+    // reject an unavailable save before opening a window that cannot progress.
+    if (PortFlash_Open() != 0)
+    {
+        fprintf(stderr, "PC: cannot open save; startup aborted without modifying it\n");
+        portSDL.Quit();
+        Port_FreeGbaMemory();
+        return 1;
+    }
+
     SDL_Window *window = portSDL.CreateWindow(windowTitle,
                                          SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                          240 * 4, 160 * 4, SDL_WINDOW_SHOWN);

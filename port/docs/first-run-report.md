@@ -648,3 +648,25 @@ con el mismo árbol de los 20 parches:
 Inventario reproducible: `callback-inventory.md`, generado con
 `port/tools/audit_callbacks.py`: 67 archivos, 142 registros no nulos y
 17 loops candidatos. Sus límites de análisis están documentados.
+
+## Save no disponible — arranque host
+
+El fixture de tamaño inválido reveló una espera permanente: AgbMain pone
+callback2 en NULL cuando no hay flash. El host seguía completando frames,
+sin mapa ni callbacks, y no alcanzaba LoadGameSave. Por ello un watchdog
+basado solo en frames no lo considera detenido. No hubo excepción.
+
+`port/main.c` abre ahora la flash después de inicializar SDL y antes de crear
+la ventana; si falla, informa la causa, libera SDL/memoria y devuelve 1.
+Un archivo incorrecto o de solo lectura permanece intacto. Reabrir una
+flash ya abierta durante IdentifyFlash conserva la ruta normal del juego.
+Pruebas: `build/save-game-regression/invalid-size.log`, `read-only.log`.
+
+También se comprobaron dos guardados por el diálogo real, reapertura con
+campos semánticos, recuperación tras corrupción e interrupción del tercer
+guardado. El parche 0021 valida IDs de sector antes de indexar las tablas
+en PORT_PC: el fixture con ID 0xffff no había causado una señal, pero el
+acceso previo estaba fuera del array según el código de save.c.
+GBA compare sigue OK (`build/save-id-gba-compare.log`). No se observó otra
+excepción en estos recorridos; reset real y cortes eléctricos no quedan
+probados por ellos.
