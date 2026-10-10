@@ -1,0 +1,25 @@
+From 3f9c4e739e1fc4d69b69010dac8505edbbe7c3ef Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sat, 10 Oct 2026 14:38:43 -0400
+Subject: [PATCH] Service host frames during party menu loading
+
+---
+ src/party_menu.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/party_menu.c b/src/party_menu.c
+index 1b23059..c711c3a 100755
+--- a/src/party_menu.c
++++ b/src/party_menu.c
+@@ -554,6 +554,11 @@ static void CB2_InitPartyMenu(void)
+     {
+         if (MenuHelpers_ShouldWaitForLinkRecv() == TRUE || ShowPartyMenu() == TRUE || MenuHelpers_IsLinkActive() == TRUE)
+             break;
++#ifdef PORT_PC
++        // Deferred DMA copies are completed by the cooperative VBlank service.
++        extern void PortHost_RunFrame(void);
++        PortHost_RunFrame();
++#endif
+     }
+ }
+ 
