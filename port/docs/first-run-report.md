@@ -646,7 +646,7 @@ Las 13 suites host pasan; `build/menu-load-gba-compare.log` contiene
 con el mismo árbol de los 20 parches:
 `0bb32861903f5d16ce9aa3eff53a8f2cb52ca92c`.
 Inventario reproducible: `callback-inventory.md`, generado con
-`port/tools/audit_callbacks.py`: 67 archivos, 142 registros no nulos y
+`port/tools/audit_callbacks.py`: 67 archivos, 136 registros no nulos y
 17 loops candidatos. Sus límites de análisis están documentados.
 
 ## Save no disponible — arranque host

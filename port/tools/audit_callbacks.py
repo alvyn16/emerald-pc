@@ -15,8 +15,12 @@ def functions(text: str) -> dict:
                     lambda match: ''.join('\n' if c == '\n' else ' ' for c in match[0]),
                     text, flags=re.S)
     result = {}
+    previous_end = 0
     pattern = r'^[\w *]+\b(\w+)\s*\([^;{}]*\)\s*\{'
     for match in re.finditer(pattern, masked, re.M):
+        # Do not interpret nested if/switch/while blocks as C functions.
+        if match.start() < previous_end or match[1] in ('if', 'switch', 'while', 'for'):
+            continue
         start = match.end()
         depth, end = 1, start
         while end < len(masked) and depth:
@@ -24,6 +28,7 @@ def functions(text: str) -> dict:
             end += 1
         result[match[1]] = (text.count('\n', 0, match.start()) + 1,
                            masked[start:end - 1])
+        previous_end = end
     return result
 
 

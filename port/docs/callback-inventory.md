@@ -1,7 +1,7 @@
 # Inventario reproducible de callbacks y cargas
 
-Checkout analizado: `cac99eeb49d7883d2b49eef3e51ccd75d841859b`. 67 archivos registran callbacks,
-142 registros no nulos; 17 funciones con while alcanzan
+Checkout analizado: `b32626ab41648cc2a13d57093496465cc51e2f24`. 67 archivos registran callbacks,
+136 registros no nulos; 17 funciones con while alcanzan
 sondeos de DMA dentro del mismo archivo.
 
 Generador propio: `python port/tools/audit_callbacks.py`. Análisis léxico de
@@ -24,7 +24,6 @@ Las colas de sprite/DMA y recursos entre módulos requieren revisión adicional.
 | src/battle_main.c:2177 CB2_InitEndLinkBattle | VBlank → VBlankCB_Battle | sin raíz liberada detectada |
 | src/battle_main.c:2417 CB2_InitAskRecordBattle | VBlank → VBlankCB_Battle | sin raíz liberada detectada |
 | src/battle_pyramid_bag.c:459 LoadPyramidBagMenu | VBlank → VBlankCB_PyramidBag | sin raíz liberada detectada |
-| src/battle_records.c:473 switch | VBlank → VblankCB_TrainerHillRecords | sin raíz liberada detectada |
 | src/battle_records.c:471 CB2_ShowTrainerHillRecords | VBlank → VblankCB_TrainerHillRecords | sin raíz liberada detectada |
 | src/battle_script_commands.c:10101 Cmd_displaydexinfo | VBlank → VBlankCB_Battle | destino dinámico/externo |
 | src/battle_transition.c:1201 Swirl_Init | VBlank → VBlankCB_Swirl | sTransitionData → IsBattleTransitionDone:1041 |
@@ -81,9 +80,9 @@ Las colas de sprite/DMA y recursos entre módulos requieren revisión adicional.
 | src/field_effect.c:2839 FieldMoveShowMonIndoorsEffect_End | VBlank → intrCallback | destino dinámico/externo |
 | src/field_region_map.c:101 MCB2_InitRegionMapRegisters | VBlank → VBCB_FieldUpdateRegionMap | sin raíz liberada detectada |
 | src/fldeff_flash.c:123 CB2_DoChangeMap | VBlank → VBC_ChangeMapVBlank | sin raíz liberada detectada |
-| src/frontier_pass.c:729 InitFrontierPass | VBlank → VBlankCB_FrontierPass | sMapData → FreeFrontierMap:1380; sPassData → FreeFrontierPassData:652; sPassGfx → FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674 |
-| src/frontier_pass.c:1069 Task_PassAreaZoom | VBlank → VBlankCB_FrontierPass | sMapData → FreeFrontierMap:1380; sPassData → FreeFrontierPassData:652; sPassGfx → FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674 |
-| src/frontier_pass.c:1388 InitFrontierMap | VBlank → VBlankCB_FrontierPass | sMapData → FreeFrontierMap:1380; sPassData → FreeFrontierPassData:652; sPassGfx → FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674 |
+| src/frontier_pass.c:729 InitFrontierPass | VBlank → VBlankCB_FrontierPass | sPassData → FreeFrontierPassData:652; sPassGfx → FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674 |
+| src/frontier_pass.c:1069 Task_PassAreaZoom | VBlank → VBlankCB_FrontierPass | sPassData → FreeFrontierPassData:652; sPassGfx → FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674 |
+| src/frontier_pass.c:1388 InitFrontierMap | VBlank → VBlankCB_FrontierPass | sPassData → FreeFrontierPassData:652; sPassGfx → FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674, FreeFrontierPassGfx:674 |
 | src/hall_of_fame.c:369 InitHallOfFameScreen | VBlank → VBlankCB_HallOfFame | sin raíz liberada detectada |
 | src/hall_of_fame.c:799 CB2_DoHallOfFamePC | VBlank → VBlankCB_HallOfFame | sin raíz liberada detectada |
 | src/intro.c:1072 SetUpCopyrightScreen | VBlank → VBlankCB_Intro | sin raíz liberada detectada |
@@ -131,26 +130,21 @@ Las colas de sprite/DMA y recursos entre módulos requieren revisión adicional.
 | src/region_map.c:1647 CB2_OpenFlyMap | VBlank → VBlankCB_FlyMap | sin raíz liberada detectada |
 | src/reset_rtc_screen.c:520 CB2_InitResetRtcScreen | VBlank → VBlankCB | sin raíz liberada detectada |
 | src/reshow_battle_screen.c:42 CB2_ReshowBattleScreenAfterMenu | VBlank → VBlankCB_Battle | destino dinámico/externo |
-| src/reshow_battle_screen.c:44 switch | VBlank → VBlankCB_Battle | destino dinámico/externo |
 | src/roulette.c:1170 CB2_LoadRoulette | VBlank → VBlankCB_Roulette | sRoulette → FreeRoulette:1103, FreeRoulette:1103 |
 | src/save_failed_screen.c:176 CB2_SaveFailedScreen | VBlank → VBlankCB | sin raíz liberada detectada |
 | src/save_failed_screen.c:176 CB2_SaveFailedScreen | VBlank → VBlankCB_UpdateClockGraphics | sin raíz liberada detectada |
-| src/save_failed_screen.c:178 switch | VBlank → VBlankCB | sin raíz liberada detectada |
-| src/save_failed_screen.c:178 switch | VBlank → VBlankCB_UpdateClockGraphics | sin raíz liberada detectada |
 | src/save_failed_screen.c:294 CB2_GameplayCannotBeContinued | VBlank → VBlankCB | sin raíz liberada detectada |
 | src/save_failed_screen.c:307 CB2_FadeAndReturnToTitleScreen | VBlank → VBlankCB | sin raíz liberada detectada |
 | src/shop.c:501 CB2_InitBuyMenu | VBlank → VBlankCB_BuyMenu | sin raíz liberada detectada |
 | src/slot_machine.c:1153 SlotMachineSetup_InitVBlank | VBlank → SlotMachine_VBlankCB | sSlotMachine → SlotTask_FreeDataStructures:1745 |
 | src/start_menu.c:1203 InitSaveWindowAfterLinkBattle | VBlank → VBlankCB_LinkBattleSave | sin raíz liberada detectada |
 | src/starter_choose.c:374 CB2_ChooseStarter | VBlank → VblankCB_StarterChoose | sin raíz liberada detectada |
-| src/title_screen.c:572 switch | VBlank → VBlankCB | sin raíz liberada detectada |
 | src/title_screen.c:570 CB2_InitTitleScreen | VBlank → VBlankCB | sin raíz liberada detectada |
 | src/trade.c:395 InitTradeMenu | VBlank → VBlankCB_TradeMenu | sin raíz liberada detectada |
 | src/trade.c:2827 CB2_LinkTrade | VBlank → VBlankCB_TradeAnim | sTradeAnim → DoTradeAnim_Cable:3438, DoTradeAnim_Wireless:3911, CB2_FreeTradeAnim:4825 |
 | src/trade.c:2996 CB2_InitInGameTrade | VBlank → VBlankCB_TradeAnim | sTradeAnim → DoTradeAnim_Cable:3438, DoTradeAnim_Wireless:3911, CB2_FreeTradeAnim:4825 |
 | src/trainer_card.c:377 Task_TrainerCard | VBlank → VblankCb_TrainerCard | sData → CloseTrainerCard:360 |
 | src/trainer_card.c:1587 FlipTrainerCard | HBlank → HblankCb_TrainerCard | sin raíz liberada detectada |
-| src/union_room_battle.c:115 switch | VBlank → VBlankCB_UnionRoomBattle | sin raíz liberada detectada |
 | src/union_room_battle.c:113 CB2_UnionRoomBattle | VBlank → VBlankCB_UnionRoomBattle | sin raíz liberada detectada |
 | src/union_room_chat.c:943 CB2_LoadInterface | VBlank → VBlankCB_UnionRoomChatMain | sin raíz liberada detectada |
 | src/use_pokeblock.c:567 ShowUsePokeblockMenu | VBlank → VBlankCB_UsePokeblockMenu | sMenu → FeedPokeblockToMon:690, CloseUsePokeblockMenu:820 |

@@ -54,10 +54,16 @@ salida limpia en 31.500. GBA compare OK; 谩rbol de reproducci贸n id茅ntico.
 
 ## Inventario completo de candidatos
 
-[callback-inventory.md](callback-inventory.md) registra los 142 callbacks
-no nulos y 17 loops con rutas transitivas hasta sondeos DMA, con ubicaci髇,
-funci髇 y ra韈es liberables detectadas. Se reproduce con
-`python port/tools/audit_callbacks.py`. El an醠isis es l閤ico y local a
+[callback-inventory.md](callback-inventory.md) registra los 136 callbacks
+no nulos y 17 loops con rutas transitivas hasta sondeos DMA, con ubicaci贸n,
+funci贸n y ra铆ces liberables detectadas. Se reproduce con
+`python port/tools/audit_callbacks.py`. El an谩lisis es l茅xico y local a
 cada archivo: no demuestra ausencia de errores ni cubre llamadas indirectas
-y recursos entre m骴ulos. Los cuatro recorridos comprobados se distinguen
-de los candidatos que todav韆 requieren una prueba de uso.
+y recursos entre m贸dulos. Los cuatro recorridos comprobados se distinguen
+de los candidatos que todav铆a requieren una prueba de uso.
+
+Al reutilizar el parser para T08 se detectaron seis registros duplicados
+porque bloques if/switch anidados se interpretaban como funciones. El parser
+ahora excluye rangos ya contenidos en una funci贸n y tiene un fixture propio
+`audit_tools_test.py`. Conteo corregido: 136 registros, antes 142; 67 archivos
+y 17 loops se mantienen. Se regener贸 el inventario con la revisi贸n actual.
