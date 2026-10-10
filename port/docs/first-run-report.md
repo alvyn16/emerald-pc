@@ -482,3 +482,66 @@ esa ventana de prueba y el proceso terminó por `Port_ExitCleanly`, cerrando
 audio y save. Los registros están en `build/hito19-windows-launch.*.log`.
 El lanzador de prueba ocultó las ventanas al arrancar; esta comprobación
 valida carga/cierre y las capturas anteriores validan el framebuffer.
+
+## Hito 20: cierre al comenzar un combate salvaje
+
+El usuario informó que, después de obtener el inicial y hablar con el
+profesor, un encuentro en Ruta 101 mostraba la transición, pantalla negra
+y cierre. Se reprodujo el mismo tipo de cierre en GDB iniciando un combate
+normal con Torchic nivel 5 y Poochyena nivel 2 después del recorrido al mapa.
+El fixture se creó en memoria con funciones del juego; no es una prueba de
+la probabilidad de encuentro ni de todos los pasos previos de la historia.
+
+### Causa medida
+
+En el frame **30.589**, GDB detuvo un **SIGSEGV**:
+
+```text
+VBlankCB_Slice → VBlankIntr → PortHost_RunFrame → WaitForVBlank → AgbMain
+EAX = 0x00000000
+EDX = 0x04000048 (WININ)
+movzwl 0x2(%eax), %eax
+```
+
+`IsBattleTransitionDone` libera y pone a NULL `sTransitionData`, pero deja
+registrado `VBlankCB_Slice`. `Task_BattleStart` selecciona `CB2_InitBattle`
+para la siguiente iteración; antes de ejecutarla, el host cooperativo llama
+a VBlank. El callback antiguo intenta leer `sTransitionData->WININ` desde
+la dirección **0x00000002**, que no está mapeada en Windows. No faltaba la
+región IO: el fallo era la vida útil de los datos del callback.
+
+### Corrección y verificación
+
+El parche **0016**, generado con `git format-patch`, desregistra VBlank y
+HBlank y detiene DMA0 antes de liberar los datos, exclusivamente bajo
+`PORT_PC`. Se conserva el código GBA. El ejecutable normal y el diagnóstico
+se reconstruyeron, y las **13 suites host pasan**.
+
+La primera repetición alcanzó **CB2_EndWildBattle en frame 32.425,
+outcome=1 (victoria)**, y el frame **36.500** sin excepción nueva. La captura
+`build/wild-battle-final.png` muestra al protagonista de vuelta en Villa Raíz.
+GDB y la entrada por guion están en `build/wild-battle-*.log`/`.gdb`.
+
+La regresión repetible se ejecuta desde MINGW32:
+
+```sh
+make -C port diagnostic-exe
+python port/tests/wild_battle_smoke.py
+```
+
+La prueba usa `build/wild-battle-regression/`: copia local de la ROM,
+save vacío propio, ejecutable y logs, todo ignorado por Git. No modifica
+`roms/` ni `saves/`. Exige victoria, llegada al frame 36.500, ausencia de
+señales y salida limpia. Requiere GDB i686 y Python 3.9 o posterior.
+
+`make compare` volvió a devolver **`pokeemerald.gba: OK`** con ARM Binutils
+2.43.1. Se verificó aplicar `0016` mediante `setup.ps1` a un checkout limpio
+con `0001`–`0015`: árbol final idéntico al de trabajo,
+`e990d9cea5ae60d66b293bff35b6c5f2725b5a49`.
+
+El SHA-256 del save original se mantuvo igual antes y después:
+`B5A41C3758763BBEC72769FAB4A2533BF2DB0B6312D93D25A695F9E4B9E02260`.
+Durante el combate apareció un aviso no fatal de stream comprimido inválido
+(`expected 0x10`); su origen gráfico queda pendiente de diagnóstico. No se
+confunde ese aviso con la causa del SIGSEGV corregido, ni se afirma haber
+validado todas las transiciones o combates del juego.

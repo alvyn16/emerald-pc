@@ -1,0 +1,27 @@
+From 693512baa5f1493add4f469cd471b833b0c126b4 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sat, 10 Oct 2026 13:46:20 -0400
+Subject: [PATCH] Retire host battle transition callbacks before freeing data
+
+---
+ src/battle_transition.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/battle_transition.c b/src/battle_transition.c
+index 59fb57e..26cd177 100644
+--- a/src/battle_transition.c
++++ b/src/battle_transition.c
+@@ -1044,6 +1044,13 @@ bool8 IsBattleTransitionDone(void)
+     if (gTasks[taskId].tTransitionDone)
+     {
+         DestroyTask(taskId);
++#ifdef PORT_PC
++        // The cooperative host runs VBlank before CB2_InitBattle can clear
++        // transition callbacks. Retire them before their data is freed.
++        SetVBlankCallback(NULL);
++        SetHBlankCallback(NULL);
++        DmaStop(0);
++#endif
+         FREE_AND_SET_NULL(sTransitionData);
+         return TRUE;
+     }
