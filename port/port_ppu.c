@@ -19,6 +19,7 @@ typedef struct {
 static PixelLayer sTop[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
 static PixelLayer sSecond[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
 static int32_t sAffineX[2], sAffineY[2];
+static int32_t sMosaicAffineX[2], sMosaicAffineY[2];
 static uint32_t sAffineRegX[2], sAffineRegY[2];
 
 static void PlotPixel(unsigned position, uint16_t color, unsigned layer, int semiTransparent)
@@ -91,14 +92,17 @@ static void RenderBackground(unsigned bg, unsigned y)
     const unsigned bpp8 = (control & 0x80) != 0;
     const unsigned hscroll = scroll[bg * 2] & 0x1ff;
     const unsigned vscroll = scroll[bg * 2 + 1] & 0x1ff;
+    const unsigned mosaic = REG_MOSAIC;
+    const unsigned mosaicWidth = (control & BGCNT_MOSAIC) ? (mosaic & 15) + 1 : 1;
+    const unsigned mosaicHeight = (control & BGCNT_MOSAIC) ? ((mosaic >> 4) & 15) + 1 : 1;
 
-        const unsigned mapY = (y + vscroll) & (height - 1);
+        const unsigned mapY = (y - y % mosaicHeight + vscroll) & (height - 1);
         const unsigned tileY = mapY >> 3;
         for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
         {
             if (!(sWindowMask[y * PORT_SCREEN_WIDTH + x] & (1u << bg)))
                 continue;
-            const unsigned mapX = (x + hscroll) & (width - 1);
+            const unsigned mapX = (x - x % mosaicWidth + hscroll) & (width - 1);
             const unsigned tileX = mapX >> 3;
             const unsigned block = (tileY >> 5) * blocksWide + (tileX >> 5);
             const unsigned mapOffset = screenBase + block * 0x800
@@ -152,15 +156,24 @@ static void RenderAffineBackground(unsigned bg, unsigned y)
         sAffineY[index] = SignExtend28(regY);
     }
     const int32_t pa = matrix[0], pc = matrix[2];
+    const unsigned mosaic = REG_MOSAIC;
+    const unsigned mosaicWidth = (control & BGCNT_MOSAIC) ? (mosaic & 15) + 1 : 1;
+    const unsigned mosaicHeight = (control & BGCNT_MOSAIC) ? ((mosaic >> 4) & 15) + 1 : 1;
+    if (y % mosaicHeight == 0)
+    {
+        sMosaicAffineX[index] = sAffineX[index];
+        sMosaicAffineY[index] = sAffineY[index];
+    }
 
-        const int64_t lineX = sAffineX[index];
-        const int64_t lineY = sAffineY[index];
+        const int64_t lineX = sMosaicAffineX[index];
+        const int64_t lineY = sMosaicAffineY[index];
         for (int x = 0; x < PORT_SCREEN_WIDTH; ++x)
         {
             if (!(sWindowMask[y * PORT_SCREEN_WIDTH + x] & (1u << bg)))
                 continue;
-            int sourceX = (int)((lineX + pa * x) >> 8);
-            int sourceY = (int)((lineY + pc * x) >> 8);
+            const int sampleX = x - x % mosaicWidth;
+            int sourceX = (int)((lineX + pa * sampleX) >> 8);
+            int sourceY = (int)((lineY + pc * sampleX) >> 8);
             if (wrap)
             {
                 sourceX &= size - 1;
@@ -234,6 +247,9 @@ static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y
         const unsigned tileStep = bpp8 ? 2 : 1;
         const unsigned tileBase = (attr2 & 0x3ff) & (bpp8 ? ~1u : ~0u);
         const unsigned rowStride = oneDimensional ? (width / 8) * tileStep : 32;
+        const unsigned mosaic = REG_MOSAIC;
+        const unsigned mosaicWidth = (attr0 & 0x1000) ? ((mosaic >> 8) & 15) + 1 : 1;
+        const unsigned mosaicHeight = (attr0 & 0x1000) ? ((mosaic >> 12) & 15) + 1 : 1;
 
         const int sy = (int)y - originY;
         if (sy < 0 || sy >= (int)renderHeight)
@@ -245,11 +261,13 @@ static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y
                 const int screenX = originX + (int)sx;
                 if (screenX < 0 || screenX >= PORT_SCREEN_WIDTH) continue;
                 if (!windowOnly && !(sWindowMask[screenY * PORT_SCREEN_WIDTH + screenX] & 0x10)) continue;
+                const int sampleX = (int)sx - (int)sx % (int)mosaicWidth;
+                const int sampleY = (int)y - (int)y % (int)mosaicHeight - originY;
                 int tileX, tileY;
                 if (affine)
                 {
-                    const int centeredX = (int)sx - (int)renderWidth / 2;
-                    const int centeredY = (int)sy - (int)renderHeight / 2;
+                    const int centeredX = sampleX - (int)renderWidth / 2;
+                    const int centeredY = sampleY - (int)renderHeight / 2;
                     tileX = (int)width / 2 + ((pa * centeredX + pb * centeredY) >> 8);
                     tileY = (int)height / 2 + ((pc * centeredX + pd * centeredY) >> 8);
                     if (tileX < 0 || tileY < 0 || tileX >= (int)width || tileY >= (int)height)
@@ -257,9 +275,11 @@ static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y
                 }
                 else
                 {
-                    tileX = (attr1 & 0x1000) ? (int)width - 1 - (int)sx : (int)sx;
-                    tileY = (attr1 & 0x2000) ? (int)height - 1 - (int)sy : (int)sy;
+                    tileX = (attr1 & 0x1000) ? (int)width - 1 - sampleX : sampleX;
+                    tileY = (attr1 & 0x2000) ? (int)height - 1 - sampleY : sampleY;
                 }
+                if (tileX < 0 || tileY < 0 || tileX >= (int)width || tileY >= (int)height)
+                    continue;
                 const unsigned tileNumber = tileBase + (tileY / 8) * rowStride
                         + (tileX / 8) * tileStep;
                 const unsigned offset = 0x10000 + tileNumber * 32
@@ -353,6 +373,8 @@ void PortPpu_BeginFrame(void)
         sAffineRegY[i] = *(const volatile uint32_t *)(registers + 12);
         sAffineX[i] = SignExtend28(sAffineRegX[i]);
         sAffineY[i] = SignExtend28(sAffineRegY[i]);
+        sMosaicAffineX[i] = sAffineX[i];
+        sMosaicAffineY[i] = sAffineY[i];
     }
 }
 

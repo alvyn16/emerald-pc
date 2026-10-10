@@ -475,6 +475,51 @@ int main(void)
     PortPpu_Render(sFrame);
     assert(sFrame[6] == 0xffff0000u);
 
+    memset(io, 0, 0x1000);
+    memset(vram, 0, 0x18000);
+    for (int i = 0; i < 128; ++i) oam[i * 4] = 0x0200;
+    for (unsigned y = 0; y < 8; ++y)
+        for (unsigned x = 0; x < 8; ++x)
+            vram[0x4000 + y * 8 + x] = 1 + ((x + y) & 1);
+    REG_BG0CNT = BGCNT_CHARBASE(1) | BGCNT_256COLOR;
+    REG_DISPCNT = DISPCNT_BG0_ON;
+    PortPpu_Render(sFrame);
+    REG_BG0CNT |= BGCNT_MOSAIC;
+    PortPpu_Render(sLineFrame);
+    assert(memcmp(sFrame, sLineFrame, sizeof(sFrame)) == 0); // 1x1 identity.
+    REG_MOSAIC = 0x0033;
+    PortPpu_Render(sFrame);
+    for (unsigned y = 0; y < 4; ++y)
+        for (unsigned x = 0; x < 4; ++x)
+            assert(sFrame[y * PORT_SCREEN_WIDTH + x] == 0xffff0000u);
+
+    REG_BG2CNT = BGCNT_CHARBASE(1) | BGCNT_MOSAIC;
+    REG_BG2PA = REG_BG2PD = 256;
+    REG_BG2PB = REG_BG2PC = 0;
+    REG_BG2X = REG_BG2Y = 0;
+    REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_BG2_ON;
+    PortPpu_Render(sFrame);
+    for (unsigned y = 0; y < 4; ++y)
+        for (unsigned x = 0; x < 4; ++x)
+            assert(sFrame[y * PORT_SCREEN_WIDTH + x] == 0xffff0000u);
+
+    memcpy(vram + 0x10000, vram + 0x4000, 64);
+    palette[257] = 0x001f;
+    palette[258] = 0x7c00;
+    oam[0] = 0x3000; // 8 bpp with mosaic.
+    oam[1] = 0;
+    oam[2] = 0;
+    REG_MOSAIC = 0x3300;
+    REG_DISPCNT = DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP;
+    PortPpu_Render(sFrame);
+    for (unsigned y = 0; y < 4; ++y)
+        for (unsigned x = 0; x < 4; ++x)
+            assert(sFrame[y * PORT_SCREEN_WIDTH + x] == 0xffff0000u);
+    REG_MOSAIC = 0;
+    PortPpu_Render(sFrame);
+    assert(sFrame[1] == 0xff0000ffu);
+    assert(sFrame[PORT_SCREEN_WIDTH] == 0xff0000ffu);
+
     VirtualFree(oam, 0, MEM_RELEASE);
     VirtualFree(vram, 0, MEM_RELEASE);
     VirtualFree(palette, 0, MEM_RELEASE);
