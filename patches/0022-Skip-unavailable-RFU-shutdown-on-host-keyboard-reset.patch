@@ -1,0 +1,25 @@
+From b32626ab41648cc2a13d57093496465cc51e2f24 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sat, 10 Oct 2026 14:58:00 -0400
+Subject: [PATCH] Skip unavailable RFU shutdown on host keyboard reset
+
+---
+ src/main.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/main.c b/src/main.c
+index a02441a..66855c3 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -139,8 +139,11 @@ void AgbMain(void)
+          && JOY_HELD_RAW(A_BUTTON)
+          && JOY_HELD_RAW(B_START_SELECT) == B_START_SELECT)
+         {
++#ifndef PORT_PC
++            // The host does not initialize the wireless adapter state.
+             rfu_REQ_stopMode();
+             rfu_waitREQComplete();
++#endif
+             DoSoftReset();
+         }
+ 

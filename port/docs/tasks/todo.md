@@ -96,7 +96,7 @@ documentado, no todos los combates ni los 67 candidatos de callbacks.
   objetos, dinero y progreso en una partida de prueba aislada.
 - [x] Simular fallo de escritura/tamaño inválido/corrupción de un slot en
   copias, verificar errores y recuperación del slot válido si corresponde.
-- [ ] Probar cierre/reset alrededor del guardado sin truncar el original;
+- [x] Probar cierre/reset alrededor del guardado sin truncar el original;
   documentar garantías y límites reales de flush/recuperación.
 
 Dependencias: T04. Archivos: `port/host_flash.c`, `port/tests/host_flash_test.c`,
@@ -105,19 +105,25 @@ y campos semánticos, no solo tamaño del archivo.
 
 T06: `save_game_smoke.py`, `host_flash_test.c` y `flash-save.md` documentan
 dos diálogos, reapertura, corrupción, escritura interrumpida y rechazo de
-save no disponible. Cierre e interrupción PASS; reset real aún depende de
-T07. No se prometen garantías frente a cortes eléctricos.
+save no disponible. Cierre e interrupción PASS; T07 verifica reset real
+tras los guardados completos. No se prometen garantías frente a cortes
+eléctricos ni reset inyectado durante cada byte de escritura.
 
 ### T07 — reinicio real del ejecutable (M)
 
-- [ ] Verificar la combinación de reset y un reset solicitado por el juego,
+- [x] Verificar la combinación de reset y un reset solicitado por el juego,
   con ruta que tenga espacios y cwd fuera del proyecto.
-- [ ] Confirmar un único proceso nuevo, cierre de audio/save, carga válida
+- [x] Confirmar un único proceso nuevo, cierre de audio/save, carga válida
   y velocidad reiniciada a 1×.
-- [ ] Comprobar fallo de CreateProcess con error útil y recursos cerrados.
+- [x] Comprobar fallo de CreateProcess con error útil y recursos cerrados.
 
 Dependencias: T06. Archivos: `port/port_reset.c`, `port/main.c`, test/harness,
 informe. Verificación: test con spawner y prueba de subprocess real aislado.
+
+T07: `reset_game_smoke.py`, `reset.md`, parche 0022; dos rutas de reset
+normal PASS, 1× y save intacto; fallo CreateProcess real con error 2 y
+cleanup atexit. La entrada DoSoftReset se prepara en GDB, no con un evento
+de historia. Cwd externo y ruta con espacios comprobados.
 
 ## Hito 24 — registros, eventos e interrupciones
 

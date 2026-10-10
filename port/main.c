@@ -21,9 +21,8 @@ static SDL_Window *sWindow;
 static SDL_Renderer *sRenderer;
 static SDL_Texture *sTexture;
 
-void Port_ExitCleanly(void)
+static void ShutdownHost(void)
 {
-    fprintf(stderr, "PC: window closed; exiting cleanly\n");
     Port_AttachRenderer(NULL, NULL);
     PortFlash_Close();
     PortAudio_Shutdown();
@@ -32,6 +31,11 @@ void Port_ExitCleanly(void)
     portSDL.DestroyWindow(sWindow);
     portSDL.Quit();
     Port_FreeGbaMemory();
+}
+
+void Port_ExitCleanly(void)
+{
+    fprintf(stderr, "PC: window closed; exiting cleanly\n");
     exit(EXIT_SUCCESS);
 }
 
@@ -116,6 +120,13 @@ int main(void)
     sWindow = window;
     sRenderer = renderer;
     sTexture = texture;
+    // Covers clean exit, a returned AgbMain, and failed soft-reset spawning.
+    if (atexit(ShutdownHost) != 0)
+    {
+        fprintf(stderr, "PC: cannot register host cleanup\n");
+        ShutdownHost();
+        return 1;
+    }
     portSDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
     portSDL.RenderClear(renderer);
     portSDL.RenderPresent(renderer);
@@ -124,13 +135,5 @@ int main(void)
     AgbMain();
     fprintf(stderr, "PC: AgbMain returned\n");
 
-    Port_AttachRenderer(NULL, NULL);
-    PortAudio_Shutdown();
-    PortFlash_Close();
-    portSDL.DestroyTexture(texture);
-    portSDL.DestroyRenderer(renderer);
-    portSDL.DestroyWindow(window);
-    portSDL.Quit();
-    Port_FreeGbaMemory();
     return 0;
 }
