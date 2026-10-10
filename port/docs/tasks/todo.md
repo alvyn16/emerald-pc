@@ -74,7 +74,7 @@ Dependencias: T03. Archivos: informe + parches de los consumidores hallados
 + harness focalizado. Verificación: repetición de abrir/cerrar la ruta,
 timeout y GDB sin acceso a datos liberados.
 
-Evidencia T05: `callback-inventory.md` (67 archivos, 142 registros y 17
+Evidencia T05: `callback-inventory.md` (67 archivos, 136 registros y 17
 loops candidatos), `callback-lifetime-audit.md` y parches 0018–0020.
 Almacenamiento, equipo y resumen tienen fixtures de regresión PASS;
 los demás candidatos no se declaran libres de fallos por el inventario.
@@ -129,15 +129,20 @@ de historia. Cwd externo y ruta con espacios comprobados.
 
 ### T08 — inventario MMIO y contrato de escrituras (S)
 
-- [ ] Enumerar reads/writes usados por Emerald: IE/IME/IF, timers, DMA,
+- [x] Enumerar reads/writes usados por Emerald: IE/IME/IF, timers, DMA,
   vídeo, sonido, GPIO y serie; separar sondeo de efectos secundarios.
-- [ ] Proponer hooks para writes que el sondeo no puede observar; definir
+- [x] Proponer hooks para writes que el sondeo no puede observar; definir
   ancho, orden, ownership y comportamiento de reset.
-- [ ] Definir eventos y pruebas esperadas sin introducir un emulador ARM.
+- [x] Definir eventos y pruebas esperadas sin introducir un emulador ARM.
 
 Dependencias: T02. Archivos: nuevo `port/docs/register-model.md`, headers
 host si hace falta. Verificación: referencias concretas a consumidores
 upstream y revisión del contrato antes de implementarlo.
+
+T08: `register-model.md`, `register-inventory.md` y `audit_registers.py`:
+75 nombres de registros, consumidores indirectos revisados y contrato IRQ/
+MMIO. Incluye bootstrap y matriz de pruebas. El modelo aún no está
+implementado; T09–T13 permanecen abiertos.
 
 ### T09 — despacho IRQ correcto (M)
 
