@@ -54,7 +54,7 @@ endif
 # Host-only unit tests. Keep each binary's dependencies explicit so changes
 # to a port module rebuild the test that exercises it.
 TEST_DIR := ../build/tests
-TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu speed_menu timer reset m4a_engine
+TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu speed_menu timer reset m4a_engine psg
 TEST_bios_SOURCES := bios.c tests/bios_test.c
 TEST_dma_SOURCES := port_dma.c tests/dma_test.c
 TEST_frame_SOURCES := frame.c speed_menu.c port_timer.c tests/frame_test.c
@@ -67,6 +67,7 @@ TEST_timer_SOURCES := port_timer.c tests/timer_test.c
 TEST_reset_SOURCES := port_reset.c host_flash.c tests/reset_test.c
 TEST_m4a_engine_SOURCES := m4a_engine.c bios.c $(OBJECT_DIR)/m4a.o $(OBJECT_DIR)/m4a_tables.o tests/m4a_engine_test.c
 TEST_m4a_engine_LIBS := -lm $(M4A_LDFLAGS)
+TEST_psg_SOURCES := port_psg.c tests/psg_test.c
 TEST_bios_LIBS := -lm
 TEST_gba_memory_LIBS := -lpsapi
 TEST_CFLAGS := -std=gnu11 -Wall -Wextra -Werror -DMODERN=0 -DPORT_PC \
