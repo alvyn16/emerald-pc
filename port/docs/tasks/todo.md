@@ -81,8 +81,12 @@ los demás candidatos no se declaran libres de fallos por el inventario.
 
 ### Checkpoint B
 
-- [ ] Aviso actual explicado/resuelto; mapa y combate estables; sin nuevas
+- [x] Aviso actual explicado/resuelto; mapa y combate estables; sin nuevas
   guardas que simplemente omitan operaciones necesarias del juego.
+
+Repetición tras 0019/0020: victoria frame 33.365, mapa y salida limpia en
+37.000 (`build/wild-battle-regression/gdb.log`). Esto cubre el fixture
+documentado, no todos los combates ni los 67 candidatos de callbacks.
 
 ## Hito 23 — datos del jugador y reinicio
 
