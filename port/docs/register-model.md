@@ -1,7 +1,7 @@
 # Registros y contrato host — T08
 
-Estado: inventario y contrato revisados; implementación IRQ/esperas aún
-pendiente en T09/T10. Base upstream con parches hasta 0022. El generador
+Estado: inventario/contrato revisados e IRQ T09 implementada; esperas T10
+en verificación. Base del inventario: upstream con parches hasta 0022. El generador
 `python port/tools/audit_registers.py` produce [register-inventory.md](register-inventory.md):
 75 nombres dentro de funciones C, con consumidores y escrituras candidatas.
 Incluye ramas GBA deshabilitadas en host; no es una traza del ejecutable.
@@ -35,9 +35,9 @@ Incluye ramas GBA deshabilitadas en host; no es una traza del ejecutable.
 - m4a contiene partes ARM excluidas y writes GBA bajo guards; revisar el
   preprocesado antes de parchear una ruta que el exe no usa.
 
-## Contrato mínimo IRQ propuesto para T09
+## Contrato IRQ implementado en T09
 
-Interfaz propia en `port/port_irq.h` (nombres propuestos, no implementados):
+Interfaz propia en `port/port_irq.h`:
 
 ```c
 void PortIrq_Reset(void);
@@ -45,6 +45,7 @@ void PortIrq_Raise(uint16_t flags);
 void PortIrq_Acknowledge(uint16_t flags);
 uint16_t PortIrq_Pending(void);
 uint16_t PortIrq_Dispatch(void);
+uint64_t PortIrq_WakeCounter(void);
 ```
 
 Decisiones host derivadas del inventario:
@@ -70,6 +71,18 @@ Decisiones host derivadas del inventario:
 6. Reset vacía pending, flags BIOS y guard de reentrada; módulos de timer/DMA
    resetean su propio estado. No crear callbacks concurrentes desde SDL.
 
+WakeCounter permite a Halt observar una solicitud habilitada que ya fue
+reconocida dentro del servicio de frame: aumenta al generar eventos con IE
+activo, independiente de IME. Se compara con una captura inicial; no consume
+pending ni flags BIOS. Reset reinicia el contador. Prueba de máscara IME=0
+en irq_test; la API no representa tiempo ni frames transcurridos.
+
+Los parches 0023/0024 cambian las siete asignaciones C a REG_IF_ACK,
+definida como PortIrq_Acknowledge en PORT_PC y la asignación original en GBA.
+El despacho reemplaza la parte IRQ de crt0 ARM en host, no sus opcodes.
+La pantalla inicia con DISPCNT forced blank en Port_InitGbaMemory, para
+que SetGpuReg aplique DISPSTAT antes de depender del primer VBlank.
+
 ## Eventos, anchos y orden
 
 Contrato de writes futuros: Write16(address,value) valida offset/alineación;
@@ -86,11 +99,11 @@ DMA precede a la entrega IRQ de esa fase; una IRQ por transferencia nace solo
 después de completarla. Timers se avanzarán por el mismo reloj emulado,
 sin derivar eventos independientes de la frecuencia de callback SDL.
 
-Bootstrap a verificar: RegisterRamReset es hoy no-op. El estado inicial de
-vídeo no reproduce el forced blank del reset BIOS; SetGpuReg puede diferir
-DISPSTAT mientras aún no llega VBlank. Antes de habilitar solicitudes
-condicionadas por DISPSTAT, probar/corregir ese arranque con fixture; no
-mantener el callback VBlank incondicional para ocultar la dependencia.
+Bootstrap detectado antes de T09: RegisterRamReset es no-op. Sin forced
+blank inicial, SetGpuReg puede diferir DISPSTAT mientras aún no llega
+VBlank. T09 inicializa DISPCNT=0x0080 y lo prueba en la suite de memoria
+y arranque del juego, sin mantener VBlank incondicional. El reset por
+flags en mitad de ejecución sigue pendiente en T19.
 
 ## Esperas T10 y evidencia de hardware
 
@@ -116,6 +129,9 @@ activando IRQ de manera global. El timeout del harness debe conservar traza.
 - Cierre SDL durante una espera sin objetivo disponible; salida limpia.
 - Calendario completo y DMA/timer IRQ se añaden en T11–T13.
 
-Revisión del contrato: conserva interfaces de juego y ownership por módulo;
-hooks solo para side effects demostrados. Sigue pendiente implementar y
-probar estas decisiones, incluyendo bootstrap, antes de cerrar T09/T10.
+Verificación T09: 14 suites host PASS, incluidas IRQ/frame/memoria; combate
+posterior a los hooks gana en 33.365 y termina limpio en 37.000. GBA compare
+OK en `build/irq-ack-rfu-gba-compare.log`; checkout aislado con 24 parches
+recompilado/enlazado y árbol idéntico
+`0db24077d24c9c51701f36e575d466f280bdb3af` (`build/irq-clean-build.log`).
+T10 y el calendario completo T11–T13 todavía requieren sus propios gates.

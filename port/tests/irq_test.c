@@ -49,7 +49,9 @@ int main(void)
     assert(VirtualAlloc((void *)REG_BASE, 4096, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE));
     ResetFixture();
     REG_IE = INTR_FLAG_VBLANK;
+    assert(PortIrq_WakeCounter() == 0);
     PortIrq_Raise(INTR_FLAG_VBLANK | INTR_FLAG_VCOUNT);
+    assert(PortIrq_WakeCounter() == 1); // IME=0 still permits Halt wake.
     assert(PortIrq_Dispatch() == 0 && sCalls == 0 && INTR_CHECK == 0);
     REG_IME = 1;
     assert(PortIrq_Dispatch() == INTR_FLAG_VBLANK && sCalls == 1);
@@ -90,6 +92,9 @@ int main(void)
     assert(PortIrq_Pending() == INTR_FLAG_VBLANK);
     sRegenerate = 0;
     assert(PortIrq_Dispatch() == INTR_FLAG_VBLANK && sCalls == 2);
+    PortIrq_Reset();
+    PortIrq_Raise(INTR_FLAG_VBLANK); // IE still enabled here.
+    assert(PortIrq_WakeCounter() == 1);
     PortIrq_Reset();
     assert(REG_IF == 0 && INTR_CHECK == 0 && PortIrq_Pending() == 0);
     VirtualFree((void *)REG_BASE, 0, MEM_RELEASE);

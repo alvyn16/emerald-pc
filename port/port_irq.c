@@ -7,6 +7,7 @@
 
 static uint16_t sPending;
 static int sDispatching;
+static uint64_t sWakeCounter;
 
 /* Emerald's IntrMain/gIntrTable order, rather than numerical bit order. */
 static const uint16_t sSources[IRQ_SOURCE_COUNT] = {
@@ -21,6 +22,7 @@ void PortIrq_Reset(void)
 {
     sPending = 0;
     sDispatching = 0;
+    sWakeCounter = 0;
     REG_IF = 0;
     INTR_CHECK = 0;
 }
@@ -28,6 +30,8 @@ void PortIrq_Reset(void)
 void PortIrq_Raise(uint16_t flags)
 {
     sPending |= flags & IRQ_MASK;
+    if (flags & IRQ_MASK & REG_IE)
+        ++sWakeCounter;
     REG_IF = sPending;
 }
 
@@ -40,6 +44,11 @@ void PortIrq_Acknowledge(uint16_t flags)
 uint16_t PortIrq_Pending(void)
 {
     return sPending;
+}
+
+uint64_t PortIrq_WakeCounter(void)
+{
+    return sWakeCounter;
 }
 
 uint16_t PortIrq_Dispatch(void)
