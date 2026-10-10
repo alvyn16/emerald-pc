@@ -1,0 +1,83 @@
+From 0b60d270dbc9017e6f529a1d09022ab5c988b581 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sat, 10 Oct 2026 15:14:33 -0400
+Subject: [PATCH] Route host IRQ acknowledgement through the pending model
+
+---
+ include/gba/macro.h   | 7 +++++++
+ src/agb_flash.c       | 2 +-
+ src/ereader_helpers.c | 2 +-
+ src/librfu_stwi.c     | 2 +-
+ src/link.c            | 2 +-
+ 5 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/include/gba/macro.h b/include/gba/macro.h
+index 3f5e6d5..e6de0b3 100644
+--- a/include/gba/macro.h
++++ b/include/gba/macro.h
+@@ -1,6 +1,13 @@
+ #ifndef GUARD_GBA_MACRO_H
+ #define GUARD_GBA_MACRO_H
+ 
++#ifdef PORT_PC
++#include "port_irq.h"
++#define REG_IF_ACK(flags) PortIrq_Acknowledge(flags)
++#else
++#define REG_IF_ACK(flags) (REG_IF = (flags))
++#endif
++
+ #define CPU_FILL_UNCHECKED(value, dest, size, bit)                                          \
+ {                                                                                 \
+     vu##bit tmp = (vu##bit)(value);                                               \
+diff --git a/src/agb_flash.c b/src/agb_flash.c
+index 6cebf29..be8d605 100644
+--- a/src/agb_flash.c
++++ b/src/agb_flash.c
+@@ -97,7 +97,7 @@ void StartFlashTimer(u8 phase)
+     sTimerCount = *maxTime++;
+     *sTimerReg++ = *maxTime++;
+     *sTimerReg-- = *maxTime++;
+-    REG_IF = (INTR_FLAG_TIMER0 << sTimerNum);
++    REG_IF_ACK(INTR_FLAG_TIMER0 << sTimerNum);
+     REG_IME = 1;
+ }
+ 
+diff --git a/src/ereader_helpers.c b/src/ereader_helpers.c
+index d79d529..1c5a8a4 100755
+--- a/src/ereader_helpers.c
++++ b/src/ereader_helpers.c
+@@ -591,7 +591,7 @@ static void CloseSerial(void)
+     REG_IME = 1;
+     REG_SIOCNT = 0;
+     REG_TM3CNT_H = 0;
+-    REG_IF = INTR_FLAG_TIMER3 | INTR_FLAG_SERIAL;
++    REG_IF_ACK(INTR_FLAG_TIMER3 | INTR_FLAG_SERIAL);
+ }
+ 
+ static void OpenSerialMulti(void)
+diff --git a/src/librfu_stwi.c b/src/librfu_stwi.c
+index 13a7e34..5efc0e4 100644
+--- a/src/librfu_stwi.c
++++ b/src/librfu_stwi.c
+@@ -528,7 +528,7 @@ static void STWI_set_timer(u8 count)
+         break;
+     }
+     *timerH = TIMER_ENABLE | TIMER_INTR_ENABLE | TIMER_1024CLK;
+-    REG_IF = INTR_FLAG_TIMER0 << gSTWIStatus->timerSelect;
++    REG_IF_ACK(INTR_FLAG_TIMER0 << gSTWIStatus->timerSelect);
+     REG_IME = 1;
+ }
+ 
+diff --git a/src/link.c b/src/link.c
+index c02b418..d8ce397 100644
+--- a/src/link.c
++++ b/src/link.c
+@@ -1864,7 +1864,7 @@ static void DisableSerial(void)
+     DisableInterrupts(INTR_FLAG_TIMER3 | INTR_FLAG_SERIAL);
+     REG_SIOCNT = SIO_MULTI_MODE;
+     REG_TMCNT_H(3) = 0;
+-    REG_IF = INTR_FLAG_TIMER3 | INTR_FLAG_SERIAL;
++    REG_IF_ACK(INTR_FLAG_TIMER3 | INTR_FLAG_SERIAL);
+     REG_SIOMLT_SEND = 0;
+     REG_SIOMLT_RECV = 0;
+     CpuFill32(0, &gLink, sizeof(gLink));
