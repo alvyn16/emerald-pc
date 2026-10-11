@@ -1,6 +1,7 @@
 """Optional Windows/GDB integration regression; uses an isolated local ROM/save."""
 
 from pathlib import Path
+import argparse
 import shutil
 import subprocess
 import sys
@@ -9,8 +10,15 @@ from process_watchdog import run_logged
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--battle-speed', type=int, choices=(1, 4),
+                        help='Pace only the battle at 1x/4x; route setup stays fast')
+    options = parser.parse_args()
     project = Path(__file__).resolve().parents[2]
-    scratch = project / "build" / "wild-battle-regression"
+    regressionName = 'wild-battle-regression'
+    if options.battle_speed:
+        regressionName += f'-{options.battle_speed}x'
+    scratch = project / "build" / regressionName
     # Keep generated executables, ROM copies, saves and debugger output ignored.
     if not scratch.resolve().is_relative_to((project / "build").resolve()):
         raise SystemExit("Regression directory must remain inside build/")
@@ -93,6 +101,11 @@ dump binary memory build/wild-battle-regression/frame.raw &sPixels ((char *)&sPi
 continue
 quit
 """
+    if options.battle_speed:
+        commands = commands.replace('call (void)BattleSetup_StartWildBattle()',
+            f'set var sFast = 0\nset var sMultiplier = {options.battle_speed}\n'
+            'call (void)BattleSetup_StartWildBattle()')
+        commands = commands.replace('wild-battle-regression/', regressionName + '/')
     script = scratch / "test.gdb"
     script.write_text(commands, encoding="ascii")
     log = scratch / "gdb.log"
