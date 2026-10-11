@@ -415,15 +415,19 @@ fixes. Verificación: datos antes/después y timeout en transiciones.
 
 ### T27 — campaña y contenidos posteriores (M por tramo)
 
-- [ ] Crear matriz de rutas/ciudades, interiores, cuevas, surf/bici,
+- [x] Crear matriz de rutas/ciudades, interiores, cuevas, surf/bici,
   scripts de historia y cargas de mapas; usar saves locales de prueba.
 - [ ] Completar un recorrido hasta Liga/créditos y revisar Concursos,
   crianza, Safari y Battle Frontier por tramos separados.
-- [ ] Mantener catálogo de casos cubiertos y pendientes, sin versionar saves
+- [x] Mantener catálogo de casos cubiertos y pendientes, sin versionar saves
   ni afirmar cobertura exhaustiva de todas las combinaciones del juego.
 
 Dependencias: T20, T24–T26. Archivos: `port/tests/` y matriz en `port/docs/`.
 Verificación: checkpoints de progreso y regresiones por cada fallo nuevo.
+
+Evidencia T27: gameplay-matrix.md. Mapas/movilidad, Liga, créditos, concurso,
+crianza, Safari y Tower medidos por segmentos; campaña continua y ampliación
+Safari/Frontier pendientes. No se cierra Checkpoint E.
 
 ### Checkpoint E — juego individual
 

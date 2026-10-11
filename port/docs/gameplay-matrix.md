@@ -86,4 +86,52 @@ Requieren primero wild_battle_smoke.py --quick --scenario catch como plantilla.
 Los fixtures crean un estado de campo aislado; no recorren la historia para llegar
 al PC. No fuerzan resultados de almacenamiento. Capturas raw locales en build/.
 
-T27 y T28: pendientes hasta sus gates y evidencia.
+## T27 — matriz de campaña y segmentos
+
+El upstream contiene 518 mapas en 34 grupos. PASS para 32 cargas seleccionadas:
+las 16 ciudades/pueblos, rutas 101/110/119/124/134, casa de Brendan, Centro
+Pokémon de Rustboro, Petalburg Woods, Granite Cave, Meteor Falls, Victory Road,
+Safari South, exteriores/lobby Battle Tower, lobby de Concurso y guardería.
+Cada carga verifica grupo/número y CB2_Overworld después de 300 frames.
+Inventario exacto privado: build/map-matrix/inventory.json. `--all --group N`
+permite ampliar la matriz; los otros mapas no se consideran probados.
+Marcha/bici en Route 101 y surf en Route 124: flag de avatar correcto, coordenadas
+cambian con input real y callback de campo conservado. Capturas privadas en build/.
+
+| Segmento | Evidencia medida | Estado |
+| --- | --- | --- |
+| Liga | Sidney/Phoebe/Glacia/Drake/Wallace: victoria, XP, dinero, flag y campo; Kyogre 95, movimientos elegidos por UI | PASS, fixtures independientes |
+| Hall of Fame/créditos | Guardado real, entrada a créditos y Task_CreditsTheEnd5 alcanzado; captura The End | PASS, entrada directa al Hall of Fame |
+| Concurso | Categoría Cool/Normal, cinco rondas de apelación y retorno al campo | PASS |
+| Crianza | Mudkip + Ditto guardados, huevo generado por rutinas reales, especie Mudkip, IS_EGG=1, save | PASS; readiness del huevo dirigida, no espera de pasos ni eclosión |
+| Safari | Encuentro Oddish, huida outcome 4, 30 bolas intactas, equipo intacto, regreso y limpieza de modo | PASS; encuentro dirigido, no recepción/captura/cuota completa |
+| Battle Frontier | Tower singles, rival generado de la tabla de facility, Kyogre 50, victoria y save | PASS de un combate; no racha completa ni otras seis facilities |
+| Campaña continua | Intro → ocho medallas mediante scripts → equipos enemigos → Liga → créditos, con el mismo estado/save | PENDIENTE |
+| Historia | Wally, Aqua/Magma, meteorito, Weather Institute, Space Center, Sky Pillar/Rayquaza y eventos posteriores | PENDIENTE de recorrido |
+
+No se acredita progreso de campaña a partir de teletransportes, flags iniciales
+ni batallas dirigidas. T27 permanece abierta por el recorrido continuo y la
+ampliación de Safari/Frontier. Checkpoint E permanece abierto.
+
+Fallos reales corregidos:
+- 0037: Cmd_playanimation, lluvia de Wallace (frame 33.728, eip 0x100e5e91).
+  Script `45 01 0a 00 00 00 00`: argumentPtr=0; lectura u16 en cero. Cero
+  explícito solo PORT_PC para argumentos ausentes, también en playanimation_var.
+- 0038/0039: Centro Pokémon inicia detección RFU; AgbRFU_SoftReset espera timer
+  <=0x11 dentro del pump RfuMain1/HandleLinkConnection y no devuelve un frame.
+  El host reporta adaptador ausente y omite el pump serie/RFU sin transporte.
+  Un segundo intento mostró que omitir solo checkID no elimina otras esperas;
+  ambos parches son necesarios. Accesorios continúan deshabilitados, no exitosos.
+- 0040: AnimSparkElectricityFlashing_Step, SIGFPE eip 0x10035c65 durante Concurso:
+  data[7] % data[4], divisor cero. Resto igual al dividendo como ARM, solo PORT_PC.
+- Primer fixture de créditos tenía caught sin seen; GetSetPokedexFlag lo limpiaba
+  y no quedaban especies para el sorteo. Se corrigió el fixture (seen+caught),
+  sin cambiar el juego ni presentar el estado inválido como recorrido real.
+
+Repro MINGW32: map_matrix_smoke.py; avatar_movement_smoke.py walk|bike|surf;
+trainer_battle_smoke.py sidney|phoebe|glacia|drake|wallace; credits_smoke.py;
+content_segment_smoke.py breeding|contest; safari_smoke.py; frontier_smoke.py.
+Primero preparar wild_battle_smoke.py --quick --scenario catch. Logs t27-*.log
+locales. Save/ROM del usuario intactos; ninguna fixture se publica con assets.
+
+T28: consultar controller-input.md.
