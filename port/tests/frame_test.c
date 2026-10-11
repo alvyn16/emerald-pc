@@ -28,6 +28,8 @@ static unsigned sVCounts;
 static unsigned sRenderedLines;
 static unsigned sHBlankDma;
 static unsigned sVBlankDma;
+static unsigned sExpectedVCount = 42;
+static unsigned sLineVisits[228];
 static int sQuitEvent;
 static SDL_Keycode sMenuKeys[2];
 static unsigned sMenuKeyCount;
@@ -70,13 +72,16 @@ static void VBlank(void)
 }
 static void HBlank(void)
 {
-    assert(REG_VCOUNT < 160);
+    assert(REG_VCOUNT < 228);
+    assert(!!(REG_DISPSTAT & DISPSTAT_VBLANK) ==
+           (REG_VCOUNT >= 160 && REG_VCOUNT < 227));
     assert(REG_DISPSTAT & DISPSTAT_HBLANK);
+    sLineVisits[REG_VCOUNT]++;
     sHBlanks++;
 }
 static void VCount(void)
 {
-    assert(REG_VCOUNT == 42);
+    assert(REG_VCOUNT == sExpectedVCount);
     assert(REG_DISPSTAT & DISPSTAT_VCOUNT);
     sVCounts++;
 }
@@ -170,11 +175,18 @@ int main(void)
     REG_IE = INTR_FLAG_HBLANK | INTR_FLAG_VCOUNT;
     REG_IME = 1;
     PortHost_RunFrame();
-    assert(sHBlanks == 160);
+    assert(sHBlanks == 228);
+    for (unsigned y = 0; y < 228; ++y) assert(sLineVisits[y] == 1);
     assert(sVCounts == 1);
+    sExpectedVCount = 227;
+    REG_DISPSTAT = DISPSTAT_VCOUNT_INTR | (227 << 8);
+    PortHost_RunFrame();
+    assert(sVCounts == 2);
+    REG_DISPSTAT = DISPSTAT_HBLANK_INTR | DISPSTAT_VCOUNT_INTR | (42 << 8);
+    sExpectedVCount = 42;
     REG_IE = 0;
     PortHost_RunFrame();
-    assert(sHBlanks == 160 && sVCounts == 1);
+    assert(sHBlanks == 228 && sVCounts == 2);
     assert(PortIrq_Pending() == (INTR_FLAG_HBLANK | INTR_FLAG_VCOUNT));
     PortIrq_Reset();
     REG_DISPSTAT = DISPSTAT_VBLANK_INTR;

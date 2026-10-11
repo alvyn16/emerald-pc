@@ -188,25 +188,32 @@ void PortHost_RunFrame(void)
     PortTimer_Advance((uint32_t)(scaled / frequency));
     sTimerCycleRemainder = scaled % frequency;
 #endif
-    SetVideoLine(160, 1);
-    PortDma_OnVBlank();
-
-    if (REG_DISPSTAT & DISPSTAT_VBLANK_INTR)
-        PortIrq_Raise(INTR_FLAG_VBLANK);
-    PortIrq_Dispatch();
-    PortAudio_SubmitFrame();
-
-    PortPpu_BeginFrame();
-    for (unsigned y = 0; y < PORT_SCREEN_HEIGHT; ++y)
+    // A cooperative frame starts at VBlank, where Emerald commits OAM/VRAM,
+    // then traverses every hidden and visible line before returning to main.
+    for (unsigned step = 0; step < 228; ++step)
     {
-        SetVideoLine(y, 0);
+        const unsigned y = (160 + step) % 228;
+        SetVideoLine(y, y >= 160 && y < 227);
+        if (y == 160)
+        {
+            PortDma_OnVBlank();
+            if (REG_DISPSTAT & DISPSTAT_VBLANK_INTR)
+                PortIrq_Raise(INTR_FLAG_VBLANK);
+        }
         if ((REG_DISPSTAT & (DISPSTAT_VCOUNT | DISPSTAT_VCOUNT_INTR)) ==
                 (DISPSTAT_VCOUNT | DISPSTAT_VCOUNT_INTR))
             PortIrq_Raise(INTR_FLAG_VCOUNT);
         PortIrq_Dispatch();
-        PortPpu_RenderLine(y, sPixels + y * PORT_SCREEN_WIDTH);
+        if (y == 160)
+            PortAudio_SubmitFrame();
+        if (y == 0)
+            PortPpu_BeginFrame();
+        if (y < PORT_SCREEN_HEIGHT)
+            PortPpu_RenderLine(y, sPixels + y * PORT_SCREEN_WIDTH);
         REG_DISPSTAT |= DISPSTAT_HBLANK;
-        PortDma_OnHBlank();
+        // HBlank status/IRQ runs on all lines; HBlank DMA only on visible ones.
+        if (y < PORT_SCREEN_HEIGHT)
+            PortDma_OnHBlank();
         if (REG_DISPSTAT & DISPSTAT_HBLANK_INTR)
             PortIrq_Raise(INTR_FLAG_HBLANK);
         PortIrq_Dispatch();
