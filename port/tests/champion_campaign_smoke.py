@@ -87,13 +87,13 @@ printf "CAMPAIGN CREDITS ENTER PASS\\n"
 disable 7
 continue
 end
-break Task_CreditsTheEnd5
+set $end_reached = 0
+break Task_CreditsTheEnd6
 commands
 silent
-printf "CAMPAIGN THE END PASS\\n"
-dump binary memory build/champion-campaign/end.raw &sPixels ((char *)&sPixels)+153600
-disable 1
-set $pc = (unsigned int)&Port_ExitCleanly
+set $end_reached = 1
+set var sStopFrame = sDiagnosticFrame + 4
+disable 8
 continue
 end
 call (void)SetWarpDestination({group},{index},-1,6,12)
@@ -102,9 +102,17 @@ call (void)SetMainCallback2((void *)CB2_LoadMap)
 set var sStopFrame = 185000
 return
 continue
+python
+assert int(gdb.parse_and_eval("$end_reached")) == 1, "Credits did not reach drawn final screen"
+end
+dump binary memory build/champion-campaign/end.raw &sPixels ((char *)&sPixels)+153600
+printf "CAMPAIGN THE END PASS\\n"
+continue
 quit
 '''
 log = run(scratch, commands, ["CHAMPION VICTORY PASS", "CAMPAIGN CREDITS ENTER PASS",
                             "CAMPAIGN THE END PASS"], timeout=1200)
 log.replace(scratch / "champion.log")
+pixels = (scratch / "end.raw").read_bytes()
+assert any(pixels[i:i+3] != b"\0\0\0" for i in range(0,len(pixels),4)), "Final capture is blank"
 print("PASS same-campaign Wallace, natural Hall of Fame and The End")
