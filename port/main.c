@@ -11,6 +11,7 @@
 #include "platform.h"
 #include "sdl_loader.h"
 #include "port_irq.h"
+#include "port_rtc.h"
 #ifdef PORT_DIAGNOSTIC
 #include "input_script.h"
 #endif
@@ -26,6 +27,7 @@ static void ShutdownHost(void)
 {
     Port_AttachRenderer(NULL, NULL);
     PortFlash_Close();
+    PortRtc_Close();
     PortAudio_Shutdown();
     portSDL.DestroyTexture(sTexture);
     portSDL.DestroyRenderer(sRenderer);
@@ -134,6 +136,8 @@ int main(void)
     portSDL.RenderPresent(renderer);
     fprintf(stderr, "PC: SDL window ready (240x160, scale 4); entering AgbMain\n");
     PortAudio_Init();
+    if (PortRtc_Open() != 0)
+        fprintf(stderr, "PC: RTC unavailable; configuration preserved\n");
     AgbMain();
     fprintf(stderr, "PC: AgbMain returned\n");
 

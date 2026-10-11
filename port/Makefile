@@ -42,6 +42,7 @@ SONG_OBJECTS := $(patsubst $(POKEEMERALD)/sound/songs/midi/%.s,$(SONG_OBJECT_DIR
 HOST_EXE_SOURCES := $(filter-out $(addprefix $(POKEEMERALD)/src/,librfu_intr.c multiboot.c),$(SOURCES))
 HOST_EXE_OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(HOST_EXE_SOURCES))
 PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c speed_menu.c port_timer.c port_reset.c port_ram_reset.c sdl_loader.c m4a_engine.c port_psg.c port_audio.c arm_stubs.c host_flash.c port_dma.c port_ppu.c port_irq.c
+PORT_EXE_SOURCES += port_rtc.c
 M4A_LDFLAGS := -Wl,--defsym,_gNumMusicPlayers=4 -Wl,--defsym,_gMaxLines=0
 EXE := ../build/emerald-pc.exe
 
@@ -63,6 +64,8 @@ TEST_bitmap_SOURCES := port_ppu.c tests/bitmap_test.c
 TEST_irq_SOURCES := port_irq.c tests/irq_test.c
 RAM_RESET_SOURCES := port_ram_reset.c port_dma.c port_ppu.c port_psg.c
 TEST_ram_reset_SOURCES := $(RAM_RESET_SOURCES) port_timer.c port_irq.c tests/ram_reset_test.c
+TEST_NAMES += rtc
+TEST_rtc_SOURCES := port_rtc.c tests/rtc_test.c
 TEST_bios_SOURCES := bios.c port_irq.c port_timer.c $(RAM_RESET_SOURCES) tests/bios_test.c
 TEST_dma_SOURCES := port_dma.c port_irq.c port_ppu.c tests/dma_test.c
 TEST_frame_SOURCES := frame.c speed_menu.c port_timer.c port_irq.c tests/frame_test.c
