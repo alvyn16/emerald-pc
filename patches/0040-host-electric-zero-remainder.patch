@@ -1,0 +1,30 @@
+From 48dce2841754214ae75e0fb0a759ffa11e42daa0 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 14:37:32 -0400
+Subject: [PATCH] Preserve ARM zero-divisor remainder in host electric
+ animation
+
+---
+ src/battle_anim_electric.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/battle_anim_electric.c b/src/battle_anim_electric.c
+index cc36e60..ea6b3ca 100644
+--- a/src/battle_anim_electric.c
++++ b/src/battle_anim_electric.c
+@@ -658,7 +658,12 @@ static void AnimSparkElectricityFlashing_Step(struct Sprite *sprite)
+     sprite->y2 = Cos(sprite->data[7], sprite->data[5]);
+ 
+     sprite->data[7] = (sprite->data[7] + sprite->data[6]) & 0xFF;
++#ifdef PORT_PC
++    // ARM remainder with divisor zero leaves the dividend; x86 traps.
++    if ((sprite->data[4] ? sprite->data[7] % sprite->data[4] : sprite->data[7]) == 0)
++#else
+     if (sprite->data[7] % sprite->data[4] == 0)
++#endif
+         sprite->invisible ^= TRUE;
+ 
+     if (sprite->data[0]-- <= 0)
+-- 
+2.51.0.windows.2
+
