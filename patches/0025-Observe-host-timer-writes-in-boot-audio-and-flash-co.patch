@@ -1,0 +1,112 @@
+From 821d4274868f370b1fa093a27a2e35f95a82d065 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 01:28:50 -0400
+Subject: [PATCH] Observe host timer writes in boot audio and flash consumers
+
+---
+ include/gba/macro.h |  5 +++++
+ src/agb_flash.c     | 10 +++++-----
+ src/m4a.c           |  6 +++---
+ src/main.c          |  4 ++--
+ 4 files changed, 15 insertions(+), 10 deletions(-)
+
+diff --git a/include/gba/macro.h b/include/gba/macro.h
+index e6de0b3..c8c58ea 100644
+--- a/include/gba/macro.h
++++ b/include/gba/macro.h
+@@ -3,9 +3,14 @@
+ 
+ #ifdef PORT_PC
+ #include "port_irq.h"
++#include "port_timer.h"
+ #define REG_IF_ACK(flags) PortIrq_Acknowledge(flags)
++#define TIMER_WRITE16(reg, value) PortTimer_Write16((uintptr_t)&(reg), (value))
++#define TIMER_WRITE32(reg, value) PortTimer_Write32((uintptr_t)&(reg), (value))
+ #else
+ #define REG_IF_ACK(flags) (REG_IF = (flags))
++#define TIMER_WRITE16(reg, value) ((reg) = (value))
++#define TIMER_WRITE32(reg, value) ((reg) = (value))
+ #endif
+ 
+ #define CPU_FILL_UNCHECKED(value, dest, size, bit)                                          \
+diff --git a/src/agb_flash.c b/src/agb_flash.c
+index be8d605..947c0c6 100644
+--- a/src/agb_flash.c
++++ b/src/agb_flash.c
+@@ -91,12 +91,12 @@ void StartFlashTimer(u8 phase)
+     const u16 *maxTime = &gFlashMaxTime[phase * 3];
+     sSavedIme = REG_IME;
+     REG_IME = 0;
+-    sTimerReg[1] = 0;
++    TIMER_WRITE16(sTimerReg[1], 0);
+     REG_IE |= (INTR_FLAG_TIMER0 << sTimerNum);
+     gFlashTimeoutFlag = 0;
+     sTimerCount = *maxTime++;
+-    *sTimerReg++ = *maxTime++;
+-    *sTimerReg-- = *maxTime++;
++    TIMER_WRITE16(*sTimerReg++, *maxTime++);
++    TIMER_WRITE16(*sTimerReg--, *maxTime++);
+     REG_IF_ACK(INTR_FLAG_TIMER0 << sTimerNum);
+     REG_IME = 1;
+ }
+@@ -104,8 +104,8 @@ void StartFlashTimer(u8 phase)
+ void StopFlashTimer(void)
+ {
+     REG_IME = 0;
+-    *sTimerReg++ = 0;
+-    *sTimerReg-- = 0;
++    TIMER_WRITE16(*sTimerReg++, 0);
++    TIMER_WRITE16(*sTimerReg--, 0);
+     REG_IE &= ~(INTR_FLAG_TIMER0 << sTimerNum);
+     REG_IME = sSavedIme;
+ }
+diff --git a/src/m4a.c b/src/m4a.c
+index 6d7224c..93ffaa0 100644
+--- a/src/m4a.c
++++ b/src/m4a.c
+@@ -421,10 +421,10 @@ void SampleFreqSet(u32 freq)
+     soundInfo->divFreq = (16777216 / soundInfo->pcmFreq + 1) >> 1;
+ 
+     // Turn off timer 0.
+-    REG_TM0CNT_H = 0;
++    TIMER_WRITE16(REG_TM0CNT_H, 0);
+ 
+     // cycles per LCD fresh 280896
+-    REG_TM0CNT_L = -(280896 / soundInfo->pcmSamplesPerVBlank);
++    TIMER_WRITE16(REG_TM0CNT_L, -(280896 / soundInfo->pcmSamplesPerVBlank));
+ 
+     m4aSoundVSyncOn();
+ 
+@@ -436,7 +436,7 @@ void SampleFreqSet(u32 freq)
+         ;
+ #endif
+ 
+-    REG_TM0CNT_H = TIMER_ENABLE | TIMER_1CLK;
++    TIMER_WRITE16(REG_TM0CNT_H, TIMER_ENABLE | TIMER_1CLK);
+ }
+ 
+ void m4aSoundMode(u32 mode)
+diff --git a/src/main.c b/src/main.c
+index 66855c3..6201ea8 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -208,14 +208,14 @@ void SetMainCallback2(MainCallback callback)
+ 
+ void StartTimer1(void)
+ {
+-    REG_TM1CNT_H = 0x80;
++    TIMER_WRITE16(REG_TM1CNT_H, 0x80);
+ }
+ 
+ void SeedRngAndSetTrainerId(void)
+ {
+     u16 val = REG_TM1CNT_L;
+     SeedRng(val);
+-    REG_TM1CNT_H = 0;
++    TIMER_WRITE16(REG_TM1CNT_H, 0);
+     sTrainerId = val;
+ }
+ 
+-- 
+2.51.0.windows.2
+
