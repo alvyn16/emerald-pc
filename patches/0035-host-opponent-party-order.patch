@@ -1,0 +1,30 @@
+From 7b23d3dbe8eb9e868d64c9fef6c5b062ba24b929 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 14:05:12 -0400
+Subject: [PATCH] Emit safe unused party-order bytes for native opponent
+ switches
+
+---
+ src/battle_controllers.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/battle_controllers.c b/src/battle_controllers.c
+index 5357f40..06bb707 100644
+--- a/src/battle_controllers.c
++++ b/src/battle_controllers.c
+@@ -1384,7 +1384,12 @@ void BtlController_EmitChosenMonReturnValue(u8 bufferId, u8 partyId, u8 *battleP
+     sBattleBuffersTransferData[0] = CONTROLLER_CHOSENMONRETURNVALUE;
+     sBattleBuffersTransferData[1] = partyId;
+     for (i = 0; i < (int)ARRAY_COUNT(gBattlePartyCurrentOrder); i++)
++#ifdef PORT_PC
++        // Opponent controllers intentionally pass NULL; these order bytes are unused.
++        sBattleBuffersTransferData[2 + i] = battlePartyOrder ? battlePartyOrder[i] : 0;
++#else
+         sBattleBuffersTransferData[2 + i] = battlePartyOrder[i];
++#endif
+     PrepareBufferDataTransfer(bufferId, sBattleBuffersTransferData, 5);
+ }
+ 
+-- 
+2.51.0.windows.2
+
