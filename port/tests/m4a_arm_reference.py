@@ -6,7 +6,7 @@ import json
 import struct
 import subprocess
 from unicorn import Uc, UC_ARCH_ARM, UC_MODE_THUMB
-from unicorn.arm_const import UC_ARM_REG_SP, UC_ARM_REG_LR
+from unicorn.arm_const import UC_ARM_REG_SP, UC_ARM_REG_LR, UC_ARM_REG_PC
 
 root = Path(__file__).resolve().parents[2]
 nm = root / "pokeemerald/.toolchains/arm-binutils-2.43.1/mingw64/bin/arm-none-eabi-nm.exe"
@@ -49,6 +49,8 @@ def run(name, data, wave_type=0, voice_type=8, channels=1, reverb=0, initial=0,
     cpu.mem_write(pcm,bytes([initial&255])*3168)
     cpu.reg_write(UC_ARM_REG_SP,0x03007e00);cpu.reg_write(UC_ARM_REG_LR,0x03007001)
     cpu.emu_start(symbols["SoundMain"]|1,0x03007000,count=1000000)
+    assert cpu.reg_read(UC_ARM_REG_PC) == 0x03007000, "ARM reference hit its instruction budget"
+    assert bytes(cpu.mem_read(sound,4)) == struct.pack("<I",0x68736d53)
     result=list(struct.unpack("224b",cpu.mem_read(pcm+1584,224)))
     return name,result
 
