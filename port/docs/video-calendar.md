@@ -37,3 +37,16 @@ enable/disable, prescalers, cascada, overflow múltiple y solicitudes IRQ.
 Write16 observa cada write; Write32 escribe recarga y luego control. El
 sondeo de writes distintos se mantiene como compatibilidad de fixtures, no
 como sustituto de los hooks en los consumidores inventariados del juego.
+
+Los parches 0025–0027 observan writes de arranque, m4a, flash, link,
+e-Reader y RFU, incluidas variantes indirectas de 16/32 bits. Esto no
+habilita transporte link/RFU ni sus busy loops dependientes de hardware.
+
+Revisión de control: cambiar de divisor 64 a 1 tras 63 ciclos no convierte
+el resto viejo en 63 ticks nuevos. Los prescalers se alinean al contador
+común de ciclos del dispositivo, incluido enable/control entre fases.
+`build/t12-control-before.log` reproduce el fallo; `timer_test` verifica
+la corrección y cambio posterior a divisor 256. Se contrastó con el
+[recalendario de timers de mGBA](https://github.com/mgba-emu/mgba/blob/master/src/gba/timer.c).
+No se simula el retraso de enable de instrucciones ARM ni fases sublínea
+entre dos instrucciones del juego nativo.

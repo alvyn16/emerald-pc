@@ -34,3 +34,9 @@ stop/rearme con valor idéntico, NOW/VBlank/HBlank, máscaras/conteo cero en
 los cuatro canales, registros estables, IRQ y prioridad de canales. T11
 prueba el calendario que limita los triggers a las fases correspondientes.
 Referencia de comportamiento: [GBATEK DMA](https://rust-console.github.io/gbatek-gbaonly/).
+
+Revisión: las máscaras GBA también se aplican al destino al recargar DAD
+en repeat. La prueba usa el alias 0x0c000020 en DMA0 y comprueba dos HBlank
+sobre 0x04000020, sin escribir el alias. El comportamiento previo fallaba
+en el segundo evento (`build/t13-review-before.log`); el corregido pasa.
+Las escrituras DMA a BG2/BG3 X/Y notifican al PPU, incluso con valor igual.
