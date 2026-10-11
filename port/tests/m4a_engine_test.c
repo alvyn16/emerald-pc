@@ -6,6 +6,7 @@
 #include "gba/m4a_internal.h"
 #include "m4a.h"
 #include "m4a_engine.h"
+#include "port_psg.h"
 
 static struct MusicPlayerTrack sTracks[4][2];
 const struct MusicPlayer gMPlayTable[] = {
@@ -188,6 +189,19 @@ int main(void)
     for (unsigned i=0;i<4;++i) { track.cmdPtr=address; ply_patt(&player,&track); }
     assert(track.flags == 0 && track.patternLevel == 3);
     puts("PCM vectors: DPCM, half-rate, reverse, ADSR, reverb, wrap, patterns and bounds OK");
+    // Run the original CgbSound writer, including its 0x40/load/0x80 wave sequence.
+    m4aSoundInit();
+    u32 wavePattern[4] = {0xffffffff,0xffffffff,0,0};
+    gCgbChans[2] = (struct CgbChannel){.statusFlags=SOUND_CHANNEL_SF_START,
+        .type=3,.leftVolume=120,.rightVolume=120,.panMask=0x44,.attack=0,.decay=0,.sustain=15,
+        .frequency=1536,.wavePointer=wavePattern};
+    CgbSound();
+    assert((REG_NR52 & 4) && !(REG_NR34 & 0x80));
+    int16_t psg[32*2] = {0};
+    PortPsg_Render(psg,32,4096);
+    for (unsigned i=0;i<32;++i)
+        assert(psg[i*2] == (i<16 ? 3840 : -3840));
+    CgbOscOff(3); assert(!(REG_NR52 & 4));
     VirtualFree(iwram, 0, MEM_RELEASE);
     VirtualFree(io, 0, MEM_RELEASE);
     return 0;

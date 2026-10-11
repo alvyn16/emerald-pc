@@ -5,6 +5,7 @@
 
 #include "gba/m4a_internal.h"
 #include "m4a_engine.h"
+#include "port_psg.h"
 
 extern void *const gMPlayJumpTableTemplate[36];
 extern const u8 gClockTable[];
@@ -268,7 +269,7 @@ void ply_port(struct MusicPlayerInfo *p, struct MusicPlayerTrack *t)
     (void)p;
     unsigned offset = *t->cmdPtr++;
     unsigned value = *t->cmdPtr++;
-    if (offset < 0x40) *(volatile u8 *)(uintptr_t)(0x04000060 + offset) = value;
+    if (offset < 0x40) PortPsg_Write8(0x04000060 + offset, value);
 }
 void ply_endtie(struct MusicPlayerInfo *p, struct MusicPlayerTrack *t)
 {
