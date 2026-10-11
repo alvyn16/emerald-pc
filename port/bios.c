@@ -27,6 +27,13 @@ static void CopyUnits(const void *source, void *destination, u32 count, size_t u
 
     if (source == NULL || destination == NULL || count == 0)
         return;
+    // ARM word block transfers ignore the low two address bits. Halfword
+    // callers retain the documented aligned-address contract.
+    if (unitSize == 4)
+    {
+        from = (const u8 *)((uintptr_t)source & ~(uintptr_t)3);
+        to = (u8 *)((uintptr_t)destination & ~(uintptr_t)3);
+    }
     if (fixed)
         memcpy(value, from, unitSize);
     for (u32 i = 0; i < count; ++i)
@@ -44,7 +51,8 @@ void CpuSet(const void *source, void *destination, u32 control)
 
 void CpuFastSet(const void *source, void *destination, u32 control)
 {
-    CopyUnits(source, destination, control & BIOS_COUNT_MASK, 4,
+    u32 count = control & BIOS_COUNT_MASK;
+    CopyUnits(source, destination, (count + 7u) & ~7u, 4,
               (control & BIOS_SOURCE_FIXED) != 0);
 }
 

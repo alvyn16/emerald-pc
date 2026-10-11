@@ -47,6 +47,22 @@ int main(void)
     u32 copiedWords[8] = {0};
     CpuSet(sourceWords, copiedWords, 0x04000008);
     assert(memcmp(sourceWords, copiedWords, sizeof(sourceWords)) == 0);
+
+    // CpuFastSet transfers complete 32-byte blocks, even for count=1/9.
+    u32 blocks[24], blockCopy[24];
+    for (unsigned i = 0; i < 24; ++i) blocks[i] = 0x12340000 + i;
+    memset(blockCopy, 0xa5, sizeof(blockCopy));
+    CpuFastSet(blocks, blockCopy, 1);
+    assert(memcmp(blocks, blockCopy, 32) == 0 && blockCopy[8] == 0xa5a5a5a5);
+    CpuFastSet(blocks, blockCopy, 9);
+    assert(memcmp(blocks, blockCopy, 64) == 0 && blockCopy[16] == 0xa5a5a5a5);
+    CpuFastSet(blocks, blockCopy, 0x01000009);
+    for (unsigned i = 0; i < 16; ++i) assert(blockCopy[i] == blocks[0]);
+    CpuFastSet(NULL, blockCopy, 0);
+    assert(blockCopy[16] == 0xa5a5a5a5);
+    // Word transfers ignore low address bits (LDM/STM alignment).
+    CpuFastSet((u8 *)blocks + 1, (u8 *)blockCopy + 3, 8);
+    assert(memcmp(blocks, blockCopy, 32) == 0);
     memset(copiedWords, 0, sizeof(copiedWords));
     CpuFastSet(sourceWords, copiedWords, 8);
     assert(memcmp(sourceWords, copiedWords, sizeof(sourceWords)) == 0);
