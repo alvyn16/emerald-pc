@@ -154,6 +154,8 @@ $(OBJECT_DIR)/%.o: $(POKEEMERALD)/src/%.c | check-tools
 	}
 
 $(OBJECT_DIR)/agb_flash.o $(OBJECT_DIR)/agb_flash_1m.o: host_flash.h
+$(OBJECT_DIR)/siirtc.o: port_rtc.h
+$(OBJECT_DIR)/m4a.o: port_psg.h
 $(OBJECTS): $(POKEEMERALD)/include/gba/macro.h $(POKEEMERALD)/include/global.h
 
 $(DATA_OBJECT_DIR)/%.o: $(POKEEMERALD)/data/%.s | check-tools
