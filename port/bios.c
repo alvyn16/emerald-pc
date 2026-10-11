@@ -207,14 +207,25 @@ u16 ArcTan2(s16 x, s16 y)
                  - FixedArcTangent(horizontal * 16384 / vertical));
 }
 
-static s16 Fixed8_8(double value)
+static s32 Sine14(unsigned phase)
 {
-    long scaled = lround(value * 256.0);
-    if (scaled > INT16_MAX)
-        scaled = INT16_MAX;
-    if (scaled < INT16_MIN)
-        scaled = INT16_MIN;
-    return (s16)scaled;
+    // Generate mathematical samples; no BIOS table or ROM bytes are used.
+    phase &= 255;
+    if (!(phase & 63))
+        return phase == 64 ? 16384 : phase == 192 ? -16384 : 0;
+    return (s32)lround(sin(phase * (2.0 * 3.14159265358979323846 / 256.0)) * 16384.0);
+}
+
+static void AffineMatrix(s16 sx, s16 sy, u16 angle, s16 matrix[4])
+{
+    unsigned phase = angle >> 8;
+    s32 sine = Sine14(phase), cosine = Sine14(phase + 64);
+    const int64_t products[4] = {
+        (int64_t)sx * cosine, -(int64_t)sx * sine,
+        (int64_t)sy * sine, (int64_t)sy * cosine,
+    };
+    for (unsigned i = 0; i < 4; ++i)
+        matrix[i] = (s16)(u16)FloorShift(products[i], 14);
 }
 
 void BgAffineSet(struct BgAffineSrcData *source, struct BgAffineDstData *destination, s32 count)
@@ -223,37 +234,33 @@ void BgAffineSet(struct BgAffineSrcData *source, struct BgAffineDstData *destina
         return;
     for (s32 i = 0; i < count; ++i)
     {
-        double angle = source[i].alpha * (2.0 * 3.14159265358979323846 / 65536.0);
-        double cosine = cos(angle);
-        double sine = sin(angle);
+        s16 matrix[4];
+        AffineMatrix(source[i].sx, source[i].sy, source[i].alpha, matrix);
         struct BgAffineDstData *out = &destination[i];
-        out->pa = Fixed8_8((source[i].sx / 256.0) * cosine);
-        out->pb = Fixed8_8(-(source[i].sx / 256.0) * sine);
-        out->pc = Fixed8_8((source[i].sy / 256.0) * sine);
-        out->pd = Fixed8_8((source[i].sy / 256.0) * cosine);
-        out->dx = source[i].texX - out->pa * source[i].scrX - out->pb * source[i].scrY;
-        out->dy = source[i].texY - out->pc * source[i].scrX - out->pd * source[i].scrY;
+        out->pa = matrix[0]; out->pb = matrix[1];
+        out->pc = matrix[2]; out->pd = matrix[3];
+        // Unsigned subtraction defines the 32-bit wrap even at extrema.
+        out->dx = (s32)((u32)source[i].texX - (u32)(out->pa * source[i].scrX)
+                        - (u32)(out->pb * source[i].scrY));
+        out->dy = (s32)((u32)source[i].texY - (u32)(out->pc * source[i].scrX)
+                        - (u32)(out->pd * source[i].scrY));
     }
 }
 
 void ObjAffineSet(struct ObjAffineSrcData *source, void *destination, s32 count, s32 offset)
 {
-    if (source == NULL || destination == NULL || offset <= 0)
+    if (source == NULL || destination == NULL || offset < 0)
         return;
     u8 *out = destination;
     for (s32 i = 0; i < count; ++i)
     {
-        double angle = source[i].rotation * (2.0 * 3.14159265358979323846 / 65536.0);
-        double cosine = cos(angle);
-        double sine = sin(angle);
-        s16 matrix[4] = {
-            Fixed8_8((source[i].xScale / 256.0) * cosine),
-            Fixed8_8(-(source[i].xScale / 256.0) * sine),
-            Fixed8_8((source[i].yScale / 256.0) * sine),
-            Fixed8_8((source[i].yScale / 256.0) * cosine),
-        };
-        for (int j = 0; j < 4; ++j)
-            memcpy(out + ((size_t)i * 4 + j) * (size_t)offset, &matrix[j], sizeof(matrix[j]));
+        s16 matrix[4];
+        AffineMatrix(source[i].xScale, source[i].yScale, source[i].rotation, matrix);
+        for (unsigned j = 0; j < 4; ++j)
+        {
+            memcpy(out, &matrix[j], sizeof(matrix[j]));
+            out += offset;
+        }
     }
 }
 

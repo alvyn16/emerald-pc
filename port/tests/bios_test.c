@@ -131,6 +131,29 @@ int main(void)
     ObjAffineSet(&obj, objResult, 1, sizeof(s16));
     assert(objResult[0] == 256 && objResult[1] == 0);
     assert(objResult[2] == 0 && objResult[3] == 256);
+    obj.rotation = 0x20ff; // Low angle byte is ignored.
+    ObjAffineSet(&obj, objResult, 1, 2);
+    assert(objResult[0] == 181 && objResult[1] == -182);
+    assert(objResult[2] == 181 && objResult[3] == 181);
+    obj.rotation = 0x4000;
+    obj.xScale = INT16_MIN;
+    obj.yScale = -256;
+    s16 strided[16];
+    for (unsigned i = 0; i < 16; ++i) strided[i] = 1234;
+    ObjAffineSet(&obj, strided, 1, 8);
+    assert(strided[0] == 0 && strided[4] == INT16_MIN);
+    assert(strided[8] == -256 && strided[12] == 0);
+    assert(strided[1] == 1234 && strided[15] == 1234);
+    ObjAffineSet(&obj, strided, 0, 8);
+    assert(strided[1] == 1234);
+    bg.alpha = 0x2001;
+    bg.texX = INT32_MIN; bg.texY = INT32_MAX;
+    bg.scrX = 120; bg.scrY = -80;
+    BgAffineSet(&bg, &bgResult, 1);
+    assert(bgResult.pa == 181 && bgResult.pb == -182);
+    assert(bgResult.pc == 181 && bgResult.pd == 181);
+    assert((u32)bgResult.dx == (u32)INT32_MIN - 36280u);
+    assert((u32)bgResult.dy == (u32)INT32_MAX - 7240u);
 
     PortIrq_Reset();
     REG_IE = INTR_FLAG_VBLANK;
