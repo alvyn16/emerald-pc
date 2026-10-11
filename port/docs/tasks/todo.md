@@ -438,14 +438,17 @@ Safari/Frontier pendientes. No se cierra Checkpoint E.
 
 ### T28 — mandos y remapeo (M por incremento)
 
-- [ ] Añadir backend SDL de mandos con hotplug/foco y asignación clara.
-- [ ] Persistir remapeo fuera de Git y evitar teclas pegadas/conflictos con P.
-- [ ] Probar teclado, mando, desconexión y reset sin romper input de diagnóstico.
+- [x] Añadir backend SDL de mandos con hotplug/foco y asignación clara.
+- [x] Persistir remapeo fuera de Git y evitar teclas pegadas/conflictos con P.
+- [x] Probar teclado, mando, desconexión y reset sin romper input de diagnóstico.
 
 Dependencias: T23–T26. Archivos: módulo input host, frame, SDL loader, test
 input y configuración; dividir UI/configuración si supera cinco archivos.
 Verificación: backend falso y mando disponible; declarar manual pendiente
 si no hay hardware, sin inventar aprobación.
+
+Evidencia T28: controller-input.md, 21 suites, mando virtual SDL real y
+reset/normal/PC PASS. SDL enumera 0 mandos físicos; validación física pendiente.
 
 ### T29 — arranque reproducible y documentación actual (M)
 

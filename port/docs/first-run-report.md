@@ -878,3 +878,10 @@ concurso, huevo, Safari y Tower singles pasan sus comprobaciones semánticas.
 NODEP=1 tras una espera de make al regenerar dependencias; fuentes modificadas
 recompiladas y ROM verificada. Campaña continua permanece pendiente.
 Detalles y límites en gameplay-matrix.md.
+
+## T28 — controles
+
+Teclado/remapeo persistente, hotplug/foco y mando virtual SDL real PASS;
+21 suites host. El normal sale de casa sin combate; retirada PC diagnóstica
+y recarga PASS; reset por teclado/juego y fallo real de spawn PASS. SDL enumera
+0 mandos físicos: prueba física pendiente. Ver controller-input.md.

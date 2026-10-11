@@ -78,10 +78,16 @@ vectores contrastados con el mezclador ARM original. Consulta
 Enlace/RFU/multiboot y campaña completa siguen pendientes. No se garantiza
 precisión por ciclo, filtro de sonido analógico ni compatibilidad total con
 accesorios. El soporte actual es Windows de 32 bits; x86-64 queda como
-trabajo futuro. T23 y las tareas posteriores permanecen en
-`port/docs/tasks/todo.md`.
+trabajo futuro. T24–T26 tienen regresiones de combate y almacenamiento;
+T27 tiene segmentos medidos, pero sigue pendiente de campaña continua.
+El estado completo está en `port/docs/tasks/todo.md`.
 
 Consulta `port/docs/toolchain.md` para reproducir el entorno. ROMs, saves,
 recursos, capturas/WAV y binarios generados permanecen en carpetas ignoradas
 por Git. El RTC guarda su configuración separada en saves/; un save antiguo
 puede avanzar eventos al activar la fecha real, según `port/docs/rtc.md`.
+
+Teclado y mandos SDL compatibles están disponibles. El remapeo se guarda en
+`saves/controls.cfg`; consulta [controles y pruebas](port/docs/controller-input.md).
+La tecla P abre el menú de velocidad. La validación física de mandos queda
+pendiente; se probaron el backend y un mando virtual SDL real.
