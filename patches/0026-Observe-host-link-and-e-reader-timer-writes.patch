@@ -1,0 +1,110 @@
+From 515d947605a9daff2b14e0cc5fa8ae2aa8a1b6d5 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 01:30:19 -0400
+Subject: [PATCH] Observe host link and e-reader timer writes
+
+---
+ src/ereader_helpers.c | 14 +++++++-------
+ src/link.c            | 12 ++++++------
+ 2 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/src/ereader_helpers.c b/src/ereader_helpers.c
+index 1c5a8a4..f59a05c 100755
+--- a/src/ereader_helpers.c
++++ b/src/ereader_helpers.c
+@@ -590,7 +590,7 @@ static void CloseSerial(void)
+     REG_IE &= ~(INTR_FLAG_TIMER3 | INTR_FLAG_SERIAL);
+     REG_IME = 1;
+     REG_SIOCNT = 0;
+-    REG_TM3CNT_H = 0;
++    TIMER_WRITE16(REG_TM3CNT_H, 0);
+     REG_IF_ACK(INTR_FLAG_TIMER3 | INTR_FLAG_SERIAL);
+ }
+ 
+@@ -732,8 +732,8 @@ static void SetUpTransferManager(size_t size, const void *data, void *recvBuffer
+ 
+ static void StartTm3(void)
+ {
+-    REG_TM3CNT_L = -601;
+-    REG_TM3CNT_H = TIMER_INTR_ENABLE;
++    TIMER_WRITE16(REG_TM3CNT_L, -601);
++    TIMER_WRITE16(REG_TM3CNT_H, TIMER_INTR_ENABLE);
+     REG_IME = 0;
+     REG_IE |= INTR_FLAG_TIMER3;
+     REG_IME = 1;
+@@ -808,7 +808,7 @@ void EReaderHelper_SerialCallback(void)
+         if (++sSendRecvMgr.cursor < sSendRecvMgr.size + 2)
+         {
+             if (sSendRecvMgr.isParent)
+-                REG_TM3CNT_H |= TIMER_ENABLE;
++                TIMER_WRITE16(REG_TM3CNT_H, REG_TM3CNT_H | (TIMER_ENABLE));
+             else
+                 EnableSio();
+         }
+@@ -841,8 +841,8 @@ static void EnableSio(void)
+ 
+ static void DisableTm3(void)
+ {
+-    REG_TM3CNT_H &= ~TIMER_ENABLE;
+-    REG_TM3CNT_L = 0xFDA7;
++    TIMER_WRITE16(REG_TM3CNT_H, REG_TM3CNT_H & (~TIMER_ENABLE));
++    TIMER_WRITE16(REG_TM3CNT_L, 0xFDA7);
+ }
+ 
+ static void GetKeyInput(void)
+@@ -865,7 +865,7 @@ void EReaderHelper_RestoreRegsState(void)
+ {
+     REG_IME = sSavedIme;
+     REG_IE = sSavedIe;
+-    REG_TM3CNT_H = sSavedTm3Cnt;
++    TIMER_WRITE16(REG_TM3CNT_H, sSavedTm3Cnt);
+     REG_SIOCNT = sSavedSioCnt;
+     REG_RCNT = sSavedRCnt;
+ }
+diff --git a/src/link.c b/src/link.c
+index d8ce397..bcce875 100644
+--- a/src/link.c
++++ b/src/link.c
+@@ -1863,7 +1863,7 @@ static void DisableSerial(void)
+ {
+     DisableInterrupts(INTR_FLAG_TIMER3 | INTR_FLAG_SERIAL);
+     REG_SIOCNT = SIO_MULTI_MODE;
+-    REG_TMCNT_H(3) = 0;
++    TIMER_WRITE16(REG_TMCNT_H(3), 0);
+     REG_IF_ACK(INTR_FLAG_TIMER3 | INTR_FLAG_SERIAL);
+     REG_SIOMLT_SEND = 0;
+     REG_SIOMLT_RECV = 0;
+@@ -2009,8 +2009,8 @@ static void InitTimer(void)
+ {
+     if (gLink.isMaster)
+     {
+-        REG_TM3CNT_L = -197;
+-        REG_TM3CNT_H = TIMER_64CLK | TIMER_INTR_ENABLE;
++        TIMER_WRITE16(REG_TM3CNT_L, -197);
++        TIMER_WRITE16(REG_TM3CNT_H, TIMER_64CLK | TIMER_INTR_ENABLE);
+         EnableInterrupts(INTR_FLAG_TIMER3);
+     }
+ }
+@@ -2336,8 +2336,8 @@ static void StopTimer(void)
+ {
+     if (gLink.isMaster)
+     {
+-        REG_TM3CNT_H &= ~TIMER_ENABLE;
+-        REG_TM3CNT_L = -197;
++        TIMER_WRITE16(REG_TM3CNT_H, REG_TM3CNT_H & (~TIMER_ENABLE));
++        TIMER_WRITE16(REG_TM3CNT_L, -197);
+     }
+ }
+ 
+@@ -2350,7 +2350,7 @@ static void SendRecvDone(void)
+     }
+     else if (gLink.isMaster)
+     {
+-        REG_TM3CNT_H |= TIMER_ENABLE;
++        TIMER_WRITE16(REG_TM3CNT_H, REG_TM3CNT_H | (TIMER_ENABLE));
+     }
+ }
+ 
+-- 
+2.51.0.windows.2
+

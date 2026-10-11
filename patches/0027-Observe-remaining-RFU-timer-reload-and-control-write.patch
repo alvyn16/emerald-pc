@@ -1,0 +1,162 @@
+From 4882f46eccc9be3dd30222a4dd6b39ae2161bfa6 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 01:31:38 -0400
+Subject: [PATCH] Observe remaining RFU timer reload and control writes
+
+---
+ src/librfu_intr.c    | 14 +++++++-------
+ src/librfu_rfu.c     |  6 +++---
+ src/librfu_sio32id.c | 10 +++++-----
+ src/librfu_stwi.c    | 22 +++++++++++-----------
+ 4 files changed, 26 insertions(+), 26 deletions(-)
+
+diff --git a/src/librfu_intr.c b/src/librfu_intr.c
+index 8b84a00..50e177c 100644
+--- a/src/librfu_intr.c
++++ b/src/librfu_intr.c
+@@ -350,23 +350,23 @@ static void STWI_set_timer_in_RAM(u8 count)
+     switch (count)
+     {
+     case 50:
+-        *regTMCNTL = 0xFCCB;
++        TIMER_WRITE16(*regTMCNTL, 0xFCCB);
+         gSTWIStatus->timerState = 1;
+         break;
+     case 80:
+-        *regTMCNTL = 0xFAE0;
++        TIMER_WRITE16(*regTMCNTL, 0xFAE0);
+         gSTWIStatus->timerState = 2;
+         break;
+     case 100:
+-        *regTMCNTL = 0xF996;
++        TIMER_WRITE16(*regTMCNTL, 0xF996);
+         gSTWIStatus->timerState = 3;
+         break;
+     case 130:
+-        *regTMCNTL = 0xF7AD;
++        TIMER_WRITE16(*regTMCNTL, 0xF7AD);
+         gSTWIStatus->timerState = 4;
+         break;
+     }
+-    *regTMCNTH = TIMER_ENABLE | TIMER_64CLK | TIMER_256CLK | TIMER_INTR_ENABLE;
++    TIMER_WRITE16(*regTMCNTH, TIMER_ENABLE | TIMER_64CLK | TIMER_256CLK | TIMER_INTR_ENABLE);
+     REG_IF_ACK(INTR_FLAG_TIMER0 << gSTWIStatus->timerSelect);
+     REG_IME = 1;
+ }
+@@ -374,8 +374,8 @@ static void STWI_set_timer_in_RAM(u8 count)
+ static void STWI_stop_timer_in_RAM(void)
+ {
+     gSTWIStatus->timerState = 0;
+-    REG_TMCNT_L(gSTWIStatus->timerSelect) = 0;
+-    REG_TMCNT_H(gSTWIStatus->timerSelect) = 0;
++    TIMER_WRITE16(REG_TMCNT_L(gSTWIStatus->timerSelect), 0);
++    TIMER_WRITE16(REG_TMCNT_H(gSTWIStatus->timerSelect), 0);
+ }
+ 
+ static void STWI_init_slave(void)
+diff --git a/src/librfu_rfu.c b/src/librfu_rfu.c
+index ee5dbe6..fef91dc 100644
+--- a/src/librfu_rfu.c
++++ b/src/librfu_rfu.c
+@@ -376,11 +376,11 @@ void rfu_REQ_stopMode(void)
+         if (AgbRFU_checkID(8) == RFU_ID)
+         {
+             timerReg = &REG_TMCNT(gSTWIStatus->timerSelect);
+-            *timerReg = 0;
+-            *timerReg = (TIMER_ENABLE | TIMER_1024CLK) << 16;
++            TIMER_WRITE32(*timerReg, 0);
++            TIMER_WRITE32(*timerReg, (TIMER_ENABLE | TIMER_1024CLK) << 16);
+             while (*timerReg << 16 < 262 << 16)
+                 ;
+-            *timerReg = 0;
++            TIMER_WRITE32(*timerReg, 0);
+             STWI_set_Callback_M(rfu_CB_stopMode);
+             STWI_send_StopModeREQ();
+         }
+diff --git a/src/librfu_sio32id.c b/src/librfu_sio32id.c
+index 18ce787..9e752de 100644
+--- a/src/librfu_sio32id.c
++++ b/src/librfu_sio32id.c
+@@ -40,13 +40,13 @@ s32 AgbRFU_checkID(u8 maxTries)
+         id = Sio32IDMain();
+         if (id != 0)
+             break;
+-        regTMCNTL[1] = 0;
+-        regTMCNTL[0] = 0;
+-        regTMCNTL[1] = TIMER_1024CLK | TIMER_ENABLE;
++        TIMER_WRITE16(regTMCNTL[1], 0);
++        TIMER_WRITE16(regTMCNTL[0], 0);
++        TIMER_WRITE16(regTMCNTL[1], TIMER_1024CLK | TIMER_ENABLE);
+         while (regTMCNTL[0] < 32)
+             ;
+-        regTMCNTL[1] = 0;
+-        regTMCNTL[0] = 0;
++        TIMER_WRITE16(regTMCNTL[1], 0);
++        TIMER_WRITE16(regTMCNTL[0], 0);
+     }
+     REG_IME = 0;
+     REG_IE = ieBak;
+diff --git a/src/librfu_stwi.c b/src/librfu_stwi.c
+index 5efc0e4..03ad70d 100644
+--- a/src/librfu_stwi.c
++++ b/src/librfu_stwi.c
+@@ -63,12 +63,12 @@ void AgbRFU_SoftReset(void)
+     REG_RCNT = 0x80A0; // all these bits are undocumented
+     timerL = &REG_TMCNT_L(gSTWIStatus->timerSelect);
+     timerH = &REG_TMCNT_H(gSTWIStatus->timerSelect);
+-    *timerH = 0;
+-    *timerL = 0;
+-    *timerH = TIMER_ENABLE | TIMER_1024CLK;
++    TIMER_WRITE16(*timerH, 0);
++    TIMER_WRITE16(*timerL, 0);
++    TIMER_WRITE16(*timerH, TIMER_ENABLE | TIMER_1024CLK);
+     while (*timerL <= 0x11)
+         REG_RCNT = 0x80A2;
+-    *timerH = 3;
++    TIMER_WRITE16(*timerH, 3);
+     REG_RCNT = 0x80A0;
+     REG_SIOCNT = SIO_INTR_ENABLE | SIO_32BIT_MODE | SIO_115200_BPS;
+     gSTWIStatus->state = 0; // master send req
+@@ -511,23 +511,23 @@ static void STWI_set_timer(u8 count)
+     switch (count)
+     {
+     case 50:
+-        *timerL = 0xFCCB;
++        TIMER_WRITE16(*timerL, 0xFCCB);
+         gSTWIStatus->timerState = 1;
+         break;
+     case 80:
+-        *timerL = 0xFAE0;
++        TIMER_WRITE16(*timerL, 0xFAE0);
+         gSTWIStatus->timerState = 2;
+         break;
+     case 100:
+-        *timerL = 0xF996;
++        TIMER_WRITE16(*timerL, 0xF996);
+         gSTWIStatus->timerState = 3;
+         break;
+     case 130:
+-        *timerL = 0xF7AD;
++        TIMER_WRITE16(*timerL, 0xF7AD);
+         gSTWIStatus->timerState = 4;
+         break;
+     }
+-    *timerH = TIMER_ENABLE | TIMER_INTR_ENABLE | TIMER_1024CLK;
++    TIMER_WRITE16(*timerH, TIMER_ENABLE | TIMER_INTR_ENABLE | TIMER_1024CLK);
+     REG_IF_ACK(INTR_FLAG_TIMER0 << gSTWIStatus->timerSelect);
+     REG_IME = 1;
+ }
+@@ -535,8 +535,8 @@ static void STWI_set_timer(u8 count)
+ static void STWI_stop_timer(void)
+ {
+     gSTWIStatus->timerState = 0;
+-    REG_TMCNT_L(gSTWIStatus->timerSelect) = 0;
+-    REG_TMCNT_H(gSTWIStatus->timerSelect) = 0;
++    TIMER_WRITE16(REG_TMCNT_L(gSTWIStatus->timerSelect), 0);
++    TIMER_WRITE16(REG_TMCNT_H(gSTWIStatus->timerSelect), 0);
+ }
+ 
+ /*
+-- 
+2.51.0.windows.2
+
