@@ -36,10 +36,13 @@ static int sQuitEvent;
 static SDL_Keycode sMenuKeys[2];
 static unsigned sMenuKeyCount;
 static unsigned sMenuKeyIndex;
+static int sBreakPoll, sAudioPaused;
+static unsigned sAudioPauseCalls, sPauseVBlanks;
 static jmp_buf sExit;
 
 static int PollEvent(SDL_Event *event)
 {
+    if (sBreakPoll && sMenuKeyIndex == 1) { sBreakPoll = 0; return 0; }
     if (sMenuKeyIndex < sMenuKeyCount)
     {
         memset(event, 0, sizeof(*event));
@@ -64,7 +67,7 @@ static const Uint8 *MockGetKeyboardState(int *count)
 
 static Uint64 GetPerformanceFrequency(void) { return 1000000; }
 static Uint64 GetPerformanceCounter(void) { return sCounter += 1000; }
-static void Delay(Uint32 milliseconds) { sCounter += milliseconds * 1000; }
+static void Delay(Uint32 milliseconds) { if (sAudioPaused) assert(sVBlanks == sPauseVBlanks); sCounter += milliseconds * 1000; }
 static void VBlank(void)
 {
     assert(REG_VCOUNT == 160);
@@ -102,7 +105,8 @@ void PortPpu_RenderLine(unsigned y, uint32_t *row)
 }
 void PortDma_OnHBlank(void) { sHBlankDma++; }
 void PortDma_OnVBlank(void) { sVBlankDma++; sVBlankDmaReady = 1; }
-void PortAudio_SubmitFrame(void) { }
+void PortAudio_SubmitFrame(void) { assert(!sAudioPaused); }
+void PortAudio_SetPaused(int paused) { if (paused != sAudioPaused) sAudioPauseCalls++; sAudioPaused = paused; if (paused) sPauseVBlanks = sVBlanks; }
 
 int main(void)
 {
@@ -158,9 +162,11 @@ int main(void)
     sMenuKeys[0] = SDLK_p;
     sMenuKeys[1] = SDLK_RETURN;
     sMenuKeyCount = 2;
+    sBreakPoll = 1;
     sKeys[SDL_SCANCODE_RETURN] = 1;
     PortHost_RunFrame();
     assert(!PortSpeedMenu_IsOpen());
+    assert(!sAudioPaused && sAudioPauseCalls == 2);
     assert(REG_KEYINPUT & START_BUTTON);
     PortHost_RunFrame();
     assert(REG_KEYINPUT & START_BUTTON);

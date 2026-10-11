@@ -127,6 +127,7 @@ static void PollHostEvents(void)
             (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE))
             Port_ExitCleanly();
         PortSpeedMenu_HandleEvent(&event);
+        PortAudio_SetPaused(PortSpeedMenu_IsOpen());
         if (PortSpeedMenu_IsOpen())
             sSuppressedMenuKeys |= START_BUTTON | DPAD_UP | DPAD_DOWN;
     }
