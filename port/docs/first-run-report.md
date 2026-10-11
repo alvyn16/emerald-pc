@@ -861,3 +861,10 @@ Nueve escenarios PASS: entrenador/rival/gym/doble, veneno/Guts, cambio, poción,
 combate largo y aprendizaje/evolución. Se corrigieron punteros sign-extended de
 Rock Slide (0033), stop de grito nulo (0034) y party-order nulo rival (0035).
 GBA compare OK. Detalles, direcciones, frames y límites en gameplay-matrix.md.
+
+## T26 — almacenamiento
+
+Se reprodujeron accesos nulos en prioridad del sprite y callback tras liberar
+sStorage; parche 0036 PORT_PC. Los seis menús pasan tres ciclos y las cuatro
+operaciones del PC pasan mutación, campo, guardado y recarga en nuevo proceso.
+Detalles y reproducción en gameplay-matrix.md.

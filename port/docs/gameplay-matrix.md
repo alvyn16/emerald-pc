@@ -62,4 +62,28 @@ OK (t25-gba-final.log, KEEP_TEMPS=1); 19 suites PASS. 35 parches aplicados en
 checkout limpio, árbol a7fc46cdf960c354915bec3ea8339364b4cfd984 idéntico.
 No se afirma cobertura de todos los estados, habilidades o combinaciones de equipos.
 
-T26, T27 y T28: pendientes hasta sus gates y evidencia.
+## T26 — menús y almacenamiento
+
+PASS: resumen, equipo, bolsa, Pokédex, opciones y nombre, tres aperturas/cierres
+por pantalla, callback de campo y especie conservados. Nombre cambia realmente
+en la primera edición; las siguientes vuelven a abrir/cerrar sin bloquear.
+PASS: depósito Mudkip al PC conservando Ralts en equipo; retirada Torchic;
+movimiento Ralts caja 0/slot 0 → caja 1/slot 2 mediante cursor/título de caja;
+depósito y retirada de una poción en el PC de objetos. Cada operación verifica
+contenidos, vuelta al campo, guardado, nuevo proceso y recarga sin alterar el
+archivo. Evolución y aprendizaje real: fixture evolution de T25.
+
+0036: SetMovingMonPriority dereferenciaba sprite NULL al ocultar equipo tras
+retirada (0x102890d6, dirección 5); se omite prioridad si no hay sprite. Además,
+RunTasks puede liberar sStorage al salir, pero CB2_PokeStorage seguía leyendo
+closeBoxFlashing (0x10286cc6, dirección 0x2c7). Sale del callback si sStorage es
+NULL. Ambas protecciones PORT_PC, no cambian GBA. Logs privados
+build/t26-withdraw-first.log y t26-withdraw-crash.log.
+
+Repro MINGW32: python port/tests/menu_matrix_smoke.py <summary|party|bag|dex|options|naming>
+y python port/tests/pc_matrix_smoke.py <deposit|withdraw|box|items>.
+Requieren primero wild_battle_smoke.py --quick --scenario catch como plantilla.
+Los fixtures crean un estado de campo aislado; no recorren la historia para llegar
+al PC. No fuerzan resultados de almacenamiento. Capturas raw locales en build/.
+
+T27 y T28: pendientes hasta sus gates y evidencia.

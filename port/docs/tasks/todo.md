@@ -404,11 +404,11 @@ parches 0033–0035, compare OK, XP/dinero/flags/retorno comprobados.
 
 ### T26 — menús, PC y almacenamiento (M por escenario)
 
-- [ ] Probar depósito/retiro de objetos y Pokémon, cambio de caja/equipo,
+- [x] Probar depósito/retiro de objetos y Pokémon, cambio de caja/equipo,
   resumen, Pokédex, bolsa y opciones con abrir/cerrar repetido.
-- [ ] Cubrir evolución, aprendizaje de movimiento y cambio de nombre sin
+- [x] Cubrir evolución, aprendizaje de movimiento y cambio de nombre sin
   callbacks o sprites reteniendo datos liberados.
-- [ ] Guardar/reabrir tras operaciones de PC y comprobar los contenidos.
+- [x] Guardar/reabrir tras operaciones de PC y comprobar los contenidos.
 
 Dependencias: T05–T07, T24–T25. Archivos: harness por escenario, informes y
 fixes. Verificación: datos antes/después y timeout en transiciones.
