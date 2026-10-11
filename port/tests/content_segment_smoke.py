@@ -8,7 +8,7 @@ segment = parser.parse_args().segment
 inputs = "".join(f"{n} {n+1} A\n" for n in range(31300, 69500, 40))
 scratch, commands = prepare(f"content-{segment}", inputs)
 if segment == "breeding":
-    # SaveBlock1 daycare is 0x3030 in the pinned GBA layout; leave a third mon.
+    # Leave a third party mon while storing the two breeding parents.
     commands += '''
 call (void)CreateMon((char *)&gPlayerParty+100,132,8,32,0,0,0,0)
 call (void)CreateMon((char *)&gPlayerParty+200,280,8,32,0,0,0,0)
@@ -25,6 +25,7 @@ call (void)GiveEggFromDaycare()
 python
 assert int(gdb.parse_and_eval("*(unsigned char *)&gPlayerPartyCount")) == 2
 assert int(gdb.parse_and_eval("(unsigned int)GetMonData3((char *)&gPlayerParty+100,11,0)")) == 283
+assert int(gdb.parse_and_eval("(unsigned int)GetMonData3((char *)&gPlayerParty+100,45,0)")) == 1
 assert int(gdb.parse_and_eval("(int)TrySavingData(0)")) == 1
 end
 printf "BREEDING EGG PASS\\n"
