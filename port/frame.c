@@ -13,6 +13,7 @@
 #include "port_timer.h"
 #include "port_audio.h"
 #include "port_irq.h"
+#include "port_input.h"
 #ifdef PORT_DIAGNOSTIC
 #include <stdio.h>
 #include "battle.h"
@@ -29,7 +30,6 @@ static Uint64 sNextFrameTick;
 static Uint64 sFrameRemainder;
 static Uint64 sTimerLastTick;
 static Uint64 sTimerCycleRemainder;
-static unsigned sSuppressedMenuKeys;
 #ifdef PORT_DIAGNOSTIC
 static unsigned sDiagnosticFrame;
 #endif
@@ -59,25 +59,7 @@ static void SetVideoLine(unsigned line, int vblank)
 
 static void UpdateKeyInput(void)
 {
-    const Uint8 *keys = portSDL.GetKeyboardState(NULL);
-    unsigned pressed = 0;
-
-    if (keys[SDL_SCANCODE_Z]) pressed |= A_BUTTON;
-    if (keys[SDL_SCANCODE_X]) pressed |= B_BUTTON;
-    if (keys[SDL_SCANCODE_BACKSPACE]) pressed |= SELECT_BUTTON;
-    if (keys[SDL_SCANCODE_RETURN]) pressed |= START_BUTTON;
-    if (keys[SDL_SCANCODE_RIGHT]) pressed |= DPAD_RIGHT;
-    if (keys[SDL_SCANCODE_LEFT]) pressed |= DPAD_LEFT;
-    if (keys[SDL_SCANCODE_UP]) pressed |= DPAD_UP;
-    if (keys[SDL_SCANCODE_DOWN]) pressed |= DPAD_DOWN;
-    if (keys[SDL_SCANCODE_S]) pressed |= R_BUTTON;
-    if (keys[SDL_SCANCODE_A]) pressed |= L_BUTTON;
-
-    // Menu navigation must not become GBA input until the key is released.
-    if (!keys[SDL_SCANCODE_RETURN]) sSuppressedMenuKeys &= ~START_BUTTON;
-    if (!keys[SDL_SCANCODE_UP]) sSuppressedMenuKeys &= ~DPAD_UP;
-    if (!keys[SDL_SCANCODE_DOWN]) sSuppressedMenuKeys &= ~DPAD_DOWN;
-    pressed &= ~sSuppressedMenuKeys;
+    unsigned pressed = PortInput_ReadButtons();
 
 #ifdef PORT_DIAGNOSTIC
     if (PortInputScript_GetPressed(++sDiagnosticFrame, &pressed))
@@ -127,9 +109,10 @@ static void PollHostEvents(void)
             (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE))
             Port_ExitCleanly();
         PortSpeedMenu_HandleEvent(&event);
+        PortInput_HandleEvent(&event);
         PortAudio_SetPaused(PortSpeedMenu_IsOpen());
         if (PortSpeedMenu_IsOpen())
-            sSuppressedMenuKeys |= START_BUTTON | DPAD_UP | DPAD_DOWN;
+            PortInput_SuppressMenuKeys();
     }
 }
 

@@ -12,6 +12,7 @@
 #include "sdl_loader.h"
 #include "port_irq.h"
 #include "port_rtc.h"
+#include "port_input.h"
 #ifdef PORT_DIAGNOSTIC
 #include "input_script.h"
 #endif
@@ -29,6 +30,7 @@ static void ShutdownHost(void)
     PortFlash_Close();
     PortRtc_Close();
     PortAudio_Shutdown();
+    PortInput_Shutdown();
     portSDL.DestroyTexture(sTexture);
     portSDL.DestroyRenderer(sRenderer);
     portSDL.DestroyWindow(sWindow);
@@ -51,7 +53,7 @@ int main(void)
         return 1;
 #else
     const char *windowTitle = "emerald-pc";
-    fprintf(stderr, "PC: normal game build; keyboard input only\n");
+    fprintf(stderr, "PC: normal game build; keyboard/controller input\n");
 #endif
     if (Port_InitGbaMemory() != 0)
         return 1;
@@ -136,6 +138,7 @@ int main(void)
     portSDL.RenderPresent(renderer);
     fprintf(stderr, "PC: SDL window ready (240x160, scale 4); entering AgbMain\n");
     PortAudio_Init();
+    PortInput_Init(NULL);
     if (PortRtc_Open() != 0)
         fprintf(stderr, "PC: RTC unavailable; configuration preserved\n");
     AgbMain();
