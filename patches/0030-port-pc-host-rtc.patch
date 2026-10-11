@@ -1,0 +1,166 @@
+From abd607bb60902cbac2fb86e1e3513a56935ccd58 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 02:42:46 -0400
+Subject: [PATCH] Use persistent host RTC behind PORT_PC without GPIO transport
+
+---
+ src/siirtc.c | 43 +++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 41 insertions(+), 2 deletions(-)
+
+diff --git a/src/siirtc.c b/src/siirtc.c
+index 46f3d54..881a16d 100644
+--- a/src/siirtc.c
++++ b/src/siirtc.c
+@@ -5,6 +5,9 @@
+ #include "gba/gba.h"
+ #include "siirtc.h"
+ #include "config.h"
++#ifdef PORT_PC
++#include "port_rtc.h"
++#endif
+ 
+ #define STATUS_INTFE  0x02 // frequency interrupt enable
+ #define STATUS_INTME  0x08 // per-minute interrupt enable
+@@ -80,21 +83,24 @@ static const char AgbLibRtcVersion[] = "SIIRTC_V001";
+ 
+ void SiiRtcUnprotect(void)
+ {
++#ifndef PORT_PC
+     EnableGpioPortRead();
++#endif
+     sLocked = FALSE;
+ }
+ 
+ void SiiRtcProtect(void)
+ {
++#ifndef PORT_PC
+     DisableGpioPortRead();
++#endif
+     sLocked = TRUE;
+ }
+ 
+ u8 SiiRtcProbe(void)
+ {
+ #ifdef PORT_PC
+-    // A PC has no cartridge RTC. RtcInit will set RTC_INIT_ERROR.
+-    return 0;
++    return PortRtc_Ready() ? 1 : 0;
+ #else
+     u8 errorCode;
+     struct SiiRtcInfo rtc;
+@@ -142,6 +148,9 @@ u8 SiiRtcProbe(void)
+ 
+ bool8 SiiRtcReset(void)
+ {
++#ifdef PORT_PC
++    return !sLocked && PortRtc_Reset();
++#else
+     bool8 result;
+     struct SiiRtcInfo rtc;
+ 
+@@ -167,10 +176,14 @@ bool8 SiiRtcReset(void)
+     result = SiiRtcSetStatus(&rtc);
+ 
+     return result;
++#endif
+ }
+ 
+ bool8 SiiRtcGetStatus(struct SiiRtcInfo *rtc)
+ {
++#ifdef PORT_PC
++    return !sLocked && PortRtc_GetStatus(rtc);
++#else
+     u8 statusData;
+ 
+     if (sLocked == TRUE)
+@@ -200,10 +213,14 @@ bool8 SiiRtcGetStatus(struct SiiRtcInfo *rtc)
+     sLocked = FALSE;
+ 
+     return TRUE;
++#endif
+ }
+ 
+ bool8 SiiRtcSetStatus(struct SiiRtcInfo *rtc)
+ {
++#ifdef PORT_PC
++    return !sLocked && PortRtc_SetStatus(rtc);
++#else
+     u8 statusData;
+ 
+     if (sLocked == TRUE)
+@@ -231,10 +248,14 @@ bool8 SiiRtcSetStatus(struct SiiRtcInfo *rtc)
+     sLocked = FALSE;
+ 
+     return TRUE;
++#endif
+ }
+ 
+ bool8 SiiRtcGetDateTime(struct SiiRtcInfo *rtc)
+ {
++#ifdef PORT_PC
++    return !sLocked && PortRtc_Get(rtc);
++#else
+     u8 i;
+ 
+     if (sLocked == TRUE)
+@@ -262,10 +283,14 @@ bool8 SiiRtcGetDateTime(struct SiiRtcInfo *rtc)
+     sLocked = FALSE;
+ 
+     return TRUE;
++#endif
+ }
+ 
+ bool8 SiiRtcSetDateTime(struct SiiRtcInfo *rtc)
+ {
++#ifdef PORT_PC
++    return !sLocked && PortRtc_Set(rtc);
++#else
+     u8 i;
+ 
+     if (sLocked == TRUE)
+@@ -289,10 +314,19 @@ bool8 SiiRtcSetDateTime(struct SiiRtcInfo *rtc)
+     sLocked = FALSE;
+ 
+     return TRUE;
++#endif
+ }
+ 
+ bool8 SiiRtcGetTime(struct SiiRtcInfo *rtc)
+ {
++#ifdef PORT_PC
++    struct SiiRtcInfo current;
++    if (sLocked || rtc == NULL || !PortRtc_Get(&current)) return FALSE;
++    rtc->hour = current.hour;
++    rtc->minute = current.minute;
++    rtc->second = current.second;
++    return TRUE;
++#else
+     u8 i;
+ 
+     if (sLocked == TRUE)
+@@ -320,10 +354,14 @@ bool8 SiiRtcGetTime(struct SiiRtcInfo *rtc)
+     sLocked = FALSE;
+ 
+     return TRUE;
++#endif
+ }
+ 
+ bool8 SiiRtcSetTime(struct SiiRtcInfo *rtc)
+ {
++#ifdef PORT_PC
++    return !sLocked && PortRtc_SetTime(rtc);
++#else
+     u8 i;
+ 
+     if (sLocked == TRUE)
+@@ -347,6 +385,7 @@ bool8 SiiRtcSetTime(struct SiiRtcInfo *rtc)
+     sLocked = FALSE;
+ 
+     return TRUE;
++#endif
+ }
+ 
+ static bool8 UNUSED SiiRtcSetAlarm(struct SiiRtcInfo *rtc)
+-- 
+2.51.0.windows.2
+

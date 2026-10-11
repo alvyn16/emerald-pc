@@ -80,3 +80,22 @@ Evidencia local: `build/t18-copy-before.log`, `t18-math-before.log` y
 `t18-affine-before.log` reproducen los tres fallos previos. Sus respectivos
 logs `*-build.log` y `build/t18-final-build.log` verifican las correcciones;
 la suite completa contiene 17 ejecutables. RegisterRamReset sigue en T19.
+
+## T19 — RegisterRamReset (2026-10-11)
+
+Implementado en `port_ram_reset.c`: flags 01 EWRAM, 02 IWRAM excepto sus
+últimos 0x200 bytes, 04 paletas, 08 VRAM y 10 OAM. Cada región se pone a
+cero. Siempre se fuerza blank (DISPCNT=0x80) y se limpia SIODATA32 bajo.
+20 restablece serie/joybus y RCNT=0x8000; 40 restablece sonido/PSG y
+SOUNDBIAS=0x200; 80 vídeo, DMA, timers e IRQ, con matrices identidad.
+KEYINPUT se conserva como entrada de solo lectura. La palabra BIOS de
+espera en IWRAM excluida se conserva aunque se reinicie el modelo IRQ.
+
+Los globals C, heap y pila nativos no están en EWRAM: este servicio no los
+borra. Los inicializadores normales del juego y SoftReset (proceso nuevo)
+se encargan de ellos. No se escribe la ROM. La prueba ram_reset compara
+cada byte de regiones solicitadas/no solicitadas, canarios host/ROM,
+flags individuales/0/FF y dispositivos armados antes del reset.
+18 suites PASS y reset real teclado/juego/error de CreateProcess PASS:
+`build/t19-build.log`, `build/t19-reset-game.log`. No se simula ejecución
+ARM ni reinicialización de accesorios reales.
