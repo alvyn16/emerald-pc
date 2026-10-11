@@ -132,6 +132,28 @@ static int32_t SignExtend28(uint32_t value)
     return (value & 0x08000000u) ? (int32_t)(value | 0xf0000000u) : (int32_t)value;
 }
 
+void PortPpu_NotifyWrite(uintptr_t address, unsigned bytes)
+{
+    if (!bytes || address < REG_BASE || address >= REG_BASE + 0x60) return;
+    for (unsigned i = 0; i < 2; ++i)
+    {
+        const uintptr_t x = REG_ADDR_BG2PA + i * 0x10 + 8;
+        const uintptr_t y = x + 4;
+        if (address < x + 4 && address + bytes > x)
+        {
+            sAffineRegX[i] = *(volatile uint32_t *)x;
+            sAffineX[i] = SignExtend28(sAffineRegX[i]);
+            sMosaicAffineX[i] = sAffineX[i];
+        }
+        if (address < y + 4 && address + bytes > y)
+        {
+            sAffineRegY[i] = *(volatile uint32_t *)y;
+            sAffineY[i] = SignExtend28(sAffineRegY[i]);
+            sMosaicAffineY[i] = sAffineY[i];
+        }
+    }
+}
+
 static void RenderAffineBackground(unsigned bg, unsigned y)
 {
     const unsigned mode = REG_DISPCNT & 7;
@@ -253,7 +275,7 @@ static void RenderSprites(uint16_t displayControl, unsigned y, int windowOnly)
         int originX = attr1 & 0x1ff;
         int originY = attr0 & 0xff;
         if (originX >= 256) originX -= 512;
-        if (originY >= 160) originY -= 256;
+        if (originY >= 160 || originY + (int)renderHeight > 256) originY -= 256;
         // For a double-size affine OBJ, OAM x/y already address the enlarged
         // bounding box. Upstream BuildOamBuffer subtracts the full size.
         int pa = 256, pb = 0, pc = 0, pd = 256;

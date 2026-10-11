@@ -5,6 +5,7 @@
 #include "gba/io_reg.h"
 #include "port_dma.h"
 #include "port_irq.h"
+#include "port_ppu.h"
 
 struct DmaState
 {
@@ -43,6 +44,8 @@ static void Transfer(int channel, struct DmaState *dma)
         uint32_t value = 0;
         memcpy(&value, from, width);
         memcpy(to, &value, width);
+        if ((uintptr_t)to >= REG_BASE && (uintptr_t)to < REG_BASE + 0x60)
+            PortPpu_NotifyWrite((uintptr_t)to, width);
         if (sourceMode == 0) from += width;
         else if (sourceMode == 1) from -= width;
         if (destinationMode == 0 || destinationMode == 3) to += width;

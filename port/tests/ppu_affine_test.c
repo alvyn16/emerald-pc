@@ -35,5 +35,42 @@ int main(void)
     oam[1] = 509; // x=-3: screen mosaic phase must survive clipping.
     PortPpu_Render(pixels);
     assert(pixels[0] == 0xff0000ff);
+
+    REG_MOSAIC = 0;
+    memset(vram + 0x10000, 0x11, 4096);
+    oam[0] = 129 | 0x0300; // 64x64 affine, double box wraps vertically.
+    oam[1] = 0xc000;
+    oam[3] = 256;
+    oam[7] = oam[11] = oam[15] = 0;
+    PortPpu_Render(pixels);
+    assert(pixels[32] == 0xffff0000 && pixels[129 * 240 + 32] == 0xff000000);
+
+    oam[0] = 0x200;
+    memset(vram, 0, 0x10000);
+    memset(vram + 0x4000, 1, 64);
+    memset(vram + 0x4040, 2, 64);
+    vram[1] = 1;
+    REG_BG2CNT = BGCNT_CHARBASE(1);
+    REG_BG2PA = REG_BG2PB = 256;
+    REG_BG2PC = REG_BG2PD = 0;
+    REG_BG2X = REG_BG2Y = 0;
+    REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_BG2_ON;
+    PortPpu_BeginFrame();
+    for (unsigned y = 0; y < 9; ++y) PortPpu_RenderLine(y, pixels + 240 * y);
+    assert(pixels[8 * 240] == 0xff0000ff);
+    REG_BG2X = 0; // Identical external register, different internal reference.
+    PortPpu_NotifyWrite(REG_ADDR_BG2X, 4);
+    PortPpu_RenderLine(9, pixels + 240 * 9);
+    assert(pixels[9 * 240] == 0xffff0000);
+    REG_BG2PA = -256;
+    REG_BG2X = 8 << 8;
+    PortPpu_NotifyWrite(REG_ADDR_BG2X, 4);
+    PortPpu_RenderLine(10, pixels + 240 * 10);
+    assert(pixels[10 * 240] == 0xff0000ff && pixels[10 * 240 + 1] == 0xffff0000);
+    REG_BG2CNT |= BGCNT_WRAP;
+    REG_BG2X = (uint32_t)-256;
+    PortPpu_NotifyWrite(REG_ADDR_BG2X, 4);
+    PortPpu_RenderLine(11, pixels + 240 * 11);
+    assert(pixels[11 * 240] == 0xffff0000); // Tile map wraps to x=127.
     return 0;
 }
