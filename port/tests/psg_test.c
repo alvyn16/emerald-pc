@@ -133,6 +133,12 @@ int main(void)
     assert((REG_NR52 & 15)==0);
     for (unsigned i=0;i<200;++i) assert(sSamples[i]==0);
     PortPsg_Reset(); PortPsg_Write8(0x04000070,0x40); assert(REG_WAVE_RAM0==0);
+    // A hooked routing write must not hide an earlier legacy raw trigger.
+    Reset(); PortPsg_Write8(0x04000084,0x80);
+    REG_NR11=0x80; REG_NR12=0xf0; REG_NR13=0xff; REG_NR14=0x87;
+    PortPsg_Write8(0x04000082,2);
+    PortPsg_Render(sSamples,1,65536);
+    assert(sSamples[0]==3840 && !(REG_NR14 & 0x80));
     puts("PSG vectors: two banks, repeated triggers, length, sweep, noise and power OK");
     VirtualFree(io, 0, MEM_RELEASE);
     return 0;

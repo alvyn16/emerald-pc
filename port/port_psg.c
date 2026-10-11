@@ -73,6 +73,8 @@ void PortPsg_Write8(uintptr_t address, uint8_t value)
     if (address < 0x04000060 || address >= 0x040000a0) return;
     volatile uint8_t *reg = (volatile uint8_t *)address;
     unsigned offset = address - 0x04000060;
+    if (offset == 0x10) // Preserve legacy wave writes before changing the CPU bank window.
+        memcpy(sWaveBanks[((REG_NR30 >> 6) & 1) ^ 1], (const void *)0x04000090, 16);
     if (offset >= 0x30)
     {
         *reg = value;
@@ -121,7 +123,13 @@ void PortPsg_Write8(uintptr_t address, uint8_t value)
         }
     }
     UpdateStatus();
-    memcpy(sObserved, (const void *)0x04000060, sizeof(sObserved));
+    // Only acknowledge writes and their side effects; other raw writes remain pending.
+    sObserved[offset] = *reg;
+    sObserved[0x24] = REG_NR52;
+    if (offset == 0x10 || (offset == 0x24 && !(value & 0x80)))
+        memcpy(sObserved + 0x30, (const void *)0x04000090, 16);
+    if (offset == 0x24 && !(value & 0x80))
+        memcpy(sObserved, (const void *)0x04000060, 0x22);
 }
 
 void PortPsg_Write16(uintptr_t address, uint16_t value)
