@@ -816,3 +816,16 @@ opcional de la referencia ARM; no hace falta para jugar.
 Siguiente tarea: **T23, salida SDL/pausa/velocidad**, seguida de la matriz
 más amplia de juego. Sigue pendiente enlace, campaña, x64 y otros hosts.
 T19–T22 quedan cerradas según los contratos documentados. Sin push.
+
+## Revisión posterior T19–T22 (2026-10-11)
+
+Se corrigieron overflow/salida insegura del RTC ante reloj inválido, pérdida
+de triggers PSG al mezclar hooks y stores directos, dependencias de headers
+de las suites y detección de retorno de la referencia ARM. Detalle y logs
+en [review-t19-t22.md](review-t19-t22.md).
+
+Builds normal/diagnóstico y 19 suites PASS también en checkout limpio.
+Reloj 2100 no genera días/bayas falsos. Referencia ARM 1.134 muestras PASS;
+tres escenas de audio PASS. Salvaje 4× victoria 33.365, mapa/salida limpia.
+`make compare`: pokeemerald.gba: OK. Sin nueva excepción en estos recorridos.
+Save normal intacto. T23 y cobertura amplia de campaña siguen pendientes.

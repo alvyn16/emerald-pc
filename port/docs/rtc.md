@@ -26,7 +26,11 @@ del sistema congela el RTC hasta alcanzar el último instante observado;
 no repite días. Un ajuste explícito SetDateTime sí permite moverlo atrás.
 Close persiste el último instante; matar el proceso puede perder el último
 avance. Un salto adelante se acepta y produce eventos offline normales.
-Fuera de 2000–2099 retorna error. No simula una batería física ni alarmas.
+Si el reloj supera 2099, retorna error y marca el flag de fallo de energía,
+pero entrega la última fecha válida: rtc.c ignora algunos errores de transporte.
+Así no quedan campos sin inicializar ni se inventan eventos diarios. Las sumas
+y restas del desfase se validan antes de operar; SetDateTime rechaza offsets
+fuera del rango persistible. No simula una batería física ni alarmas.
 
 ## Saves anteriores
 
@@ -51,3 +55,7 @@ inyectado. PASS: reloj confirmado en frame 19.531, baya Cheri plantada→brote a
 VAR_DAYS=1 a +24h, retroceso de 48h sin repetir eventos ni alterar la fecha
 de actualización de bayas; salida limpia en 30.500. Evidencia:
 `build/t20-game.log`, `build/rtc-game-regression/gdb.log`.
+
+Revisión posterior: INT64_MIN/MAX, salto a 2100 y recuperación PASS en
+rtc_test; el fixture de juego confirma fecha segura y ningún evento diario
+falso a 2100 (`build/review-rtc-game.log`, marker INVALID CLOCK en gdb.log).

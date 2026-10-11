@@ -93,3 +93,17 @@ filtro analógico/HP, todos los quirks de DAC/envelope ni latencia de writes
 dentro de un buffer ya generado. Los tests documentan el contrato nativo
 actual, no equivalencia universal de hardware. T23 (pausa, velocidad,
 colas/dispositivo y discontinuidades) sigue como tarea separada.
+
+## Revisión posterior de T21/T22
+
+Los hooks PSG reconocen solo el registro escrito y sus efectos: una escritura
+directa pendiente de trigger no desaparece al escribir otro registro mediante
+hook. Cambiar NR30 conserva primero las escrituras legacy de la ventana del
+banco anterior. Regresión de trigger directo seguido de hook no relacionado
+PASS; permanece el límite de detectar solo cambios de valor en el fallback.
+
+La referencia ARM exige alcanzar la dirección de retorno y comprobar el
+identificador desbloqueado del mixer antes de comparar muestras; agotar el
+presupuesto de instrucciones es fallo, no éxito. Las 1.134 muestras siguen
+coincidiendo (`build/review-arm.log`). Escenas reales PASS nuevamente en
+`build/review-audio-scenes.log`; esto no sustituye una captura de hardware.
