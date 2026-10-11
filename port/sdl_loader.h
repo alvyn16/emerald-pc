@@ -11,6 +11,7 @@ struct PortSDL
     __typeof__(&SDL_OpenAudioDevice) OpenAudioDevice;
     __typeof__(&SDL_CloseAudioDevice) CloseAudioDevice;
     __typeof__(&SDL_PauseAudioDevice) PauseAudioDevice;
+    __typeof__(&SDL_GetAudioDeviceStatus) GetAudioDeviceStatus;
     __typeof__(&SDL_QueueAudio) QueueAudio;
     __typeof__(&SDL_GetQueuedAudioSize) GetQueuedAudioSize;
     __typeof__(&SDL_ClearQueuedAudio) ClearQueuedAudio;

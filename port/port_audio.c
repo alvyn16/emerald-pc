@@ -12,7 +12,8 @@
 #define MAX_QUEUE_FRAMES (OUTPUT_RATE * 150 / 1000)
 #define MAX_OUTPUT_FRAMES 16000u
 static SDL_AudioDeviceID sDevice;
-static int sOpened;
+static int sOpened, sActive, sPaused;
+static unsigned sRetryFrames;
 static unsigned sLastSpeed;
 static double sPosition;
 static int16_t sSource[PCM_DMA_BUF_SIZE * 2];
@@ -53,7 +54,9 @@ static int QueueDevice(const int16_t *data, unsigned frames)
 static unsigned QueuedDevice(void) { return portSDL.GetQueuedAudioSize(sDevice) / 4; }
 static void ClearDevice(void) { portSDL.ClearQueuedAudio(sDevice); }
 static void CloseDevice(void) { portSDL.CloseAudioDevice(sDevice); sDevice = 0; }
-static const struct PortAudioBackend sRealBackend = {OpenDevice, QueueDevice, QueuedDevice, ClearDevice, CloseDevice};
+static void PauseDevice(int paused) { portSDL.PauseAudioDevice(sDevice, paused); }
+static int HealthyDevice(void) { return portSDL.GetAudioDeviceStatus(sDevice) != SDL_AUDIO_STOPPED; }
+static const struct PortAudioBackend sRealBackend = {OpenDevice, QueueDevice, QueuedDevice, ClearDevice, CloseDevice, PauseDevice, HealthyDevice};
 static const struct PortAudioBackend *sBackend = &sRealBackend;
 
 void PortAudio_SetBackend(const struct PortAudioBackend *backend)
@@ -61,6 +64,9 @@ void PortAudio_SetBackend(const struct PortAudioBackend *backend)
 
 int PortAudio_Init(void)
 {
+    sActive = 1;
+    sPaused = 0;
+    sRetryFrames = 120;
     sPosition = 0;
     sLastSpeed = 0;
     PortPsg_Reset();
@@ -81,11 +87,19 @@ int PortAudio_Init(void)
 
 void PortAudio_SubmitFrame(void)
 {
-    if (!sOpened
-#ifdef PORT_DIAGNOSTIC
-        && sDump == NULL
-#endif
-       ) return;
+    if (!sActive || sPaused) return;
+    if (sOpened && !sBackend->healthy())
+    {
+        sBackend->close();
+        sOpened = 0;
+        sRetryFrames = 0;
+    }
+    if (!sOpened && (sRetryFrames == 0 || --sRetryFrames == 0))
+    {
+        sOpened = sBackend->open(OUTPUT_RATE) == 0;
+        sRetryFrames = 120; // Game frames; no blocking loop or repeated log spam.
+        if (sOpened) { sPosition = 0; fprintf(stderr, "PC audio: device reconnected\n"); }
+    }
     const int8_t *left, *right;
     unsigned samples;
     PortM4a_GetLastMix(&left, &right, &samples);
@@ -126,6 +140,7 @@ void PortAudio_SubmitFrame(void)
             fprintf(stderr, "PC audio: queue failed; continuing in silence\n");
             sBackend->close();
             sOpened = 0;
+            sRetryFrames = 120;
         }
     }
 #ifdef PORT_DIAGNOSTIC
@@ -134,8 +149,22 @@ void PortAudio_SubmitFrame(void)
 #endif
 }
 
+void PortAudio_SetPaused(int paused)
+{
+    paused = !!paused;
+    if (!sActive || paused == sPaused) return;
+    if (sOpened)
+    {
+        sBackend->pause(paused);
+        if (paused) sBackend->clear();
+    }
+    sPosition = 0;
+    sPaused = paused;
+}
+
 void PortAudio_Shutdown(void)
 {
+    sActive = 0;
     if (sOpened) { sBackend->close(); sOpened = 0; }
 #ifdef PORT_DIAGNOSTIC
     if (sDump != NULL) { WriteHeader(); fclose(sDump); sDump = NULL; }

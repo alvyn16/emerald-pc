@@ -32,6 +32,7 @@ int Port_LoadSDL2(void)
     LOAD(OpenAudioDevice);
     LOAD(CloseAudioDevice);
     LOAD(PauseAudioDevice);
+    LOAD(GetAudioDeviceStatus);
     LOAD(QueueAudio);
     LOAD(GetQueuedAudioSize);
     LOAD(ClearQueuedAudio);
