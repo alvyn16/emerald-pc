@@ -378,13 +378,16 @@ toda la matriz de una vez. Los fixes encontrados respetan PORT_PC.
 
 ### T24 — variantes de combate salvaje (M por escenario)
 
-- [ ] Cubrir victoria, derrota, huida y captura con Pokémon/recursos distintos.
-- [ ] Exigir outcome correcto y retorno al mapa o centro correspondiente,
+- [x] Cubrir victoria, derrota, huida y captura con Pokémon/recursos distintos.
+- [x] Exigir outcome correcto y retorno al mapa o centro correspondiente,
   equipo/HP/items coherentes y cierre limpio.
-- [ ] Convertir cada excepción nueva en repro, diagnóstico GDB y regresión.
+- [x] Convertir cada excepción nueva en repro, diagnóstico GDB y regresión.
 
 Dependencias: T04–T06, T13, T16–T23. Archivos: harness de `port/tests/`,
 informe y patch del fallo hallado. Verificación: no basta `exit=0`.
+
+Evidencia T24: gameplay-matrix.md; cuatro outcomes y estado semántico PASS,
+parche 0032 Master Ball, compare OK y árbol limpio idéntico.
 
 ### T25 — entrenadores y mecánicas de combate (M por escenario)
 

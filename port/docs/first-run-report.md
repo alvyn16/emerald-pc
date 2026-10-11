@@ -846,3 +846,11 @@ descartes; cola máxima 46,46 ms. Usuario confirma combate 1× y título 4×
 make compare: pokeemerald.gba: OK. No apareció una nueva excepción en los
 recorridos probados. Detalle: [audio-output.md](audio-output.md).
 Siguiente: T24, variantes de combate; campaña todavía pendiente.
+
+## T24 — variantes salvajes
+
+Victoria, derrota/curación, huida y captura pasan con equipo/HP/experiencia/
+dinero/item y mapa comprobados. Se encontró SIGFPE real al lanzar Master Ball
+en Cmd_handleballthrow (32.167): índice fuera de tabla y división por odds cero.
+Parche 0032 bajo PORT_PC; captura posterior PASS, GBA compare OK.
+Detalles y límites en [gameplay-matrix.md](gameplay-matrix.md).
