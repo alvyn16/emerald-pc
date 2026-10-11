@@ -26,6 +26,25 @@ def prepare(name, inputs):
     return scratch, commands
 
 
+def prepare_saved(name, inputs, save_path):
+    """Resume a measured save instead of constructing a new party or progress."""
+    saved = save_path.read_bytes()
+    scratch, commands = prepare(name, inputs)
+    (scratch / "saves/emerald-pc-diagnostic.sav").write_bytes(saved)
+    replacements = {
+        "call (void)NewGameInitData()": "call (unsigned char)LoadGameSave(0)",
+        "call (void)CreateMon((void *)&gPlayerParty,283,8,32,0,0,0,0)": "",
+        "set *(unsigned char *)&gPlayerPartyCount = 1": "",
+        "call (void)FlagSet(0x860)": "",
+        "call (void)SetLastHealLocationWarp(1)": "",
+        "call (void)SetMoney((void *)(*(unsigned int *)&gSaveBlock1Ptr+0x490),5000)": "",
+    }
+    for old, new in replacements.items():
+        assert old in commands, "Catch fixture changed; review saved-game setup"
+        commands = commands.replace(old, new)
+    return scratch, commands
+
+
 def run(scratch, commands, markers, timeout=600):
     script = scratch / "test.gdb"; script.write_text(commands, encoding="ascii")
     log = scratch / "gdb.log"
