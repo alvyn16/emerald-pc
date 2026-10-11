@@ -87,7 +87,7 @@ TEST_CFLAGS := -std=gnu11 -Wall -Wextra -Werror -DMODERN=0 -DPORT_PC \
 	-Wl,--image-base=0x10000000 -Wl,--disable-dynamicbase
 
 define BUILD_TEST
-$(TEST_DIR)/$(1).exe: $$(TEST_$(1)_SOURCES) Makefile | check-tools
+$(TEST_DIR)/$(1).exe: $$(TEST_$(1)_SOURCES) Makefile $(wildcard *.h) | check-tools
 	@mkdir -p $(TEST_DIR)
 	@$$(HOST_CC) $$(TEST_CFLAGS) $$(TEST_$(1)_SOURCES) -o $$@ $$(TEST_$(1)_LIBS)
 endef
