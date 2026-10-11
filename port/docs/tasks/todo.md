@@ -426,8 +426,11 @@ Dependencias: T20, T24–T26. Archivos: `port/tests/` y matriz en `port/docs/`.
 Verificación: checkpoints de progreso y regresiones por cada fallo nuevo.
 
 Evidencia T27: gameplay-matrix.md. Mapas/movilidad, Liga, créditos, concurso,
-crianza, Safari y Tower medidos por segmentos; campaña continua y ampliación
-Safari/Frontier pendientes. No se cierra Checkpoint E.
+crianza, Safari y Tower medidos por segmentos. campaign-progress.md añade
+cadena dirigida Wally/ocho medallas/Liga/créditos con estado/save conservado,
+recargas y HOF reales; recepción/captura/salida por pasos de Safari PASS.
+Quedan historia/desplazamientos/gating, eclosión y ampliación del Frontier.
+No se cierra Checkpoint E.
 
 ### Checkpoint E — juego individual
 

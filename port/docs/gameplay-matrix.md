@@ -100,18 +100,19 @@ cambian con input real y callback de campo conservado. Capturas privadas en buil
 
 | Segmento | Evidencia medida | Estado |
 | --- | --- | --- |
-| Liga | Sidney/Phoebe/Glacia/Drake/Wallace: victoria, XP, dinero, flag y campo; Kyogre 95, movimientos elegidos por UI | PASS, fixtures independientes |
-| Hall of Fame/créditos | Guardado real, entrada a créditos y Task_CreditsTheEnd5 alcanzado; captura The End | PASS, entrada directa al Hall of Fame |
+| Liga | Fixtures previos independientes más cadena NPC Sidney/Phoebe/Glacia/Drake/Wallace desde save de ocho medallas; entrada de salas y flags por scripts | PASS, cadena dirigida con estado conservado |
+| Hall of Fame/créditos | La secuencia de Wallace lleva al Hall of Fame y The End; recarga verifica game-clear, ocho medallas y un equipo HOF de tres Pokémon | PASS, transición natural tras combate dirigido |
 | Concurso | Categoría Cool/Normal, cinco rondas de apelación y retorno al campo | PASS |
 | Crianza | Mudkip + Ditto guardados, huevo generado por rutinas reales, especie Mudkip, IS_EGG=1, save | PASS; readiness del huevo dirigida, no espera de pasos ni eclosión |
-| Safari | Encuentro Oddish, huida outcome 4, 30 bolas intactas, equipo intacto, regreso y limpieza de modo | PASS; encuentro dirigido, no recepción/captura/cuota completa |
+| Safari | Huida previa más admisión/cobro 500/30 bolas, captura Magikarp, salida por pasos y limpieza de modo | PASS dirigido; rutina de pasos invocada, no paseo ni agotamiento de bolas |
 | Battle Frontier | Tower singles, rival generado de la tabla de facility, Swampert/Salamence/Metagross 50, victoria y save | PASS de un combate; no racha completa ni otras seis facilities |
-| Campaña continua | Intro → ocho medallas mediante scripts → equipos enemigos → Liga → créditos, con el mismo estado/save | PENDIENTE |
-| Historia | Wally, Aqua/Magma, meteorito, Weather Institute, Space Center, Sky Pillar/Rayquaza y eventos posteriores | PENDIENTE de recorrido |
+| Campaña continua | Wally → ocho medallas mediante NPC → Liga → créditos, mismo estado/save con reanudaciones comprobadas | PASS dirigido; intro, recorrido y gating de historia pendientes |
+| Historia | Wally y secuencias Norman/Surf/Wallace/Birch/HOF pasan; Aqua/Magma, meteorito, Weather Institute, Space Center, Sky Pillar/Rayquaza pendientes | PARCIAL |
 
-No se acredita progreso de campaña a partir de teletransportes, flags iniciales
-ni batallas dirigidas. T27 permanece abierta por el recorrido continuo y la
-ampliación de Safari/Frontier. Checkpoint E permanece abierto.
+El progreso medido procede de scripts NPC y guardados reales; warps y equipo
+asistidos no acreditan recorrido ni desbloqueos de historia. T27 y Checkpoint E
+siguen abiertos por esos tramos, crianza/eclosión y ampliación del Frontier.
+Detalle y comandos: [campaign-progress.md](campaign-progress.md).
 
 Fallos reales corregidos:
 - 0037: Cmd_playanimation, lluvia de Wallace (frame 33.728, eip 0x100e5e91).

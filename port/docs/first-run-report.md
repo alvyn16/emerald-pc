@@ -885,3 +885,26 @@ Teclado/remapeo persistente, hotplug/foco y mando virtual SDL real PASS;
 21 suites host. El normal sale de casa sin combate; retirada PC diagnóstica
 y recarga PASS; reset por teclado/juego y fallo real de spawn PASS. SDL enumera
 0 mandos físicos: prueba física pendiente. Ver controller-input.md.
+
+## T27 — continuación con estado persistente
+
+En codex/milestone-34-campaign-continuation se midió la cadena dirigida:
+Wally captura y regresa; ocho scripts de líderes entregan medallas/MT;
+Norman lleva a la entrega de Surf; cuatro scripts del Alto Mando conservan
+el estado; Wallace inicia su secuencia y lleva al Hall of Fame y The End.
+Un proceso nuevo confirma game-clear, ocho medallas y un equipo HOF válido
+con tres Pokémon; la lectura no modifica el save. Safari independiente añade
+recepción/cobro, captura y salida al agotar la cuota mediante la rutina de pasos.
+
+Las esperas nuevas fueron del harness: límite de diálogos y selección por
+índice original pese al reordenamiento de equipo del menú. GDB mostró
+CB2_UpdatePartyMenu y Task_ReturnToChooseMonAfterText/Task_PrintAndWaitForText
+con Pokémon vivos; se utiliza GetPartyIdFromBattleSlot. El guion maneja
+movimientos con PP disponibles y reemplazos. No se necesitó un parche upstream
+nuevo ni se encontró una nueva excepción del port en estos recorridos.
+
+21 suites host y verify-normal PASS; make compare KEEP_TEMPS=1 NODEP=1 da
+pokeemerald.gba: OK. ROM/save originales intactos. La campaña está asistida
+con warps/equipo; intro, Aqua/Magma, eventos y gating natural, eclosión y
+ampliación del Frontier siguen pendientes. T27 permanece abierta.
+Evidencia y reproducción: [campaign-progress.md](campaign-progress.md).
