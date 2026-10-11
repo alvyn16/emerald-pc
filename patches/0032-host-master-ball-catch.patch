@@ -1,0 +1,41 @@
+From b6cead291add1da520023e37322bb5491b09ff83 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 13:52:40 -0400
+Subject: [PATCH] Guard guaranteed Master Ball catches on the native host
+
+---
+ src/battle_script_commands.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
+index 3af09ec..e709010 100644
+--- a/src/battle_script_commands.c
++++ b/src/battle_script_commands.c
+@@ -9981,6 +9981,12 @@ static void Cmd_handleballthrow(void)
+         }
+         else
+         {
++#ifdef PORT_PC
++            // Master Ball is outside this table; native out-of-bounds reads are undefined.
++            if (gLastUsedItem == ITEM_MASTER_BALL)
++                ballMultiplier = 10;
++            else
++#endif
+             ballMultiplier = sBallCatchBonuses[gLastUsedItem - ITEM_ULTRA_BALL];
+         }
+ 
+@@ -10006,6 +10012,11 @@ static void Cmd_handleballthrow(void)
+             }
+         }
+ 
++#ifdef PORT_PC
++        // Guarantee the catch before the shake divisions, independent of odds/RNG.
++        if (gLastUsedItem == ITEM_MASTER_BALL)
++            odds = 255;
++#endif
+         if (odds > 254) // mon caught
+         {
+             BtlController_EmitBallThrowAnim(B_COMM_TO_CONTROLLER, BALL_3_SHAKES_SUCCESS);
+-- 
+2.51.0.windows.2
+
