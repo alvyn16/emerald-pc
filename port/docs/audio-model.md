@@ -92,7 +92,7 @@ de CPU, reproducción/lectura del shift-register wave RAM a nivel de bus,
 filtro analógico/HP, todos los quirks de DAC/envelope ni latencia de writes
 dentro de un buffer ya generado. Los tests documentan el contrato nativo
 actual, no equivalencia universal de hardware. T23 (pausa, velocidad,
-colas/dispositivo y discontinuidades) sigue como tarea separada.
+colas/dispositivo y discontinuidades) se verifica en [audio-output.md](audio-output.md).
 
 ## Revisión posterior de T21/T22
 
@@ -107,3 +107,6 @@ identificador desbloqueado del mixer antes de comparar muestras; agotar el
 presupuesto de instrucciones es fallo, no éxito. Las 1.134 muestras siguen
 coincidiendo (`build/review-arm.log`). Escenas reales PASS nuevamente en
 `build/review-audio-scenes.log`; esto no sustituye una captura de hardware.
+
+T23: menú P silencia/descarta cola; recuperación de dispositivo y errores,
+PSG sin dispositivo, medidas 1×–4× y escucha documentadas en audio-output.md.

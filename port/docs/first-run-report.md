@@ -829,3 +829,20 @@ Reloj 2100 no genera días/bayas falsos. Referencia ARM 1.134 muestras PASS;
 tres escenas de audio PASS. Salvaje 4× victoria 33.365, mapa/salida limpia.
 `make compare`: pokeemerald.gba: OK. Sin nueva excepción en estos recorridos.
 Save normal intacto. T23 y cobertura amplia de campaña siguen pendientes.
+
+## T23 — salida SDL, pausa y velocidad (2026-10-11)
+
+Menú P pausa audio, vacía la cola y reanuda con datos nuevos. Dispositivo
+perdido/error de cola reabre automáticamente con backoff de 120 frames; sin
+salida el PSG continúa. Pruebas falsas de pausa, reconexión, cierre y longitud
+1×–4× PASS; reset real teclado/juego/fallo de proceso PASS.
+
+16 capturas reales: título, selección, combate y Torchic a 1×–4×. Duraciones
+4,035 / 2,0175 / 1,345 / 1,00875 s, cero muestras saturadas y cero errores/
+descartes; cola máxima 46,46 ms. Usuario confirma combate 1× y título 4×
+«Sí, se oyen bien». Se documentan deltas y límites, sin inferir fidelidad del RMS.
+
+19 suites y builds normal/diagnóstico en raíz y checkout limpio PASS;
+make compare: pokeemerald.gba: OK. No apareció una nueva excepción en los
+recorridos probados. Detalle: [audio-output.md](audio-output.md).
+Siguiente: T24, variantes de combate; campaña todavía pendiente.

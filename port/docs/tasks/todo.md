@@ -352,19 +352,24 @@ Evidencia T19–T22 (2026-10-11): `bios.md` T19, `rtc.md`,
 reloj del dormitorio/berry/evento diario, 1.134 muestras PCM contra ARM,
 PSG con writes reales y dos bancos, WAV locales y escucha del usuario.
 Builds normal/diagnóstico y reproducción de 31 parches PASS; compare OK.
-T23 sigue pendiente; no se declara equivalencia por ciclo ni campaña completa.
+T23 se verifica por separado en audio-output.md; no se declara equivalencia
+por ciclo ni campaña completa.
 
 ### T23 — salida SDL, pausa y velocidad (M)
 
-- [ ] Probar silencio sin dispositivo, reconexión/errores y cierre/reset;
+- [x] Probar silencio sin dispositivo, reconexión/errores y cierre/reset;
   resolver comportamiento de audio al abrir el menú de velocidad.
-- [ ] Medir duración, clipping, discontinuidades y cola a 1×–4×; audio rápido
+- [x] Medir duración, clipping, discontinuidades y cola a 1×–4×; audio rápido
   conserva la decisión de subir el tono.
-- [ ] Validar escucha de título, menú, combate y gritos; registrar fallos
+- [x] Validar escucha de título, menú, combate y gritos; registrar fallos
   restantes sin confundir RMS distinto de cero con fidelidad.
 
 Dependencias: T07, T21–T22. Archivos: `port_audio.*`, tests audio/frame,
 informe. Verificación: backend falso + dispositivo real.
+
+Evidencia T23 (2026-10-11): audio-output.md; backend falso, 16 escenas/velocidades
+con SDL real, escucha confirmada por el usuario, reset real, 19 suites y compare OK.
+Hot-unplug físico no probado; límites de interpolación/driver documentados.
 
 ## Hito 30 — ampliar cobertura de juego
 
