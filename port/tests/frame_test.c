@@ -234,6 +234,16 @@ int main(void)
     elapsed = sCounter - start;
     expected = 1000000ull * 10000 * 1000 / (597275 * 4);
     assert(elapsed >= expected - 2000 && elapsed <= expected + 2000);
+    // Closing the window while paused must also exit without a game callback.
+    sMenuKeyIndex = 0; sMenuKeyCount = 1; sMenuKeys[0] = SDLK_p;
+    sQuitEvent = 1;
+    unsigned beforeQuit = sVBlanks;
+    if (setjmp(sExit) == 0)
+    {
+        PortHost_RunFrame();
+        assert(0 && "quit in menu must exit");
+    }
+    assert(sAudioPaused && sVBlanks == beforeQuit);
     VirtualFree(io, 0, MEM_RELEASE);
     VirtualFree(iwram, 0, MEM_RELEASE);
     return 0;

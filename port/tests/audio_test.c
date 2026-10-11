@@ -95,6 +95,20 @@ int main(void)
     sQueueFailure = 0;
     for (unsigned i = 0; i < 119; ++i) PortAudio_SubmitFrame();
     assert(sQueueCalls > calls);
+    for (unsigned speed = 1; speed <= 4; ++speed)
+    {
+        sSpeed = speed;
+        unsigned frames = 0;
+        for (unsigned i = 0; i < 1000; ++i)
+        {
+            sQueued = 0; // Device consuming previous block.
+            PortAudio_SubmitFrame();
+            frames += sLastFrames;
+        }
+        double expected = 224.0 * 1000 * 48000 / (13379 * speed);
+        assert(frames >= expected - 1 && frames <= expected + 1);
+    }
+    PortAudio_SetPaused(1);
     PortAudio_Shutdown();
     assert(sCloses == 2);
     calls = sQueueCalls;
