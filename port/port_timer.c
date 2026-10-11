@@ -3,6 +3,7 @@
 #include "gba/types.h"
 #include "gba/io_reg.h"
 #include "port_timer.h"
+#include "port_irq.h"
 
 struct TimerState
 {
@@ -18,6 +19,36 @@ static struct TimerState sTimers[4];
 void PortTimer_Reset(void)
 {
     memset(sTimers, 0, sizeof(sTimers));
+    memset((void *)REG_ADDR_TM0CNT_L, 0, 16);
+}
+
+void PortTimer_Write16(uintptr_t address, uint16_t value)
+{
+    if (address < REG_ADDR_TM0CNT_L || address >= REG_ADDR_TM0CNT_L + 16 || (address & 1))
+        return;
+    struct TimerState *timer = &sTimers[(address - REG_ADDR_TM0CNT_L) / 4];
+    if (!(address & 2))
+        timer->reload = value;
+    else
+    {
+        value &= 0xc7;
+        if ((value & TIMER_ENABLE) && !(timer->control & TIMER_ENABLE))
+        {
+            timer->counter = timer->reload;
+            timer->dividerRemainder = 0;
+        }
+        timer->control = value;
+        *(volatile uint16_t *)address = value;
+    }
+    *(volatile uint16_t *)(address & ~(uintptr_t)3) = timer->counter;
+    timer->lastWritten = timer->counter;
+}
+
+void PortTimer_Write32(uintptr_t address, uint32_t value)
+{
+    if (address & 3) return;
+    PortTimer_Write16(address, value);
+    PortTimer_Write16(address + 2, value >> 16);
 }
 
 static uint32_t AddTicks(struct TimerState *timer, uint32_t ticks)
@@ -50,12 +81,11 @@ void PortTimer_Advance(uint32_t cycles)
         const int enabled = (control & TIMER_ENABLE) != 0;
         uint32_t ticks = 0;
 
-        // Memory-mapped writes cannot be trapped here. A changed CNT_L
-        // value is treated as a new reload; equal-value writes are invisible.
+        // Compatibility for unhooked fixtures. Game writes use Write16/32;
+        // only those hooks can observe a write equal to the published counter.
         if (observed != timer->lastWritten)
         {
             timer->reload = observed;
-            if (!enabled) timer->counter = observed;
         }
         if (enabled && !wasEnabled)
         {
@@ -74,6 +104,8 @@ void PortTimer_Advance(uint32_t cycles)
                 timer->dividerRemainder = accumulated % divider;
             }
             previousOverflows = AddTicks(timer, ticks);
+            if (previousOverflows && (control & TIMER_INTR_ENABLE))
+                PortIrq_Raise(INTR_FLAG_TIMER0 << i);
         }
         else
             previousOverflows = 0;
