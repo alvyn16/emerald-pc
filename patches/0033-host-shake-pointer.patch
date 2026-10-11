@@ -1,0 +1,61 @@
+From 3d5865b5570d03f4d183ca901895f29f08fc58bd Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 14:05:08 -0400
+Subject: [PATCH] Reconstruct shake pointers from unsigned halfwords on host
+
+---
+ src/battle_anim_normal.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/src/battle_anim_normal.c b/src/battle_anim_normal.c
+index 683328e..a3548a1 100644
+--- a/src/battle_anim_normal.c
++++ b/src/battle_anim_normal.c
+@@ -849,6 +849,11 @@ void AnimTask_TintPalettes(u8 taskId)
+ #define sType          data[5]
+ #define sShakePtrLo    data[6]
+ #define sShakePtrHi    data[7]
++#ifdef PORT_PC
++#define SHAKE_PTR(sprite) ((u16 *)((u32)(u16)(sprite)->sShakePtrLo | ((u32)(u16)(sprite)->sShakePtrHi << 16)))
++#else
++#define SHAKE_PTR(sprite) ((u16 *)((sprite)->sShakePtrLo | ((sprite)->sShakePtrHi << 16)))
++#endif
+ 
+ static void AnimShakeMonOrBattlePlatforms(struct Sprite *sprite)
+ {
+@@ -876,7 +881,7 @@ static void AnimShakeMonOrBattlePlatforms(struct Sprite *sprite)
+         break;
+     }
+ 
+-    sprite->sOriginalValue = *(u16 *)(sprite->sShakePtrLo | (sprite->sShakePtrHi << 16));
++    sprite->sOriginalValue = *SHAKE_PTR(sprite);
+     sprite->sType = cmd->type;
+     if (sprite->sType == SHAKE_MON_X || sprite->sType == SHAKE_MON_Y)
+         AnimShakeMonOrBattlePlatforms_UpdateCoordOffsetEnabled();
+@@ -898,13 +903,13 @@ static void AnimShakeMonOrBattlePlatforms_Step(struct Sprite *sprite)
+         else
+         {
+             sprite->sShakeTimer = sprite->sShakeDuration;
+-            *(u16 *)(sprite->sShakePtrLo | (sprite->sShakePtrHi << 16)) += sprite->sShakeVelocity;
++            *SHAKE_PTR(sprite) += sprite->sShakeVelocity;
+             sprite->sShakeVelocity = -sprite->sShakeVelocity;
+         }
+     }
+     else
+     {
+-        *(u16 *)(sprite->sShakePtrLo | (sprite->sShakePtrHi << 16)) = sprite->sOriginalValue;
++        *SHAKE_PTR(sprite) = sprite->sOriginalValue;
+         if (sprite->sType == SHAKE_MON_X || sprite->sType == SHAKE_MON_Y)
+         {
+             for (i = 0; i < gBattlersCount; i++)
+@@ -945,6 +950,7 @@ static void AnimShakeMonOrBattlePlatforms_UpdateCoordOffsetEnabled(void)
+ #undef sType
+ #undef sShakePtrLo
+ #undef sShakePtrHi
++#undef SHAKE_PTR
+ 
+ // Task data for AnimTask_ShakeBattlePlatforms
+ #define tXOffset     data[0]
+-- 
+2.51.0.windows.2
+
