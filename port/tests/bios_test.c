@@ -78,6 +78,23 @@ int main(void)
     assert(memcmp(unpacked, "ABABAB", 6) == 0);
     RLUnCompWram((const u32 *)rl, unpacked);
     assert(memcmp(unpacked, "XXXXX", 5) == 0);
+
+    // Own fixtures: literal RLE, LZ overlap, invalid distance and canaries.
+    const u8 literals[] = {0x30, 3, 0, 0, 2, 'C', 'A', 'T'};
+    memset(unpacked, 0xa5, sizeof(unpacked));
+    RLUnCompWram((const u32 *)literals, unpacked);
+    assert(memcmp(unpacked, "CAT", 3) == 0 && unpacked[3] == 0xa5);
+    const u8 overlap[] = {0x10, 6, 0, 0, 0x40, 'Z', 0x20, 0};
+    memset(unpacked, 0xa5, sizeof(unpacked));
+    LZ77UnCompWram((const u32 *)overlap, unpacked);
+    assert(memcmp(unpacked, "ZZZZZZ", 6) == 0 && unpacked[6] == 0xa5);
+    const u8 invalidDistance[] = {0x10, 3, 0, 0, 0x80, 0, 0};
+    memset(unpacked, 0xa5, sizeof(unpacked));
+    LZ77UnCompWram((const u32 *)invalidDistance, unpacked);
+    for (unsigned i = 0; i < sizeof(unpacked); ++i) assert(unpacked[i] == 0xa5);
+    const u8 clippedRun[] = {0x30, 2, 0, 0, 0xff, 'Q'};
+    RLUnCompVram((const u32 *)clippedRun, unpacked);
+    assert(unpacked[0] == 'Q' && unpacked[1] == 'Q' && unpacked[2] == 0xa5);
     memset(unpacked, 0, sizeof(unpacked));
     RLUnCompVram((const u32 *)rl, unpacked);
     assert(memcmp(unpacked, "XXXXX", 5) == 0);
