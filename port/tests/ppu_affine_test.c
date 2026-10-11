@@ -36,6 +36,25 @@ int main(void)
     PortPpu_Render(pixels);
     assert(pixels[0] == 0xff0000ff);
 
+    oam[0] = 0x3003;
+    oam[1] = 3 | 0x1000; // Flip after applying the screen mosaic phase.
+    PortPpu_Render(pixels);
+    assert(pixels[3 * 240 + 3] == 0xff0000ff);
+    assert(pixels[3 * 240 + 4] == 0xffff0000);
+    REG_MOSAIC = 0;
+    oam[0] = 0x2100; // Affine 8bpp, negative horizontal scale.
+    oam[1] = 20;
+    oam[3] = (uint16_t)-256;
+    oam[7] = oam[11] = 0;
+    oam[15] = 256;
+    PortPpu_Render(pixels);
+    assert(pixels[20] == 0xff000000 && pixels[21] == 0xff0000ff);
+    assert(pixels[22] == 0xffff0000);
+    oam[0] |= 0x0200; // Double-size box retains its centre at x=28.
+    PortPpu_Render(pixels);
+    assert(pixels[4 * 240 + 24] == 0xff000000 && pixels[4 * 240 + 25] == 0xff0000ff);
+    assert(pixels[4 * 240 + 28] == 0xffff0000);
+
     REG_MOSAIC = 0;
     memset(vram + 0x10000, 0x11, 4096);
     oam[0] = 129 | 0x0300; // 64x64 affine, double box wraps vertically.
