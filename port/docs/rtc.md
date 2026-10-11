@@ -47,4 +47,7 @@ PortRtc_DiagnosticSetTime solo existe en el ejecutable diagnóstico.
 `build/t20-gba-compare.log`: pokeemerald.gba: OK.
 La prueba de juego aislada rtc_game_smoke verifica la ruta real del reloj
 del dormitorio, PlantBerryTree/DoTimeBasedEvents y VAR_DAYS con tiempo
-inyectado. Sus resultados se registran tras completar el recorrido.
+inyectado. PASS: reloj confirmado en frame 19.531, baya Cheri plantada→brote a +3h,
+VAR_DAYS=1 a +24h, retroceso de 48h sin repetir eventos ni alterar la fecha
+de actualización de bayas; salida limpia en 30.500. Evidencia:
+`build/t20-game.log`, `build/rtc-game-regression/gdb.log`.

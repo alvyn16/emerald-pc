@@ -109,7 +109,7 @@ endif
 # Fail if test-only input or debugger frame controls leak into the playable binary.
 verify-normal: ../build/emerald-pc.exe
 	@$(HOST_NM) --defined-only $< > ../build/normal-symbols.txt
-	@if grep -E '_(PortInputScript_[[:alnum:]_]+|sDiagnosticFrame|sStopFrame)$$' ../build/normal-symbols.txt; then \
+	@if grep -E '_(PortInputScript_[[:alnum:]_]+|PortRtc_Diagnostic[[:alnum:]_]+|sDiagnosticFrame|sStopFrame)$$' ../build/normal-symbols.txt; then \
 		echo 'ERROR: diagnostic controls found in normal executable'; exit 1; \
 	fi
 	@echo 'PASS normal executable: no diagnostic input/frame controls'

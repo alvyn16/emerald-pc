@@ -1,0 +1,220 @@
+From 8eef9737a22c2c09cd4f073c985e5c9d77c89c25 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 02:56:30 -0400
+Subject: [PATCH] Observe PSG writes and wave bank uploads only on the native
+ host
+
+---
+ src/m4a.c | 104 ++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 57 insertions(+), 47 deletions(-)
+
+diff --git a/src/m4a.c b/src/m4a.c
+index 93ffaa0..ee68bb7 100644
+--- a/src/m4a.c
++++ b/src/m4a.c
+@@ -1,5 +1,15 @@
+ #include "global.h"
+ #include "gba/m4a_internal.h"
++#ifdef PORT_PC
++#include "port_psg.h"
++#define PSG_WRITE8(reg, value) PortPsg_Write8((uintptr_t)&(reg), (u8)(value))
++#define PSG_WRITE16(reg, value) PortPsg_Write16((uintptr_t)&(reg), (u16)(value))
++#define PSG_WRITE32(reg, value) PortPsg_Write32((uintptr_t)&(reg), (u32)(value))
++#else
++#define PSG_WRITE8(reg, value) ((reg) = (value))
++#define PSG_WRITE16(reg, value) ((reg) = (value))
++#define PSG_WRITE32(reg, value) ((reg) = (value))
++#endif
+ 
+ extern const u8 gCgb3Vol[];
+ 
+@@ -261,20 +271,20 @@ void MPlayExtender(struct CgbChannel *cgbChans)
+     struct SoundInfo *soundInfo;
+     u32 ident;
+ 
+-    REG_SOUNDCNT_X = SOUND_MASTER_ENABLE
++    PSG_WRITE16(REG_SOUNDCNT_X, SOUND_MASTER_ENABLE
+                    | SOUND_4_ON
+                    | SOUND_3_ON
+                    | SOUND_2_ON
+-                   | SOUND_1_ON;
+-    REG_SOUNDCNT_L = 0; // set master volume to zero
+-    REG_NR12 = 0x8;
+-    REG_NR22 = 0x8;
+-    REG_NR42 = 0x8;
+-    REG_NR14 = 0x80;
+-    REG_NR24 = 0x80;
+-    REG_NR44 = 0x80;
+-    REG_NR30 = 0;
+-    REG_NR50 = 0x77;
++                   | SOUND_1_ON);
++    PSG_WRITE16(REG_SOUNDCNT_L, 0); // set master volume to zero
++    PSG_WRITE8(REG_NR12, 0x8);
++    PSG_WRITE8(REG_NR22, 0x8);
++    PSG_WRITE8(REG_NR42, 0x8);
++    PSG_WRITE8(REG_NR14, 0x80);
++    PSG_WRITE8(REG_NR24, 0x80);
++    PSG_WRITE8(REG_NR44, 0x80);
++    PSG_WRITE8(REG_NR30, 0);
++    PSG_WRITE8(REG_NR50, 0x77);
+ 
+     soundInfo = SOUND_INFO_PTR;
+ 
+@@ -368,14 +378,14 @@ void SoundInit(struct SoundInfo *soundInfo)
+     REG_DMA1CNT_H = DMA_32BIT;
+     REG_DMA2CNT_H = DMA_32BIT;
+ #endif
+-    REG_SOUNDCNT_X = SOUND_MASTER_ENABLE
++    PSG_WRITE16(REG_SOUNDCNT_X, SOUND_MASTER_ENABLE
+                    | SOUND_4_ON
+                    | SOUND_3_ON
+                    | SOUND_2_ON
+-                   | SOUND_1_ON;
+-    REG_SOUNDCNT_H = SOUND_B_FIFO_RESET | SOUND_B_TIMER_0 | SOUND_B_LEFT_OUTPUT
++                   | SOUND_1_ON);
++    PSG_WRITE16(REG_SOUNDCNT_H, SOUND_B_FIFO_RESET | SOUND_B_TIMER_0 | SOUND_B_LEFT_OUTPUT
+                    | SOUND_A_FIFO_RESET | SOUND_A_TIMER_0 | SOUND_A_RIGHT_OUTPUT
+-                   | SOUND_ALL_MIX_FULL;
++                   | SOUND_ALL_MIX_FULL);
+     REG_SOUNDBIAS_H = (REG_SOUNDBIAS_H & 0x3F) | 0x40;
+ 
+ #ifndef PORT_PC
+@@ -873,19 +883,19 @@ void CgbOscOff(u8 chanNum)
+     switch (chanNum)
+     {
+     case 1:
+-        REG_NR12 = 8;
+-        REG_NR14 = 0x80;
++        PSG_WRITE8(REG_NR12, 8);
++        PSG_WRITE8(REG_NR14, 0x80);
+         break;
+     case 2:
+-        REG_NR22 = 8;
+-        REG_NR24 = 0x80;
++        PSG_WRITE8(REG_NR22, 8);
++        PSG_WRITE8(REG_NR24, 0x80);
+         break;
+     case 3:
+-        REG_NR30 = 0;
++        PSG_WRITE8(REG_NR30, 0);
+         break;
+     default:
+-        REG_NR42 = 8;
+-        REG_NR44 = 0x80;
++        PSG_WRITE8(REG_NR42, 8);
++        PSG_WRITE8(REG_NR44, 0x80);
+     }
+ }
+ 
+@@ -1009,31 +1019,31 @@ void CgbSound(void)
+                 switch (ch)
+                 {
+                 case 1:
+-                    *nrx0ptr = channels->sweep;
++                    PSG_WRITE8(*nrx0ptr, channels->sweep);
+                     // fallthrough
+                 case 2:
+-                    *nrx1ptr = ((u32)channels->wavePointer << 6) + channels->length;
++                    PSG_WRITE8(*nrx1ptr, ((u32)channels->wavePointer << 6) + channels->length);
+                     goto init_env_step_time_dir;
+                 case 3:
+                     if (channels->wavePointer != channels->currentPointer)
+                     {
+-                        *nrx0ptr = 0x40;
+-                        REG_WAVE_RAM0 = channels->wavePointer[0];
+-                        REG_WAVE_RAM1 = channels->wavePointer[1];
+-                        REG_WAVE_RAM2 = channels->wavePointer[2];
+-                        REG_WAVE_RAM3 = channels->wavePointer[3];
++                        PSG_WRITE8(*nrx0ptr, 0x40);
++                        PSG_WRITE32(REG_WAVE_RAM0, channels->wavePointer[0]);
++                        PSG_WRITE32(REG_WAVE_RAM1, channels->wavePointer[1]);
++                        PSG_WRITE32(REG_WAVE_RAM2, channels->wavePointer[2]);
++                        PSG_WRITE32(REG_WAVE_RAM3, channels->wavePointer[3]);
+                         channels->currentPointer = channels->wavePointer;
+                     }
+-                    *nrx0ptr = 0;
+-                    *nrx1ptr = channels->length;
++                    PSG_WRITE8(*nrx0ptr, 0);
++                    PSG_WRITE8(*nrx1ptr, channels->length);
+                     if (channels->length)
+                         channels->n4 = 0xC0;
+                     else
+                         channels->n4 = 0x80;
+                     break;
+                 default:
+-                    *nrx1ptr = channels->length;
+-                    *nrx3ptr = (u32)channels->wavePointer << 3;
++                    PSG_WRITE8(*nrx1ptr, channels->length);
++                    PSG_WRITE8(*nrx3ptr, (u32)channels->wavePointer << 3);
+                 init_env_step_time_dir:
+                     envelopeStepTimeAndDir = channels->attack + CGB_NRx2_ENV_DIR_INC;
+                     if (channels->length)
+@@ -1209,34 +1219,34 @@ void CgbSound(void)
+             }
+ 
+             if (ch != 4)
+-                *nrx3ptr = channels->frequency;
++                PSG_WRITE8(*nrx3ptr, channels->frequency);
+             else
+-                *nrx3ptr = (*nrx3ptr & 0x08) | channels->frequency;
++                PSG_WRITE8(*nrx3ptr, (*nrx3ptr & 0x08) | channels->frequency);
+             channels->n4 = (channels->n4 & 0xC0) + (*((u8 *)(&channels->frequency) + 1));
+-            *nrx4ptr = (s8)(channels->n4 & mask);
++            PSG_WRITE8(*nrx4ptr, (s8)(channels->n4 & mask));
+         }
+ 
+         /* 4. apply envelope & volume to HW registers */
+         if (channels->modify & CGB_CHANNEL_MO_VOL)
+         {
+-            REG_NR51 = (REG_NR51 & ~channels->panMask) | channels->pan;
++            PSG_WRITE8(REG_NR51, (REG_NR51 & ~channels->panMask) | channels->pan);
+             if (ch == 3)
+             {
+-                *nrx2ptr = gCgb3Vol[channels->envelopeVolume];
++                PSG_WRITE8(*nrx2ptr, gCgb3Vol[channels->envelopeVolume]);
+                 if (channels->n4 & 0x80)
+                 {
+-                    *nrx0ptr = 0x80;
+-                    *nrx4ptr = channels->n4;
++                    PSG_WRITE8(*nrx0ptr, 0x80);
++                    PSG_WRITE8(*nrx4ptr, channels->n4);
+                     channels->n4 &= 0x7f;
+                 }
+             }
+             else
+             {
+                 u32 envMask = 0xF;
+-                *nrx2ptr = (envelopeStepTimeAndDir & envMask) + (channels->envelopeVolume << 4);
+-                *nrx4ptr = channels->n4 | 0x80;
++                PSG_WRITE8(*nrx2ptr, (envelopeStepTimeAndDir & envMask) + (channels->envelopeVolume << 4));
++                PSG_WRITE8(*nrx4ptr, channels->n4 | 0x80);
+                 if (ch == 1 && !(*nrx0ptr & 0x08))
+-                    *nrx4ptr = channels->n4 | 0x80;
++                    PSG_WRITE8(*nrx4ptr, channels->n4 | 0x80);
+             }
+         }
+ 
+@@ -1775,16 +1785,16 @@ void SetPokemonCryStereo(u32 val)
+ 
+     if (val)
+     {
+-        REG_SOUNDCNT_H = SOUND_B_TIMER_0 | SOUND_B_LEFT_OUTPUT
++        PSG_WRITE16(REG_SOUNDCNT_H, SOUND_B_TIMER_0 | SOUND_B_LEFT_OUTPUT
+                        | SOUND_A_TIMER_0 | SOUND_A_RIGHT_OUTPUT
+-                       | SOUND_ALL_MIX_FULL;
++                       | SOUND_ALL_MIX_FULL);
+         soundInfo->mode &= ~1;
+     }
+     else
+     {
+-        REG_SOUNDCNT_H = SOUND_B_TIMER_0 | SOUND_B_LEFT_OUTPUT | SOUND_B_RIGHT_OUTPUT
++        PSG_WRITE16(REG_SOUNDCNT_H, SOUND_B_TIMER_0 | SOUND_B_LEFT_OUTPUT | SOUND_B_RIGHT_OUTPUT
+                        | SOUND_A_TIMER_0 | SOUND_A_LEFT_OUTPUT | SOUND_A_RIGHT_OUTPUT
+-                       | SOUND_B_MIX_HALF | SOUND_A_MIX_HALF | SOUND_CGB_MIX_FULL;
++                       | SOUND_B_MIX_HALF | SOUND_A_MIX_HALF | SOUND_CGB_MIX_FULL);
+         soundInfo->mode |= 1;
+     }
+ }
+-- 
+2.51.0.windows.2
+
