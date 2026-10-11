@@ -18,6 +18,14 @@ struct DmaState
 
 static struct DmaState sChannels[4];
 
+static uintptr_t DestinationAddress(int channel, uintptr_t address, unsigned width)
+{
+    address &= ~(uintptr_t)(width - 1);
+    if (address < 0x10000000u)
+        address &= channel == 3 ? 0x0fffffffu : 0x07ffffffu;
+    return address;
+}
+
 static unsigned TransferCount(int channel, unsigned count)
 {
     count &= channel == 3 ? 0xffff : 0x3fff;
@@ -61,7 +69,7 @@ static void Transfer(int channel, struct DmaState *dma)
         dma->armed = 0;
     }
     else if (destinationMode == 3)
-        dma->destination = (uint8_t *)(uintptr_t)(registers[1] & ~(width - 1));
+        dma->destination = (uint8_t *)DestinationAddress(channel, registers[1], width);
     if (dma->armed)
         dma->count = TransferCount(channel, registers[2]);
     if (dma->flags & DMA_INTR_ENABLE)
@@ -93,7 +101,7 @@ void PortDma_Set(int channel, const void *source, void *destination, unsigned co
     // pointers that the i686 port also passes through DmaSet.
     uintptr_t from = (uintptr_t)source, to = (uintptr_t)destination;
     if (from < 0x10000000u) from &= channel == 0 ? 0x07ffffffu : 0x0fffffffu;
-    if (to < 0x10000000u) to &= channel == 3 ? 0x0fffffffu : 0x07ffffffu;
+    to = DestinationAddress(channel, to, alignmentMask + 1);
     *dma = (struct DmaState){(const uint8_t *)from, (uint8_t *)to, count, flags, 1};
     if ((flags & DMA_START_MASK) == DMA_START_NOW)
         Transfer(channel, dma);

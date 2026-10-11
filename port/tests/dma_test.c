@@ -137,6 +137,20 @@ int main(void)
     PortDma_OnVBlank();
     assert(shared == 9);
 
+    // GBA destination masks must also apply when repeat reloads DAD.
+    void *alias = VirtualAlloc((void *)0x0c000000, 4096,
+                               MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    assert(alias);
+    REG_BG2PA = 0;
+    PortDma_Set(0, source16, (void *)0x0c000020,
+                ((DMA_ENABLE | DMA_START_HBLANK | DMA_REPEAT | DMA_DEST_RELOAD) << 16) | 1);
+    PortDma_OnHBlank();
+    assert(REG_BG2PA == 1);
+    PortDma_OnHBlank();
+    assert(REG_BG2PA == 2 && *(uint16_t *)((uint8_t *)alias + 0x20) == 0);
+    PortDma_Stop(0);
+    VirtualFree(alias, 0, MEM_RELEASE);
+
     VirtualFree(io, 0, MEM_RELEASE);
     VirtualFree(iwram, 0, MEM_RELEASE);
     return 0;
