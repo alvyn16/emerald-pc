@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <limits.h>
 #include <stdint.h>
 #include <string.h>
 #include <setjmp.h>
@@ -96,6 +97,27 @@ int main(void)
     assert(Sqrt(65536) == 256);
     assert(ArcTan2(1, 0) == 0);
     assert(ArcTan2(0, 1) == 16384);
+    assert(Div(INT_MIN, -1) == INT_MIN);
+    assert(Div(INT_MIN, 1) == INT_MIN);
+    assert(Div(INT_MAX, -2) == -1073741823);
+    assert(Div(13, -4) == -3 && Div(-13, -4) == 3);
+    assert(Div(1, 0) == 0); // Explicit host safety policy, not BIOS accuracy.
+    for (u32 root = 1; root <= 65535; ++root)
+    {
+        u32 square = root * root;
+        assert(Sqrt(square) == root && Sqrt(square - 1) == root - 1);
+    }
+    assert(Sqrt(UINT32_MAX) == 65535 && Sqrt(0) == 0);
+    // Numerical vectors evaluated against the open mGBA HLE reference.
+    const struct { s16 x, y; u16 angle; } angles[] = {
+        {0, 0, 0}, {-1, 0, 32768}, {0, -1, 49152},
+        {3, 1, 3355}, {1, 3, 13029}, {7, 2, 2902},
+        {-3, 1, 29412}, {3, -1, 62180}, {-3, -1, 36123},
+        {1, 1, 8192}, {-1, -1, 40960},
+        {32767, 32766, 8191}, {-32768, 32767, 24576},
+    };
+    for (unsigned i = 0; i < sizeof(angles) / sizeof(angles[0]); ++i)
+        assert(ArcTan2(angles[i].x, angles[i].y) == angles[i].angle);
 
     struct BgAffineSrcData bg = {.texX = 0, .texY = 0, .scrX = 0, .scrY = 0,
                                  .sx = 256, .sy = 256, .alpha = 0};

@@ -177,11 +177,34 @@ u16 Sqrt(u32 number)
     return (u16)result;
 }
 
+static s32 FloorShift(int64_t value, unsigned bits)
+{
+    int64_t divisor = (int64_t)1 << bits;
+    return (s32)(value >= 0 ? value / divisor : -((-value + divisor - 1) / divisor));
+}
+
+static s32 FixedArcTangent(s32 tangent)
+{
+    // Evaluate the documented fixed-point approximation in Horner form.
+    // Coefficients are numeric facts; this evaluator is host code of our own.
+    static const s32 coefficients[] = {169, 912, 2332, 4022, 5802, 8321, 13905, 41721};
+    s32 square = -FloorShift((int64_t)tangent * tangent, 14);
+    s32 polynomial = coefficients[0];
+    for (unsigned i = 1; i < sizeof(coefficients) / sizeof(coefficients[0]); ++i)
+        polynomial = FloorShift((int64_t)polynomial * square, 14) + coefficients[i];
+    return FloorShift((int64_t)tangent * polynomial, 16);
+}
+
 u16 ArcTan2(s16 x, s16 y)
 {
-    double angle = atan2((double)y, (double)x);
-    long units = lround(angle * (32768.0 / 3.14159265358979323846));
-    return (u16)units;
+    s32 horizontal = x, vertical = y;
+    if (!vertical) return horizontal < 0 ? 0x8000 : 0;
+    if (!horizontal) return vertical < 0 ? 0xc000 : 0x4000;
+    if (abs(horizontal) >= abs(vertical))
+        return (u16)(FixedArcTangent(vertical * 16384 / horizontal)
+                     + (horizontal < 0 ? 0x8000 : 0));
+    return (u16)((vertical < 0 ? 0xc000 : 0x4000)
+                 - FixedArcTangent(horizontal * 16384 / vertical));
 }
 
 static s16 Fixed8_8(double value)
