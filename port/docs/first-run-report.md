@@ -717,3 +717,57 @@ parches y árbol `0db24077d24c9c51701f36e575d466f280bdb3af`, recompilada en
 `build/irq-clean-build.log`. Modelo y límites en `register-model.md`.
 Siguen pendientes líneas 160–227 completas y eventos IRQ de timers/DMA
 (T11–T13); no se afirma precisión temporal de instrucciones ARM.
+
+## T11–T18 — calendario, dispositivos, PPU y BIOS (2026-10-11)
+
+Cadena local: milestone-24-registers-irq → milestone-25-dma →
+milestone-26-graphics → milestone-27-bios. Nuevos parches 0025–0029,
+solo hooks PORT_PC; no se alteró la salida original GBA ni se publicó código
+upstream, ROM, assets, saves o ejecutables.
+
+- Calendario: 228 líneas, render/DMA HBlank solo en las 160 visibles,
+  DISPSTAT/VCount coherentes, DMA antes del callback VBlank. Timers avanzan
+  en fases 1006/226; overflow solicita IRQ sin callbacks fuera del hilo.
+- Timers: recarga incluso idéntica, enable y control observables, prescaler
+  común y cascada. La revisión reprodujo/corrigió ticks extra al cambiar
+  divisor. DMA: SAD/DAD estables, repeat/count/máscaras, stop/rearme e IRQ
+  al terminar; corregida máscara perdida al recargar DAD.
+- PPU: bitmap 3/4/5, restricciones OBJ bitmap, prioridad OAM antes de BG,
+  segunda capa sin OBJ ocultos, ventanas/mezcla combinadas, mosaico respecto
+  a pantalla y referencias afines reescritas con el mismo valor.
+- BIOS: inventario; CpuFastSet por bloques de ocho palabras y alineación
+  word, ArcTan2 entero, matrices con ángulo cuantizado y wrap, división y
+  raíz con extremos; fixtures propios de LZ/RLE y canarios.
+
+17 suites pasan en `build/t12-control-build.log` tras la última corrección.
+Build normal sin controles diagnósticos. La reproducción aislada con 29
+parches también compila normal/diagnóstico y pasa las 17 suites en
+`build/t18-clean-final.log`; árbol upstream idéntico
+`a4e7dad5c792f55e13fde35af0e75e6f5d6c7e60`.
+
+Recorridos finales:
+
+| Prueba | Resultado / evidencia local |
+| --- | --- |
+| Normal: salir de casa, sin pelea forzada | PASS, build/t18-final-normal.log |
+| Batalla Ruta 101 a 1× | Victoria y regreso; salida limpia 37000, build/t18-final-battle-1x.log |
+| Batalla a 4× | Mismo resultado, build/t18-final-battle-4x.log |
+| Reapertura/recuperación de save | PASS, build/t18-final-save.log |
+| GBA original | pokeemerald.gba: OK, build/t18-final-gba.log |
+
+Capturas alineadas del PPU anterior/actual en `build/visual-before/` y
+`build/visual-after/`: intro 2400 y 2665, confirmación Torchic 30800.
+Torchic está centrado; el frame 2665 es blanco en ambos renderizadores.
+Combate 31300 y mapa 37000 también coinciden (0 píxeles distintos).
+La comparación controla frame/registros/fixture, pero es entre versiones
+del port, no contra hardware. Detalles y límites en `ppu-model.md`.
+
+No apareció otra excepción o espera infinita en estos recorridos. Las
+correcciones adicionales proceden de vectores sintéticos reproducibles;
+no se afirma cobertura de todos los mapas/combates. El save normal del
+usuario mantiene SHA256
+`B5A41C3758763BBEC72769FAB4A2533BF2DB0B6312D93D25A695F9E4B9E02260`.
+
+Siguiente tarea: **T19, RegisterRamReset por flags**, que aún es un no-op
+host documentado. RTC, fidelidad de audio y campaña completa conservan sus
+tareas pendientes. No se hizo push de esta cadena.

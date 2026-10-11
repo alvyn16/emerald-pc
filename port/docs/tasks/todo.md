@@ -141,8 +141,8 @@ upstream y revisión del contrato antes de implementarlo.
 
 T08: `register-model.md`, `register-inventory.md` y `audit_registers.py`:
 75 nombres de registros, consumidores indirectos revisados y contrato IRQ/
-MMIO. Incluye bootstrap y matriz de pruebas. El modelo aún no está
-implementado; T09–T13 permanecen abiertos.
+MMIO. Incluye bootstrap y matriz de pruebas. Fue la base del modelo implementado en T09–T13; los contratos y límites
+actuales están en register-model.md, video-calendar.md y dma-model.md.
 
 ### T09 — despacho IRQ correcto (M)
 
@@ -159,8 +159,8 @@ y regresiones; no asumir que RAM normal implementa IF.
 T09: `port_irq.*`, suites irq/frame, parches 0023/0024. Sin VBlank
 incondicional ni flags BIOS ficticios bajo IME=0. Bootstrap forced blank;
 14 suites PASS, combate con victoria/regreso y compare OK. Reproducción
-con 24 parches y árbol idéntico. T10 aún en verificación; el calendario de
-líneas y eventos timer/DMA se completa en T11–T13.
+con 24 parches y árbol idéntico. T10 y el calendario de
+líneas/eventos timer/DMA se verifican en los apartados siguientes.
 
 ### T10 — IntrWait/Halt con máscaras (M)
 
@@ -177,45 +177,45 @@ Verificación: fixtures de eventos, sin esperas infinitas en test.
 T10: bios/irq suites prueban masks/discard, evento distinto, IRQ enmascarada,
 Halt con IME=0 y wake ya reconocido. El cierre durante espera usa un pump
 sintético; frame suite verifica SDL_QUIT real en el servicio. 14 suites,
-normal sin combate al salir, batalla y recuperación de save PASS. T11–T13
-siguen abiertos; no se declara terminado el hito 24 completo.
+normal sin combate al salir, batalla y recuperación de save PASS. Esta fue la base
+de T11–T13, ahora verificados abajo con precisión temporal limitada.
 
 ### T11 — calendario completo de líneas (M)
 
-- [ ] Definir y ejecutar líneas visibles y VBlank, transiciones VCOUNT/
+- [x] Definir y ejecutar líneas visibles y VBlank, transiciones VCOUNT/
   DISPSTAT y eventos HBlank sin renderizar fuera del área visible.
-- [ ] Comparar el orden DMA/IRQ/callback con referencias de hardware y los
+- [x] Comparar el orden DMA/IRQ/callback con referencias de hardware y los
   consumidores upstream; no asumir HBlank activo igual en toda región.
-- [ ] Mantener cadencia y velocidad, y medir coste frente a la base integrada.
+- [x] Mantener cadencia y velocidad, y medir coste frente a la base integrada.
 
 Dependencias: T09. Archivos: `frame.c`, `port_dma.c`, `frame_test.c`, informe.
 Verificación: traza de un frame entero, scanline effects y combate a 1×/4×.
 
 ### T12 — timers observables e IRQ (M)
 
-- [ ] Reescribir recarga, incluso con el mismo valor, mediante hooks de los
+- [x] Reescribir recarga, incluso con el mismo valor, mediante hooks de los
   consumidores identificados; conservar prescaler/cascada.
-- [ ] Solicitar IRQ de overflow cuando corresponde y probar enable/disable,
+- [x] Solicitar IRQ de overflow cuando corresponde y probar enable/disable,
   cambios de recarga/control y overflow múltiple.
-- [ ] Mantener diagnóstico determinista y documentar granularidad nativa.
+- [x] Mantener diagnóstico determinista y documentar granularidad nativa.
 
 Dependencias: T08–T11. Archivos: `port_timer.*`, `timer_test.c`, `frame.c`,
 parche de consumidores. Verificación: timers/IRQ y RNG/recorrido conocidos.
 
 ### Checkpoint C
 
-- [ ] IRQ, waits y calendario pasan; las rutas ya jugables siguen funcionando;
+- [x] IRQ, waits y calendario pasan; las rutas ya jugables siguen funcionando;
   el informe explica qué precisión temporal se garantiza.
 
 ## Hito 25 — completar DMA usado por el juego
 
 ### T13 — DMA y control de canales (M por lote)
 
-- [ ] Auditar escrituras directas a DMA; capturar armado/desarmado observables,
+- [x] Auditar escrituras directas a DMA; capturar armado/desarmado observables,
   conteo cero, máscaras y recarga en los canales realmente usados.
-- [ ] Probar IRQ de fin, repetición, incrementos/decrementos/fijos y triggers
+- [x] Probar IRQ de fin, repetición, incrementos/decrementos/fijos y triggers
   NOW/VBlank/HBlank según el calendario de T11.
-- [ ] Determinar si FIFO/special timing requiere emulación o queda sustituido
+- [x] Determinar si FIFO/special timing requiere emulación o queda sustituido
   correctamente por la ruta m4a host; dejar contrato explícito.
 
 Dependencias: T08–T12. Archivos: `port_dma.*`, `dma_test.c`, `frame.c`, parche
@@ -225,11 +225,11 @@ de writes. Verificación: matriz por canal + transiciones/sonido sin regresión.
 
 ### T14 — modos bitmap 3 y 4 (M)
 
-- [ ] Dibujar sus formatos de color y selección de página según registros,
+- [x] Dibujar sus formatos de color y selección de página según registros,
   usando fixtures sintéticos y BG2 afín cuando corresponda.
-- [ ] Integrar prioridad, ventanas, color y objetos; comprobar índice/color
+- [x] Integrar prioridad, ventanas, color y objetos; comprobar índice/color
   cero según el modo, no asumir transparencia de fondos de texto.
-- [ ] Probar extremos de VRAM y cambio de página entre frames.
+- [x] Probar extremos de VRAM y cambio de página entre frames.
 
 Dependencias: T11, T13. Archivos: `port_ppu.c`, `ppu_test.c`, informe PPU.
 Verificación: fixtures exactos por píxel y comparación local de escenas que
@@ -237,55 +237,65 @@ realmente usen esos modos; no afirmar que Emerald usa todos ellos.
 
 ### T15 — modo bitmap 5 (M)
 
-- [ ] Implementar dimensiones, página y color directo con clipping/backdrop.
-- [ ] Comprobar transformaciones de BG2 y restricciones de tiles OBJ en
+- [x] Implementar dimensiones, página y color directo con clipping/backdrop.
+- [x] Comprobar transformaciones de BG2 y restricciones de tiles OBJ en
   bitmap mediante referencia, no reutilizar límites de texto a ciegas.
-- [ ] Probar coordenadas negativas/bordes y combinación con efectos.
+- [x] Probar coordenadas negativas/bordes y combinación con efectos.
 
 Dependencias: T14. Archivos: PPU, pruebas e informe. Verificación: fixtures
 exactos y ninguna lectura fuera de la región VRAM modelada.
 
 ### T16 — prioridades, ventanas y mezcla (M)
 
-- [ ] Revisar empates BG/OBJ, orden OAM, transparencia y elección de segunda
+- [x] Revisar empates BG/OBJ, orden OAM, transparencia y elección de segunda
   capa con más de dos candidatos.
-- [ ] Cubrir OBJ semitransparente, OBJWIN, efectos dentro/fuera de ventanas,
+- [x] Cubrir OBJ semitransparente, OBJWIN, efectos dentro/fuera de ventanas,
   bordes invertidos y clipping/forced blank con pruebas combinadas.
-- [ ] Comparar escenas de intro y combate; corregir diferencias concretas.
+- [x] Comparar escenas de intro y combate; corregir diferencias concretas.
 
 Dependencias: T14–T15. Archivos: PPU, `ppu_test.c`, informe visual.
 Verificación: fixtures de capas y capturas alineadas por estado de escena.
 
 ### T17 — afines y mosaico (M)
 
-- [ ] Medir mosaico OBJ respecto a origen/posición, tamaños y clipping;
+- [x] Medir mosaico OBJ respecto a origen/posición, tamaños y clipping;
   reemplazar aproximaciones cuando una referencia demuestre diferencia.
-- [ ] Cubrir afines con matriz negativa, doble tamaño, wraparound y cambios
+- [x] Cubrir afines con matriz negativa, doble tamaño, wraparound y cambios
   de referencia/matriz entre líneas.
-- [ ] Conservar selección del inicial centrada y scanline effects existentes.
+- [x] Conservar selección del inicial centrada y scanline effects existentes.
 
 Dependencias: T16. Archivos: PPU, prueba PPU, informe.
 Verificación: fixtures signed/overflow/bordes y escenas antes/después.
 
 ### Checkpoint D
 
-- [ ] Los modos y efectos implementados tienen pruebas por píxel; la matriz
+- [x] Los modos y efectos implementados tienen pruebas por píxel; la matriz
   visual distingue errores conocidos de escenas todavía no comparadas.
 
 ## Hito 27 — completar BIOS requerida
 
 ### T18 — exactitud de copia, cálculo y descompresión (M por lote)
 
-- [ ] Inventariar las llamadas BIOS usadas, incluidas variantes actualmente
+- [x] Inventariar las llamadas BIOS usadas, incluidas variantes actualmente
   ausentes o stubs, y priorizar consumidores alcanzables.
-- [ ] Comparar divisiones/extremos, raíces/ángulos/matrices y alineación/
+- [x] Comparar divisiones/extremos, raíces/ángulos/matrices y alineación/
   conteos de copias con vectores de referencia obtenidos legalmente.
-- [ ] Corregir una familia por commit con fixtures propios; jamás incorporar
+- [x] Corregir una familia por commit con fixtures propios; jamás incorporar
   implementación de BIOS al repo público.
 
 Dependencias: T04, T09. Archivos: `bios.c`, `bios_test.c`, `bios.md` y patch
 del consumidor solo si hace falta. Verificación: resultados numéricos, no
 solo ausencia de excepción.
+
+Evidencia T11–T18 (2026-10-11): video-calendar.md, dma-model.md,
+ppu-model.md, bios-inventory.md y bios.md. 17 suites host PASS; normales y
+recorridos de combate 1×/4× PASS; recuperación de save PASS; compare GBA OK.
+Reproducción aislada de 29 parches con árbol idéntico y build/tests PASS.
+Revisión y logs en milestones-24-27-review.md. Capturas solo en build/.
+Los contratos son de un port cooperativo: no se declara precisión de CPU ARM,
+conformidad universal BIOS ni comparación física de todas las escenas.
+T19 y las tareas posteriores continúan abiertas; no se declara completo el
+hito 27 entero ni todo el juego.
 
 ### T19 — RegisterRamReset por flags (M)
 

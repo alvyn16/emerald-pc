@@ -138,3 +138,10 @@ T10: `build/irq-wait-build.log`, 14 suites PASS; normal sale de casa sin
 combate (`normal-game-regression/gdb.log`); fixture de batalla gana y sale
 en 37.000 (`wild-battle-regression/gdb.log`); recarga/recuperación de save
 PASS. El calendario completo y dispositivos T11–T13 siguen pendientes.
+
+Actualización T11–T13 (2026-10-11): ya están implementados el calendario de
+228 líneas, IRQ de timers/DMA y writes observables de timer/stop DMA.
+Los parches 0025–0028 y las suites frame/timer/dma cubren los consumidores
+identificados; 0029 añade observación de referencias afines. Contratos y
+límites actuales: video-calendar.md y dma-model.md. Los párrafos T09/T10
+anteriores conservan el estado y los logs históricos de esos incrementos.
