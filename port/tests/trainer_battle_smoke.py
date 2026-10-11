@@ -5,12 +5,13 @@ import shutil
 from process_watchdog import run_logged
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("scenario", choices=("trainer", "rival", "gym", "double", "poison", "switch", "item", "long", "evolution"))
+parser.add_argument("scenario", choices=("trainer", "rival", "gym", "double", "poison", "switch", "item", "long", "evolution", "sidney", "phoebe", "glacia", "drake", "wallace"))
 scenario = parser.parse_args().scenario
 project = Path(__file__).resolve().parents[2]
 template = project / "build/wild-battle-regression-catch/test.gdb"
 assert template.is_file(), "Prepare the catch fixture first"
-trainer = {"trainer": 318, "rival": 529, "gym": 265, "double": 481, "poison":318, "switch":318, "item":318, "long":331, "evolution":318}[scenario]
+trainer = {"trainer": 318, "rival": 529, "gym": 265, "double": 481, "poison":318, "switch":318, "item":318, "long":331, "evolution":318, "sidney":261, "phoebe":262, "glacia":263, "drake":264, "wallace":335}[scenario]
+league = scenario in ("sidney", "phoebe", "glacia", "drake", "wallace")
 scratch = project / f"build/trainer-{scenario}"
 for directory in ("build", "roms", "saves"):
     (scratch / directory).mkdir(parents=True, exist_ok=True)
@@ -20,7 +21,7 @@ for filename in ("SDL2.dll", "emerald-pc-diagnostic.exe"):
     shutil.copy2(project / "build" / filename, scratch / "build" / filename)
 (scratch / "saves/emerald-pc-diagnostic.sav").write_bytes(b"\xff" * 131072)
 inputs = (template.parent / "input.txt").read_text()
-inputs += "".join(f"{n} {n+1} A\n" for n in range(36900, 89800 if scenario == "long" else 49800, 40))
+inputs += "".join(f"{n} {n+1} A\n" for n in range(36900, 89800 if scenario == "long" or league else 49800, 40))
 (scratch / "input.txt").write_text(inputs, encoding="ascii")
 commands = template.read_text().replace("wild-battle-regression-catch", f"trainer-{scenario}")
 commands = commands.replace("gPlayerParty,283,8,32", "gPlayerParty,280,15,32" if scenario == "evolution" else "gPlayerParty,68,60,32")
@@ -100,6 +101,25 @@ continue
 end
 """
 commands = commands[:start] + hooks + commands[end:]
+if league:
+    commands = commands.replace("gPlayerParty,68,60,32", "gPlayerParty,404,95,32")
+    commands = commands.replace("call (void)SetMonMoveSlot((void *)&gPlayerParty,157,0)", "".join(f"call (void)SetMonMoveSlot((void *)&gPlayerParty,{move},{slot})\n" for slot,move in enumerate((57,58,85,247))))
+    commands = commands.replace("sStopFrame = 50000", "sStopFrame = 90000")
+    commands = commands.replace('continue\nprintf "STOP', '''break HandleInputChooseMove
+commands
+silent
+python
+enemy = int(gdb.parse_and_eval("(unsigned int)GetMonData3((char *)&gEnemyParty+100*((unsigned short *)&gBattlerPartyIndexes)[1],11,0)"))
+preferred = 1 if SCENARIO == "drake" else (0 if enemy == 324 else 2) if SCENARIO == "wallace" else 0
+slot = next(i for i in [preferred]+list(range(4)) if int(gdb.parse_and_eval("(unsigned int)GetMonData3((void *)&gPlayerParty,%d,0)" % (17+i))) > 0)
+gdb.execute("set ((unsigned char *)&gMoveSelectionCursor)[*(unsigned char *)&gActiveBattler] = %d" % slot)
+gdb.execute("set gMain.newKeys = 1")
+end
+continue
+end
+continue
+printf "STOP''')
+commands = commands.replace("SCENARIO", repr(scenario))
 start = commands.index("python\nassert", commands.index('printf "STOP'))
 end = commands.index("bt\ndump", start)
 extra_checks = ""
