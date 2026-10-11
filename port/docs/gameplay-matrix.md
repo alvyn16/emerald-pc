@@ -33,4 +33,33 @@ progreso; se detuvo solo ese make y se repitió secuencialmente, sin cambiar fue
 Repro MINGW32: python port/tests/wild_battle_smoke.py --quick --scenario
 victory|loss|run|catch (ejecutar un escenario por llamada).
 
-T25, T26, T27 y T28: pendientes hasta tener sus pruebas y evidencia.
+## T25 — entrenadores y mecánicas
+
+trainer_battle_smoke.py usa el fixture rápido de captura como plantilla. Casos:
+Calvin (318), May Route 103 (529), Roxanne (265), Amy/Liv (481, doble), veneno
+con Guts, cambio de Pokémon, poción, combate de ≥10 turnos contra Calvin5 (331),
+y Torchic 15→16, aprendizaje de Double Kick y evolución a Combusken.
+Todos PASS: outcome 1, XP aumenta, dinero aumenta, flag del entrenador activado,
+HP positivos, callback CB2_Overworld y Route 101. Switch verifica contador de
+cambios; poción verifica contador y consumo; veneno valida Guts 62/estado durante
+la selección y persistencia del estado; evolución verifica especie 281 y move 24.
+El gym fixture prueba batalla de Roxanne y flag, no entrega de medalla por su script.
+Los fixtures seleccionan acciones de UI en GDB; no alteran outcomes ni resultados.
+
+Tres fallos encontrados y corregidos:
+- 0033 AnimShakeMonOrBattlePlatforms (32.493): low s16 f20e se extendía a
+  fffff20e y anulaba los bits altos del puntero. Reconstrucción de ambas mitades
+  como u16/u32 en inicialización, paso y restauración; Rock Slide ahora PASS.
+- 0034 m4aMPlayStop (31.993 doble): StopCryAndClearCrySongs antes del primer
+  grito pasa NULL; lectura de ident en 0x34. Stop nulo seguro solo PORT_PC,
+  regresión en suite m4a y doble combate real PASS.
+- 0035 BtlController_EmitChosenMonReturnValue (33.420 gym): oponente pasa
+  battlePartyOrder=NULL al sustituir un Pokémon. Son bytes sin consumidor rival;
+  en host se emiten ceros sin leer address 0; cambio rival y victoria PASS.
+
+Logs build/t25-{scenario}.log, t25-{trainer,double,gym}-crash.log. GBA original
+OK (t25-gba-final.log, KEEP_TEMPS=1); 19 suites PASS. 35 parches aplicados en
+checkout limpio, árbol a7fc46cdf960c354915bec3ea8339364b4cfd984 idéntico.
+No se afirma cobertura de todos los estados, habilidades o combinaciones de equipos.
+
+T26, T27 y T28: pendientes hasta sus gates y evidencia.

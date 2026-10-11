@@ -854,3 +854,10 @@ dinero/item y mapa comprobados. Se encontró SIGFPE real al lanzar Master Ball
 en Cmd_handleballthrow (32.167): índice fuera de tabla y división por odds cero.
 Parche 0032 bajo PORT_PC; captura posterior PASS, GBA compare OK.
 Detalles y límites en [gameplay-matrix.md](gameplay-matrix.md).
+
+## T25 — entrenadores y mecánicas
+
+Nueve escenarios PASS: entrenador/rival/gym/doble, veneno/Guts, cambio, poción,
+combate largo y aprendizaje/evolución. Se corrigieron punteros sign-extended de
+Rock Slide (0033), stop de grito nulo (0034) y party-order nulo rival (0035).
+GBA compare OK. Detalles, direcciones, frames y límites en gameplay-matrix.md.

@@ -391,13 +391,16 @@ parche 0032 Master Ball, compare OK y árbol limpio idéntico.
 
 ### T25 — entrenadores y mecánicas de combate (M por escenario)
 
-- [ ] Cubrir entrenador, rival, gimnasio y doble combate offline.
-- [ ] Probar cambio de Pokémon, estados, habilidades y selección de objetos/
+- [x] Cubrir entrenador, rival, gimnasio y doble combate offline.
+- [x] Probar cambio de Pokémon, estados, habilidades y selección de objetos/
   movimientos; añadir un caso de batalla larga.
-- [ ] Registrar dinero/experiencia/evolución y progreso esperado tras victoria.
+- [x] Registrar dinero/experiencia/evolución y progreso esperado tras victoria.
 
 Dependencias: T24. Archivos: harness, informe y fixes localizados.
 Verificación: fixtures controlados y observación semántica de resultados.
+
+Evidencia T25: gameplay-matrix.md y trainer_battle_smoke.py (9 escenarios),
+parches 0033–0035, compare OK, XP/dinero/flags/retorno comprobados.
 
 ### T26 — menús, PC y almacenamiento (M por escenario)
 
