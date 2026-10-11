@@ -135,15 +135,15 @@ static int32_t SignExtend28(uint32_t value)
 static void RenderAffineBackground(unsigned bg, unsigned y)
 {
     const unsigned mode = REG_DISPCNT & 7;
-    const int bitmap = mode == 3 || mode == 4;
+    const int bitmap = mode >= 3 && mode <= 5;
     const uint16_t control = ((const volatile uint16_t *)REG_ADDR_BG0CNT)[bg];
     const unsigned size = 128u << ((control >> 14) & 3);
     const unsigned tilesWide = size / 8;
     const unsigned screenBase = ((control >> 8) & 31) * 0x800;
     const unsigned charBase = ((control >> 2) & 3) * 0x4000;
     const int wrap = !bitmap && (control & BGCNT_WRAP) != 0;
-    const unsigned sourceWidth = bitmap ? 240 : size;
-    const unsigned sourceHeight = bitmap ? 160 : size;
+    const unsigned sourceWidth = mode == 5 ? 160 : (bitmap ? 240 : size);
+    const unsigned sourceHeight = mode == 5 ? 128 : (bitmap ? 160 : size);
     const uintptr_t registers = REG_ADDR_BG2PA + (bg - 2) * 0x10;
     const volatile int16_t *matrix = (const volatile int16_t *)registers;
     const unsigned index = bg - 2;
@@ -189,8 +189,11 @@ static void RenderAffineBackground(unsigned bg, unsigned y)
             if (bitmap)
             {
                 const unsigned pixel = sourceY * sourceWidth + sourceX;
-                if (mode == 3)
-                    PlotPixel(y * PORT_SCREEN_WIDTH + x, ReadVram16(pixel * 2), bg, 0);
+                if (mode != 4)
+                {
+                    const unsigned page = mode == 5 && (REG_DISPCNT & 0x10) ? 0xa000 : 0;
+                    PlotPixel(y * PORT_SCREEN_WIDTH + x, ReadVram16(page + pixel * 2), bg, 0);
+                }
                 else
                 {
                     const unsigned page = (REG_DISPCNT & 0x10) ? 0xa000 : 0;
@@ -426,7 +429,7 @@ void PortPpu_RenderLine(unsigned y, uint32_t *row)
         BuildWindowMasks(displayControl, y);
 
     const unsigned mode = displayControl & 7;
-    if (mode <= DISPCNT_MODE_4)
+    if (mode <= DISPCNT_MODE_5)
     {
         for (int priority = 3; priority >= 0; --priority)
         {

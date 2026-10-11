@@ -74,5 +74,32 @@ int main(void)
     REG_BLDALPHA = 0x0808;
     PortPpu_Render(pixels);
     assert(pixels[4] == 0xff007b00); // Black + green, fixed-point truncation.
+
+    REG_DISPCNT = DISPCNT_MODE_5 | DISPCNT_BG2_ON;
+    REG_BLDCNT = 0;
+    REG_BG2CNT = BGCNT_WRAP; // Still no bitmap wrapping.
+    memset(vram, 0, 0x18000);
+    vram[0] = 0x001f;
+    vram[160 * 128 - 1] = 0x7c00;
+    vram[0xa000 / 2] = 0x7c00;
+    vram[0xa000 / 2 + 160 * 128 - 1] = 0x001f;
+    PortPpu_Render(pixels);
+    assert(pixels[0] == 0xffff0000);
+    assert(pixels[127 * 240 + 159] == 0xff0000ff);
+    assert(pixels[160] == 0xff00ff00 && pixels[128 * 240] == 0xff00ff00);
+    REG_DISPCNT |= 0x10;
+    PortPpu_Render(pixels);
+    assert(pixels[0] == 0xff0000ff && pixels[127 * 240 + 159] == 0xffff0000);
+    REG_BG2X = (uint32_t)-256;
+    PortPpu_Render(pixels);
+    assert(pixels[0] == 0xff00ff00 && pixels[1] == 0xff0000ff);
+    REG_BG2X = 159 << 8;
+    REG_BG2Y = 127 << 8;
+    PortPpu_Render(pixels);
+    assert(pixels[0] == 0xffff0000 && pixels[1] == 0xff00ff00);
+    REG_BG2X = REG_BG2Y = 0;
+    REG_BG2PA = REG_BG2PD = 128;
+    PortPpu_Render(pixels);
+    assert(pixels[0] == 0xff0000ff && pixels[1] == 0xff0000ff);
     return 0;
 }
