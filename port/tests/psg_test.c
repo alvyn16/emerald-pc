@@ -85,9 +85,15 @@ int main(void)
     PortPsg_Render(sSamples,64,4096); // Exactly one nibble/sample.
     for (unsigned i=0;i<64;++i) assert(sSamples[i*2] == (i<32?3840:-3840));
     assert(REG_NR52 & 4);
+    memset(sSamples,0,sizeof(sSamples)); PortPsg_Render(sSamples,32,4096);
+    assert(REG_NR30 & 0x40); // Playback has entered bank 1, CPU sees bank 0.
+    assert(REG_WAVE_RAM0 == 0xffffffff);
+    for (unsigned i=0;i<4;++i) PortPsg_Write32(0x04000090+i*4,0);
+    memset(sSamples,0,sizeof(sSamples)); PortPsg_Render(sSamples,64,4096);
+    for (unsigned i=0;i<64;++i) assert(sSamples[i*2]==-3840);
     PortPsg_Write8(0x04000070, 0x40); // DAC stop, visible bank 0 still intact.
     assert(!(REG_NR52 & 4));
-    assert(REG_WAVE_RAM0 == 0xffffffff);
+    assert(REG_WAVE_RAM0 == 0);
     PortPsg_Write8(0x04000070, 0); assert(REG_WAVE_RAM0 == 0);
 
     // Same-value trigger is an event even when the visible trigger bit is zero.

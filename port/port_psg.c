@@ -18,11 +18,13 @@ static double sClock;
 static unsigned sClockStep;
 static uint8_t sWaveBanks[2][16];
 static uint8_t sObserved[64];
+static unsigned sWaveStartBank;
 static void ResetOscillators(void)
 {
     memset(sChannels, 0, sizeof(sChannels));
     sClock = 0;
     sClockStep = 0;
+    sWaveStartBank = 0;
 }
 
 void PortPsg_Reset(void)
@@ -50,6 +52,7 @@ static void Trigger(unsigned i, uint8_t length, uint8_t envelope, uint8_t contro
     c->envelopeTicks = 0;
     c->envelopeUp = (envelope & 8) != 0;
     c->lfsr = 0x7fff;
+    if (i == 2) sWaveStartBank = (REG_NR30 >> 6) & 1;
     if (!i)
     {
         c->sweepFrequency = c->frequency;
@@ -93,6 +96,8 @@ void PortPsg_Write8(uintptr_t address, uint8_t value)
         if (offset == 0x10)
         {
             if (!(value & 0x80)) sChannels[2].enabled = 0;
+            unsigned half = value & 0x20 ? (unsigned)(sChannels[2].phase * 64) / 32 : 0;
+            sWaveStartBank = ((value >> 6) & 1) ^ half;
             memcpy((void *)0x04000090, sWaveBanks[((value >> 6) & 1) ^ 1], 16);
         }
         static const unsigned lengths[] = {2,8,0x12,0x18};
@@ -195,7 +200,7 @@ void PortPsg_Render(int16_t *stereo, unsigned frames, unsigned sampleRate)
     ObserveRawWrites();
     if (!(REG_NR52 & 0x80)) return;
     const unsigned lengths[] = {REG_NR11, REG_NR21, REG_NR31, REG_NR41};
-    const unsigned waveBank = (REG_NR30 >> 6) & 1;
+    const unsigned waveBank = REG_NR30 & 0x20 ? sWaveStartBank : (REG_NR30 >> 6) & 1;
     const unsigned waveLength = REG_NR30 & 0x20 ? 64 : 32;
     const unsigned routing = REG_NR51, levels = REG_NR50;
     const unsigned ratio = REG_SOUNDCNT_H & 3;
@@ -224,6 +229,13 @@ void PortPsg_Render(int16_t *stereo, unsigned frames, unsigned sampleRate)
                 unsigned volume = (REG_NR32 >> 5) & 3;
                 value = REG_NR32 & 0x80 ? sample * 192 : volume ? sample * 256 / (1 << (volume - 1)) : 0;
                 c->phase += 65536.0 * 32 / waveLength / (2048 - c->frequency) / sampleRate;
+                while (c->phase >= 1) c->phase -= 1;
+                unsigned active = (waveBank + (unsigned)(c->phase * waveLength) / 32) & 1;
+                if (active != ((REG_NR30 >> 6) & 1))
+                {
+                    REG_NR30 = (REG_NR30 & ~0x40) | (active << 6);
+                    memcpy((void *)0x04000090, sWaveBanks[active ^ 1], 16);
+                }
             }
             else
             {
