@@ -107,6 +107,36 @@ int main(void)
         assert(large[0xffff] == (channel == 3 ? 2 : 0));
     }
 
+    PortDma_Reset();
+    uint16_t dest[4] = {0};
+    PortDma_Write32(REG_ADDR_DMA0SAD, (uintptr_t)source16);
+    PortDma_Write32(REG_ADDR_DMA0DAD, (uintptr_t)dest);
+    PortDma_Write32(REG_ADDR_DMA0CNT_L,
+                   ((DMA_ENABLE | DMA_START_HBLANK | DMA_REPEAT | DMA_INTR_ENABLE |
+                     DMA_DEST_RELOAD) << 16) | 1);
+    PortDma_OnHBlank();
+    assert(dest[0] == 1 && PortIrq_Pending() == INTR_FLAG_DMA0);
+    PortIrq_Acknowledge(INTR_FLAG_DMA0);
+    PortDma_Stop(0);
+    PortDma_OnHBlank();
+    assert(dest[0] == 1 && !PortIrq_Pending());
+    // An identical control/count write after disable must latch the source anew.
+    PortDma_Write32(REG_ADDR_DMA0CNT_L,
+                   ((DMA_ENABLE | DMA_START_HBLANK | DMA_REPEAT | DMA_INTR_ENABLE |
+                     DMA_DEST_RELOAD) << 16) | 1);
+    PortDma_OnHBlank();
+    assert(dest[0] == 1);
+    PortDma_OnHBlank();
+    assert(dest[0] == 2);
+    PortDma_Stop(0);
+
+    // Simultaneous VBlank transfers retain channel priority (DMA0 then DMA3).
+    uint16_t a = 7, b = 9, shared = 0;
+    PortDma_Set(3, &b, &shared, ((DMA_ENABLE | DMA_START_VBLANK) << 16) | 1);
+    PortDma_Set(0, &a, &shared, ((DMA_ENABLE | DMA_START_VBLANK) << 16) | 1);
+    PortDma_OnVBlank();
+    assert(shared == 9);
+
     VirtualFree(io, 0, MEM_RELEASE);
     VirtualFree(iwram, 0, MEM_RELEASE);
     return 0;

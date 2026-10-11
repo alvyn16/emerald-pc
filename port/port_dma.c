@@ -10,7 +10,6 @@ struct DmaState
 {
     const uint8_t *source;
     uint8_t *destination;
-    uint8_t *initialDestination;
     unsigned count;
     unsigned flags;
     int armed;
@@ -87,9 +86,55 @@ void PortDma_Set(int channel, const void *source, void *destination, unsigned co
     const unsigned alignmentMask = (flags & DMA_32BIT) ? 3 : 1;
     source = (const void *)((uintptr_t)source & ~(uintptr_t)alignmentMask);
     destination = (void *)((uintptr_t)destination & ~(uintptr_t)alignmentMask);
-    *dma = (struct DmaState){source, destination, destination, count, flags, 1};
+    // Hardware address masks apply to GBA addresses, not native heap/image
+    // pointers that the i686 port also passes through DmaSet.
+    uintptr_t from = (uintptr_t)source, to = (uintptr_t)destination;
+    if (from < 0x10000000u) from &= channel == 0 ? 0x07ffffffu : 0x0fffffffu;
+    if (to < 0x10000000u) to &= channel == 3 ? 0x0fffffffu : 0x07ffffffu;
+    *dma = (struct DmaState){(const uint8_t *)from, (uint8_t *)to, count, flags, 1};
     if ((flags & DMA_START_MASK) == DMA_START_NOW)
         Transfer(channel, dma);
+}
+
+void PortDma_Reset(void)
+{
+    memset(sChannels, 0, sizeof(sChannels));
+    memset((void *)REG_ADDR_DMA0, 0, 48);
+}
+
+void PortDma_Write16(uintptr_t address, uint16_t value)
+{
+    if (address < REG_ADDR_DMA0 || address >= REG_ADDR_DMA0 + 48 || (address & 1)) return;
+    const unsigned channel = (address - REG_ADDR_DMA0) / 12;
+    const unsigned offset = (address - REG_ADDR_DMA0) % 12;
+    volatile uint16_t *regs = (volatile uint16_t *)(REG_ADDR_DMA0 + channel * 12);
+    const uint16_t oldControl = regs[5];
+    if (offset == 8) value &= channel == 3 ? 0xffff : 0x3fff;
+    if (offset == 10) value &= channel == 3 ? 0xffe0 : 0xf7e0;
+    regs[offset / 2] = value;
+    if (offset != 10) return;
+    if (!(value & DMA_ENABLE)) sChannels[channel].armed = 0;
+    else if (!(oldControl & DMA_ENABLE))
+    {
+        volatile uint32_t *wide = (volatile uint32_t *)regs;
+        PortDma_Set(channel, (const void *)(uintptr_t)wide[0],
+                    (void *)(uintptr_t)wide[1], wide[2]);
+    }
+}
+
+void PortDma_Write32(uintptr_t address, uint32_t value)
+{
+    if (address & 3) return;
+    PortDma_Write16(address, value);
+    PortDma_Write16(address + 2, value >> 16);
+}
+
+void PortDma_Stop(int channel)
+{
+    if (channel < 0 || channel > 3) return;
+    const uintptr_t address = REG_ADDR_DMA0CNT_H + channel * 12;
+    PortDma_Write16(address, *(volatile uint16_t *)address &
+                    ~(DMA_START_MASK | DMA_DREQ_ON | DMA_REPEAT | DMA_ENABLE));
 }
 
 static void OnEvent(unsigned start)
@@ -100,7 +145,7 @@ static void OnEvent(unsigned start)
         volatile uint16_t *control = (volatile uint16_t *)(uintptr_t)
                 (REG_ADDR_DMA0CNT_H + channel * 12);
         if (dma->armed && (*control & DMA_ENABLE) &&
-            (dma->flags & DMA_START_MASK) == start)
+            (*control & DMA_START_MASK) == start)
         {
             dma->flags = *control;
             Transfer(channel, dma);
