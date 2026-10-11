@@ -1,0 +1,70 @@
+From 712d55404ec1e4a3d10123c3e281c509e82e69ff Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 01:47:39 -0400
+Subject: [PATCH] Notify host PPU of buffered and scanline reference writes
+
+---
+ src/gpu_regs.c        | 6 ++++++
+ src/scanline_effect.c | 9 +++++++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/src/gpu_regs.c b/src/gpu_regs.c
+index d645c14..e960e69 100644
+--- a/src/gpu_regs.c
++++ b/src/gpu_regs.c
+@@ -1,5 +1,8 @@
+ #include "global.h"
+ #include "gpu_regs.h"
++#ifdef PORT_PC
++#include "port_ppu.h"
++#endif
+ 
+ #define GPU_REG_BUF_SIZE 0x60
+ 
+@@ -43,6 +46,9 @@ static void CopyBufferedValueToGpuReg(u8 regOffset)
+     else
+     {
+         GPU_REG(regOffset) = GPU_REG_BUF(regOffset);
++#ifdef PORT_PC
++        PortPpu_NotifyWrite(REG_BASE + regOffset, 2);
++#endif
+     }
+ }
+ 
+diff --git a/src/scanline_effect.c b/src/scanline_effect.c
+index 684c895..098c165 100644
+--- a/src/scanline_effect.c
++++ b/src/scanline_effect.c
+@@ -4,6 +4,9 @@
+ #include "task.h"
+ #include "trig.h"
+ #include "scanline_effect.h"
++#ifdef PORT_PC
++#include "port_ppu.h"
++#endif
+ 
+ static void CopyValue16Bit(void);
+ static void CopyValue32Bit(void);
+@@ -104,6 +107,9 @@ static void CopyValue16Bit(void)
+     vu16 *src = (vu16 *)&gScanlineEffectRegBuffers[gScanlineEffect.srcBuffer];
+ 
+     *dest = *src;
++#ifdef PORT_PC
++    PortPpu_NotifyWrite((uintptr_t)dest, 2);
++#endif
+ }
+ 
+ static void CopyValue32Bit(void)
+@@ -112,6 +118,9 @@ static void CopyValue32Bit(void)
+     vu32 *src = (vu32 *)&gScanlineEffectRegBuffers[gScanlineEffect.srcBuffer];
+ 
+     *dest = *src;
++#ifdef PORT_PC
++    PortPpu_NotifyWrite((uintptr_t)dest, 4);
++#endif
+ }
+ 
+ #define tStartLine            data[0]
+-- 
+2.51.0.windows.2
+
