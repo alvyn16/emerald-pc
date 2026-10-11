@@ -105,7 +105,7 @@ cambian con input real y callback de campo conservado. Capturas privadas en buil
 | Concurso | Categoría Cool/Normal, cinco rondas de apelación y retorno al campo | PASS |
 | Crianza | Mudkip + Ditto guardados, huevo generado por rutinas reales, especie Mudkip, IS_EGG=1, save | PASS; readiness del huevo dirigida, no espera de pasos ni eclosión |
 | Safari | Encuentro Oddish, huida outcome 4, 30 bolas intactas, equipo intacto, regreso y limpieza de modo | PASS; encuentro dirigido, no recepción/captura/cuota completa |
-| Battle Frontier | Tower singles, rival generado de la tabla de facility, Kyogre 50, victoria y save | PASS de un combate; no racha completa ni otras seis facilities |
+| Battle Frontier | Tower singles, rival generado de la tabla de facility, Swampert/Salamence/Metagross 50, victoria y save | PASS de un combate; no racha completa ni otras seis facilities |
 | Campaña continua | Intro → ocho medallas mediante scripts → equipos enemigos → Liga → créditos, con el mismo estado/save | PENDIENTE |
 | Historia | Wally, Aqua/Magma, meteorito, Weather Institute, Space Center, Sky Pillar/Rayquaza y eventos posteriores | PENDIENTE de recorrido |
 
