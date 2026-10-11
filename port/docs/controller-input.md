@@ -46,8 +46,7 @@ Mando no reconocido por la base SDL: teclado disponible; no se inventa soporte.
 - `input_sdl_test.c`: SDL real con joystick virtual GameController, botones,
   eje izquierdo, desconexión y reconexión. Vídeo dummy para ejecución automática;
   no usa un backend falso de mando. PASS.
-- SDL detectó **0 joysticks físicos** antes del fixture. Escucha/vibración,
-  identificación de modelos reales y conexión/desconexión física: pendientes
+- SDL detectó **0 joysticks físicos** antes del fixture. Identificación de modelos reales y conexión/desconexión física: pendientes
   de hardware; no se ha pedido ni registrado una aprobación inexistente.
 - Normal: casa → exterior de Littleroot sin batalla inesperada; PASS.
 - Diagnóstico: retirada PC y recarga en nuevo proceso; PASS con input por script.
