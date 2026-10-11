@@ -19,8 +19,7 @@ void PortHost_RunFrame(void) { }
 int PortReset_Restart(void) { return 0; }
 void Port_ExitCleanly(void) { }
 // BIOS waits are not exercised by this audio-only fixture.
-uint64_t PortIrq_WakeCounter(void) { return 0; }
-uint16_t PortIrq_Pending(void) { return 0; }
+void (*gIntrTable[14])(void);
 
 int main(void)
 {

@@ -172,7 +172,7 @@ void PortHost_RunFrame(void)
 #endif
         WaitForFrameDeadline();
 #ifdef PORT_DIAGNOSTIC
-    PortTimer_Advance(PORT_CYCLES_PER_FRAME);
+    const uint32_t frameCycles = PORT_CYCLES_PER_FRAME;
 #else
     // A faster display rate also advances the emulated clock faster.
     // Retain the small host timing variation used by the game's RNG seed.
@@ -185,7 +185,7 @@ void PortHost_RunFrame(void)
         elapsed = maxElapsed;
     sTimerLastTick = now;
     const Uint64 scaled = elapsed * 16777216u * multiplier + sTimerCycleRemainder;
-    PortTimer_Advance((uint32_t)(scaled / frequency));
+    const uint32_t frameCycles = (uint32_t)(scaled / frequency);
     sTimerCycleRemainder = scaled % frequency;
 #endif
     // A cooperative frame starts at VBlank, where Emerald commits OAM/VRAM,
@@ -210,12 +210,23 @@ void PortHost_RunFrame(void)
             PortPpu_BeginFrame();
         if (y < PORT_SCREEN_HEIGHT)
             PortPpu_RenderLine(y, sPixels + y * PORT_SCREEN_WIDTH);
+        // Device time advances at phase boundaries; native instructions do
+        // not have ARM cycle costs. Distribute host variation without losing
+        // a cycle; diagnostics always total exactly 280896 cycles/frame.
+        const uint64_t startCycle = (uint64_t)step * 1232;
+        const uint32_t drawCycles = frameCycles * (startCycle + 1006) / PORT_CYCLES_PER_FRAME
+                                 - frameCycles * startCycle / PORT_CYCLES_PER_FRAME;
+        const uint32_t blankCycles = frameCycles * (startCycle + 1232) / PORT_CYCLES_PER_FRAME
+                                  - frameCycles * (startCycle + 1006) / PORT_CYCLES_PER_FRAME;
+        PortTimer_Advance(drawCycles);
         REG_DISPSTAT |= DISPSTAT_HBLANK;
         // HBlank status/IRQ runs on all lines; HBlank DMA only on visible ones.
         if (y < PORT_SCREEN_HEIGHT)
             PortDma_OnHBlank();
         if (REG_DISPSTAT & DISPSTAT_HBLANK_INTR)
             PortIrq_Raise(INTR_FLAG_HBLANK);
+        PortIrq_Dispatch();
+        PortTimer_Advance(blankCycles);
         PortIrq_Dispatch();
     }
     PresentFrame(0);

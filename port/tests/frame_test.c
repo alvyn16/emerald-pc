@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <setjmp.h>
 #include <string.h>
+#include <stdio.h>
 #define NOMINMAX
 #include <windows.h>
 
@@ -28,6 +29,7 @@ static unsigned sVCounts;
 static unsigned sRenderedLines;
 static unsigned sHBlankDma;
 static unsigned sVBlankDma;
+static int sVBlankDmaReady;
 static unsigned sExpectedVCount = 42;
 static unsigned sLineVisits[228];
 static int sQuitEvent;
@@ -67,12 +69,15 @@ static void VBlank(void)
 {
     assert(REG_VCOUNT == 160);
     assert(REG_DISPSTAT & DISPSTAT_VBLANK);
+    assert(sVBlankDmaReady); // DMA precedes the IRQ callback.
+    sVBlankDmaReady = 0;
     sVBlanks++;
     gMain.intrCheck |= INTR_FLAG_VBLANK;
 }
 static void HBlank(void)
 {
     assert(REG_VCOUNT < 228);
+    assert(REG_VCOUNT == (160 + sHBlanks) % 228);
     assert(!!(REG_DISPSTAT & DISPSTAT_VBLANK) ==
            (REG_VCOUNT >= 160 && REG_VCOUNT < 227));
     assert(REG_DISPSTAT & DISPSTAT_HBLANK);
@@ -87,15 +92,16 @@ static void VCount(void)
 }
 void Port_ExitCleanly(void) { longjmp(sExit, 1); }
 void PortPpu_Render(uint32_t *pixels) { (void)pixels; }
-void PortPpu_BeginFrame(void) { }
+void PortPpu_BeginFrame(void) { sVBlankDmaReady = 0; }
 void PortPpu_RenderLine(unsigned y, uint32_t *row)
 {
     (void)row;
     assert(REG_VCOUNT == y);
+    assert(!(REG_DISPSTAT & (DISPSTAT_VBLANK | DISPSTAT_HBLANK)));
     sRenderedLines++;
 }
 void PortDma_OnHBlank(void) { sHBlankDma++; }
-void PortDma_OnVBlank(void) { sVBlankDma++; }
+void PortDma_OnVBlank(void) { sVBlankDma++; sVBlankDmaReady = 1; }
 void PortAudio_SubmitFrame(void) { }
 
 int main(void)
@@ -135,9 +141,15 @@ int main(void)
     assert(sVBlanks == 2);
 
     Uint64 start = sCounter;
+    LARGE_INTEGER wallStart, wallEnd, wallFrequency;
+    QueryPerformanceFrequency(&wallFrequency);
+    QueryPerformanceCounter(&wallStart);
     for (int i = 0; i < 1000; ++i)
         PortHost_RunFrame();
     Uint64 expected = 1000000ull * 10000 * 1000 / 597275;
+    QueryPerformanceCounter(&wallEnd);
+    printf("calendar fixture: 1000 frames %.3f ms (mock SDL, no PPU)\n",
+           1000.0 * (wallEnd.QuadPart - wallStart.QuadPart) / wallFrequency.QuadPart);
     Uint64 elapsed = sCounter - start;
     assert(elapsed >= expected - 2000 && elapsed <= expected + 2000);
     assert(sVBlanks == 1002);
@@ -196,6 +208,26 @@ int main(void)
     PortHost_RunFrame();
     assert(sVBlanks == 1006 && INTR_CHECK == 0 && gMain.intrCheck == 0);
     assert(PortIrq_Pending() == INTR_FLAG_VBLANK);
+
+    SDL_Event speed;
+    memset(&speed, 0, sizeof(speed));
+    speed.type = SDL_KEYDOWN;
+    speed.key.keysym.sym = SDLK_p;
+    PortSpeedMenu_HandleEvent(&speed);
+    speed.key.keysym.sym = SDLK_DOWN;
+    for (unsigned i = 0; i < 3; ++i) PortSpeedMenu_HandleEvent(&speed);
+    speed.key.keysym.sym = SDLK_RETURN;
+    PortSpeedMenu_HandleEvent(&speed);
+    assert(PortSpeedMenu_Multiplier() == 4);
+    PortIrq_Reset();
+    REG_IE = INTR_FLAG_VBLANK;
+    REG_IME = 1;
+    PortHost_RunFrame(); // Settle the transition from 1x.
+    start = sCounter;
+    for (unsigned i = 0; i < 1000; ++i) PortHost_RunFrame();
+    elapsed = sCounter - start;
+    expected = 1000000ull * 10000 * 1000 / (597275 * 4);
+    assert(elapsed >= expected - 2000 && elapsed <= expected + 2000);
     VirtualFree(io, 0, MEM_RELEASE);
     VirtualFree(iwram, 0, MEM_RELEASE);
     return 0;
