@@ -868,3 +868,13 @@ Se reprodujeron accesos nulos en prioridad del sprite y callback tras liberar
 sStorage; parche 0036 PORT_PC. Los seis menús pasan tres ciclos y las cuatro
 operaciones del PC pasan mutación, campo, guardado y recarga en nuevo proceso.
 Detalles y reproducción en gameplay-matrix.md.
+
+## T27 — contenido por segmentos
+
+32 mapas, marcha/bici/surf, cinco combates de Liga, Hall of Fame/créditos,
+concurso, huevo, Safari y Tower singles pasan sus comprobaciones semánticas.
+0037 corrige argumento nulo de lluvia; 0038/0039 evitan esperas de RFU ausente;
+0040 conserva resto ARM con divisor cero. GBA compare OK con KEEP_TEMPS=1
+NODEP=1 tras una espera de make al regenerar dependencias; fuentes modificadas
+recompiladas y ROM verificada. Campaña continua permanece pendiente.
+Detalles y límites en gameplay-matrix.md.
