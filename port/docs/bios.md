@@ -10,11 +10,11 @@
 | `Div`, `DivArm`, `Sqrt`, `ArcTan2` | Cálculo host; división por cero devuelve 0 y registra diagnóstico. `DivArm` invierte el orden de argumentos. |
 | `BgAffineSet`, `ObjAffineSet` | Matrices afines en punto fijo 8.8 a partir de escala y ángulo. |
 | `VBlankIntrWait`, `IntrWait`, `Halt` | Sirven eventos/frames hasta cumplir la condición IRQ. IntrWait fuerza IME=1, descarta opcionalmente flags previos y consume solo los coincidentes. VBlankIntrWait solicita un VBlank nuevo. Halt espera IE&IF o una nueva solicitud habilitada, sin requerir IME. |
-| `RegisterRamReset` | Stub de reset por flags pendiente de T19. No limpia RAM en mitad de ejecución. El arranque host inicializa memoria, teclas liberadas y DISPCNT forced blank. |
+| `RegisterRamReset` | Reset por flags de RAM/registros/modelos GBA; preserva pila/heap/globals nativos, ROM y los últimos 0x200 bytes de IWRAM. Detalles y pruebas en T19 abajo. |
 | `SoftReset` | En el normal relanza mediante CreateProcessW y termina con cleanup; fallo devuelve código 1 con error. Diagnóstico termina su recorrido. Detalles en `reset.md`. |
 | `MultiBoot` | **Stub seguro** adicional: devuelve error; el cable/link GBA no existe en PC. |
 
-Las variantes `Vram` escriben los mismos bytes descomprimidos que las variantes `Wram`; no reproducen restricciones eléctricas del bus VRAM. Los decodificadores comprueban el byte de tipo y rechazan una referencia LZ77 hacia antes del comienzo de la salida. No validan el tamaño total de la entrada comprimida porque la API GBA no proporciona ese tamaño; se usarán con los recursos del juego. `RegisterRamReset` sigue pendiente; las esperas usan un modelo cooperativo sin ejecutar instrucciones ARM ni prometer precisión de CPU.
+Las variantes `Vram` escriben los mismos bytes descomprimidos que las variantes `Wram`; no reproducen restricciones eléctricas del bus VRAM. Los decodificadores comprueban el byte de tipo y rechazan una referencia LZ77 hacia antes del comienzo de la salida. No validan el tamaño total de la entrada comprimida porque la API GBA no proporciona ese tamaño; se usarán con los recursos del juego. `RegisterRamReset` actúa sobre las regiones GBA seleccionadas; las esperas usan un modelo cooperativo sin ejecutar instrucciones ARM ni prometer precisión de CPU.
 
 Verificación focalizada (MINGW32):
 
@@ -79,7 +79,7 @@ los ángulos. Los límites de precisión de tiempo están en video-calendar.md.
 Evidencia local: `build/t18-copy-before.log`, `t18-math-before.log` y
 `t18-affine-before.log` reproducen los tres fallos previos. Sus respectivos
 logs `*-build.log` y `build/t18-final-build.log` verifican las correcciones;
-la suite completa contiene 17 ejecutables. RegisterRamReset sigue en T19.
+la suite completa contenía 17 ejecutables. T19 se verificó después, abajo.
 
 ## T19 — RegisterRamReset (2026-10-11)
 

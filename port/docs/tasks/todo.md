@@ -299,11 +299,11 @@ hito 27 entero ni todo el juego.
 
 ### T19 — RegisterRamReset por flags (M)
 
-- [ ] Resetear regiones/registros GBA solicitados con la exclusión que
+- [x] Resetear regiones/registros GBA solicitados con la exclusión que
   requieren pila/estado host; no borrar heap/stack nativos ni ROM original.
-- [ ] Restablecer módulos internos coherentemente (DMA/IRQ/timers/PSG),
+- [x] Restablecer módulos internos coherentemente (DMA/IRQ/timers/PSG),
   sin introducir referencias a un modelo anterior al reset.
-- [ ] Probar cada flag y combinaciones usadas en arranque/reinicio.
+- [x] Probar cada flag y combinaciones usadas en arranque/reinicio.
 
 Dependencias: T12, T13, T18. Archivos: `bios.c`, módulo coordinador de reset,
 pruebas y documento. Verificación: canarios de regiones y reset real de T07.
@@ -312,11 +312,11 @@ pruebas y documento. Verificación: canarios de regiones y reset real de T07.
 
 ### T20 — RTC host (M por incremento)
 
-- [ ] Proporcionar fecha/hora, presencia y errores mediante capa host de RTC
+- [x] Proporcionar fecha/hora, presencia y errores mediante capa host de RTC
   compatible con las funciones siirtc usadas por el juego.
-- [ ] Persistir desfase/configuración en saves/; pruebas con reloj inyectado,
+- [x] Persistir desfase/configuración en saves/; pruebas con reloj inyectado,
   avance de días y retroceso del reloj sin acelerar con 2×–4×.
-- [ ] Verificar reloj del dormitorio y un evento diario/berries real;
+- [x] Verificar reloj del dormitorio y un evento diario/berries real;
   documentar desfases/zonas horarias y compatibilidad con saves anteriores.
 
 Dependencias: T06, T08, T19. Archivos: nuevo `port/port_rtc.*`, test RTC,
@@ -327,25 +327,32 @@ Verificación: fecha/hora deterministas y recorrido diario aislado.
 
 ### T21 — PCM/secuenciador m4a (M por familia)
 
-- [ ] Comparar música/efectos/gritos en fixtures y referencias locales:
+- [x] Comparar música/efectos/gritos en fixtures y referencias locales:
   tempo, pitch, pan, ADSR, bucles, compresión y reverberación.
-- [ ] Revisar límites, fin de muestras y comandos de patrones; corregir
+- [x] Revisar límites, fin de muestras y comandos de patrones; corregir
   discrepancias sin copiar código ARM al repositorio.
-- [ ] Guardar WAV/mediciones solo en build/ y registrar resultado de escucha.
+- [x] Guardar WAV/mediciones solo en build/ y registrar resultado de escucha.
 
 Dependencias: T04, T12, T18. Archivos: `m4a_engine.*`, prueba m4a, informe.
 Verificación: vectores sintéticos y escenas musicales identificadas.
 
 ### T22 — PSG y bancos de onda (M)
 
-- [ ] Capturar writes de bancos y triggers, incluidos cambios múltiples
+- [x] Capturar writes de bancos y triggers, incluidos cambios múltiples
   entre frames; conservar ambos bancos según comportamiento documentado.
-- [ ] Verificar square/sweep/envelope/length/noise y routing, más secuencias
+- [x] Verificar square/sweep/envelope/length/noise y routing, más secuencias
   reales de escrituras usadas por m4a.
-- [ ] Probar que apagar/encender/resetear canales no conserva estado espurio.
+- [x] Probar que apagar/encender/resetear canales no conserva estado espurio.
 
 Dependencias: T08, T12, T21. Archivos: `port_psg.*`, test PSG, patch de writes,
 informe. Verificación: wave banks y fases con datos propios.
+
+Evidencia T19–T22 (2026-10-11): `bios.md` T19, `rtc.md`,
+`audio-model.md` y `milestones-27-29-review.md`. 19 suites, reset real,
+reloj del dormitorio/berry/evento diario, 1.134 muestras PCM contra ARM,
+PSG con writes reales y dos bancos, WAV locales y escucha del usuario.
+Builds normal/diagnóstico y reproducción de 31 parches PASS; compare OK.
+T23 sigue pendiente; no se declara equivalencia por ciclo ni campaña completa.
 
 ### T23 — salida SDL, pausa y velocidad (M)
 

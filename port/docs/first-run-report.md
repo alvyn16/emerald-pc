@@ -771,3 +771,48 @@ usuario mantiene SHA256
 Siguiente tarea: **T19, RegisterRamReset por flags**, que aún es un no-op
 host documentado. RTC, fidelidad de audio y campaña completa conservan sus
 tareas pendientes. No se hizo push de esta cadena.
+
+## T19–T22 — reset BIOS, RTC y audio (2026-10-11)
+
+- T19: RegisterRamReset aplica flags a regiones/registros GBA y restablece
+  DMA/timers/IRQ/PSG; excluye últimos 0x200 IWRAM, ROM y estado C nativo.
+  Canarios/flags PASS, igual que reset real por teclado/juego/error spawner.
+- T20/0030: RTC fecha BCD, configuración persistida junto al save, sin GPIO.
+  El reloj del dormitorio se confirma en 19.531. Cheri brota a +3h;
+  VAR_DAYS=1 a +24h; rollback no duplica eventos. Fixture aislado en 30.500.
+  El reloj avanza con Windows, independiente de velocidad de frames.
+- T21: reverb/contador/rounding, sustain cero y suma PCM corregidos. 1.134
+  muestras de ondas propias contrastadas con SoundMain ARM del build GBA.
+  Se preservan bounds/final de muestra seguro, sin publicar código/assets.
+- T22/0031: 42 writes m4a observables, uploads y triggers del mismo valor,
+  ambos bancos y cambio de banco activo en modo 64 muestras; reloj ruido
+  corregido. Secuencia real CgbSound y fixtures PSG exactos PASS.
+
+WAV de título (413), efecto selección (5) y grito Torchic (280) en
+`build/audio-scene-regression/`, PCM16 stereo 48kHz, 10,062354 segundos
+cada uno; mediciones en audio-model.md. El usuario escuchó los tres y
+respondió «Se oyen reconocibles». No se confunde esto con equivalencia
+bit a bit de todas las canciones ni captura original de hardware.
+
+| Gate | Resultado / evidencia local |
+| --- | --- |
+| Builds normal/diagnóstico + 19 suites | PASS, t22-dual-build.log |
+| Clon base + 31 parches + builds/19 suites | PASS, t22-clean-setup.log y t22-clean-final.log |
+| Árbol upstream idéntico | 299f542a9c0d1a6d82ebd7645556e49bdc409692 |
+| GBA original | pokeemerald.gba: OK, t22-gba-compare.log |
+| Normal: salida casa sin batalla | PASS, t22-normal.log |
+| Salvaje a 4×: victoria/regreso/salida | PASS, t22-battle.log, victoria frame 33.365 |
+| Save: reapertura/corrupción/escritura interrumpida | PASS, t22-save.log |
+| RTC: reloj/berry/día/retroceso | PASS, t20-game.log |
+| Reset proceso teclado/juego/error | PASS, t19-reset-game.log |
+| Audio de escenas reales | PASS, t21-scenes.log |
+
+No apareció una nueva excepción/bloqueo en estos recorridos. Los tests
+no cubren todos los combates, mapas o eventos. El save normal mantiene
+SHA256 B5A41C3758763BBEC72769FAB4A2533BF2DB0B6312D93D25A695F9E4B9E02260.
+La ROM original no se modifica. Se instaló Unicorn 2.1.4 como dependencia
+opcional de la referencia ARM; no hace falta para jugar.
+
+Siguiente tarea: **T23, salida SDL/pausa/velocidad**, seguida de la matriz
+más amplia de juego. Sigue pendiente enlace, campaña, x64 y otros hosts.
+T19–T22 quedan cerradas según los contratos documentados. Sin push.
