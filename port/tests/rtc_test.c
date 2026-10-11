@@ -29,6 +29,21 @@ int main(void)
     for (unsigned speed=1;speed<=4;++speed)
         for (unsigned frames=0;frames<10000;++frames)
         { struct SiiRtcInfo same; assert(PortRtc_Get(&same)); assert(same.second==date.second); }
+    struct SiiRtcInfo last=date;
+    now=4102444800LL;
+    memset(&date,0xa5,sizeof(date));
+    assert(!PortRtc_Get(&date));
+    assert(date.year==last.year && date.month==last.month && date.day==last.day);
+    assert(date.status & 0x80); // Failure still supplies valid date to unchecked game callers.
+    assert(PortRtc_GetStatus(&date) && (date.status & 0x80));
+
+    now=INT64_MAX; assert(!PortRtc_Get(&date));
+    assert(!PortRtc_Set(&last)); // Reject offsets that cannot survive reopen.
+    now=INT64_MIN;
+    assert(PortRtc_Get(&date) && date.year==last.year && date.day==last.day);
+    assert(!PortRtc_Set(&last));
+    now=1709078461;
+    assert(PortRtc_Get(&date) && !(date.status & 0x80));
     date.month=2; date.day=0x30; assert(!PortRtc_Set(&date));
     date.month=0xfa; assert(!PortRtc_Set(&date));
     assert(!PortRtc_Get(NULL));

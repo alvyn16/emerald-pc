@@ -63,6 +63,14 @@ assert int(gdb.parse_and_eval("(unsigned short)VarGet(0x4040)")) == 1
 assert int(gdb.parse_and_eval("*(unsigned long long *)(*(unsigned int *)&gSaveBlock2Ptr + 0xa0)")) == int(gdb.parse_and_eval("$berry_time"))
 end
 printf "ROLLBACK no duplicate events\n"
+call (void)PortRtc_DiagnosticSetTime(4102444800LL)
+call (void)DoTimeBasedEvents()
+python
+assert int(gdb.parse_and_eval("(unsigned short)VarGet(0x4040)")) == 1
+assert int(gdb.parse_and_eval("*(unsigned long long *)(*(unsigned int *)&gSaveBlock2Ptr + 0xa0)")) == int(gdb.parse_and_eval("$berry_time"))
+end
+printf "INVALID CLOCK safe date, no false daily update\n"
+call (void)PortRtc_DiagnosticSetTime(1709251200LL)
 continue
 quit
 """
@@ -72,6 +80,6 @@ log = scratch/"gdb.log"
 result = run_logged(["gdb","-batch","-x",str(script),str(scratch/"build/emerald-pc-diagnostic.exe")],project,log,"PC diagnostic: frame=")
 text = log.read_text(encoding="utf-8",errors="replace")
 assert result == 0 and "received signal" not in text and "exited normally" in text, text[-3000:]
-for marker in ("BEDROOM CLOCK set", "BERRY sprouted", "DAILY counter=1", "ROLLBACK no duplicate"):
+for marker in ("BEDROOM CLOCK set", "BERRY sprouted", "DAILY counter=1", "ROLLBACK no duplicate", "INVALID CLOCK safe date"):
     assert marker in text, marker
 print("PASS RTC: bedroom, berry growth, daily event and rollback;",log)

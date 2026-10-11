@@ -5,6 +5,18 @@
 #include <windows.h>
 #include "port_rtc.h"
 
+#define RTC_FIRST 946684800LL
+#define RTC_END 4102444800LL
+#define RTC_MAX_OFFSET 3155760000LL
+
+/* Check before adding offsets: injected/changed clocks may be any int64. */
+static int ClockTime(int64_t clock, int64_t offset, int64_t *result)
+{
+    if (clock < RTC_FIRST - offset || clock >= RTC_END - offset) return 0;
+    *result = clock + offset;
+    return 1;
+}
+
 struct RtcState { int64_t offset, last; unsigned status; };
 static struct RtcState sState;
 static char sPath[MAX_PATH];
@@ -65,8 +77,8 @@ int PortRtc_OpenFile(const char *path)
         DWORD kind = GetTimeZoneInformation(&zone);
         long bias = kind == TIME_ZONE_ID_INVALID ? 0 : zone.Bias
                     + (kind == TIME_ZONE_ID_DAYLIGHT ? zone.DaylightBias : zone.StandardBias);
-        sState = (struct RtcState){-(int64_t)bias * 60, sClock() - (int64_t)bias * 60, 0x40};
-        if (sState.last < 946684800LL || sState.last >= 4102444800LL) return -1;
+        sState = (struct RtcState){-(int64_t)bias * 60, 0, 0x40};
+        if (!ClockTime(sClock(), sState.offset, &sState.last)) return -1;
         if (!Persist()) return -1;
     }
     sReady = 1;
@@ -96,8 +108,9 @@ int PortRtc_Open(void)
 
 static int64_t GuestTime(void)
 {
-    int64_t now = sClock() + sState.offset;
-    if (now >= 4102444800LL) return -1;
+    int64_t clock = sClock(), now;
+    if (clock < RTC_FIRST - sState.offset) return sState.last;
+    if (!ClockTime(clock, sState.offset, &now)) return -1;
     if (now > sState.last) sState.last = now;
     return sState.last; // OS clock rollback freezes time until it catches up.
 }
@@ -112,15 +125,19 @@ static int Binary(unsigned bcd)
 { return bcd > 0x99 || (bcd & 15) > 9 ? -1 : (int)((bcd >> 4) * 10 + (bcd & 15)); }
 int PortRtc_Get(struct SiiRtcInfo *info)
 {
-    if (!sReady || !info) return 0;
+    if (!info) return 0;
+    *info = (struct SiiRtcInfo){.month=1, .day=1, .status=0xc0};
+    if (!sReady) return 0;
     __time64_t now = GuestTime();
+    int valid = now >= RTC_FIRST;
+    if (!valid) now = sState.last; // rtc.c ignores transport errors: supply safe last date.
     struct tm date;
     if (_gmtime64_s(&date, &now) || date.tm_year < 100 || date.tm_year > 199) return 0;
     info->year = Bcd(date.tm_year - 100); info->month = Bcd(date.tm_mon + 1);
     info->day = Bcd(date.tm_mday); info->dayOfWeek = date.tm_wday;
     info->hour = Bcd(date.tm_hour); info->minute = Bcd(date.tm_min); info->second = Bcd(date.tm_sec);
-    info->status = sState.status;
-    return 1;
+    info->status = sState.status | (valid ? 0 : 0x80);
+    return valid;
 }
 int PortRtc_Set(const struct SiiRtcInfo *info)
 {
@@ -136,13 +153,19 @@ int PortRtc_Set(const struct SiiRtcInfo *info)
     if (seconds < 946684800LL || date.tm_year != requested.tm_year || date.tm_mon != requested.tm_mon
         || date.tm_mday != requested.tm_mday || date.tm_hour != requested.tm_hour
         || date.tm_min != requested.tm_min || date.tm_sec != requested.tm_sec) return 0;
+    int64_t clock = sClock();
+    if (clock < seconds - RTC_MAX_OFFSET || clock > seconds + RTC_MAX_OFFSET) return 0;
     struct RtcState previous = sState;
-    sState.offset = seconds - sClock(); sState.last = seconds;
+    sState.offset = seconds - clock; sState.last = seconds;
     if (!Persist()) { sState = previous; return 0; }
     return 1;
 }
 int PortRtc_GetStatus(struct SiiRtcInfo *info)
-{ if (!sReady || !info) return 0; info->status = sState.status; return 1; }
+{
+    if (!info) return 0;
+    info->status = sReady ? sState.status | (GuestTime() < 0 ? 0x80 : 0) : 0xc0;
+    return sReady;
+}
 int PortRtc_SetStatus(const struct SiiRtcInfo *info)
 {
     if (!sReady || !info) return 0;
