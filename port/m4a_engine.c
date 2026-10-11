@@ -77,26 +77,41 @@ static int AdvanceEnvelope(struct SoundChannel *c, unsigned index)
     {
         volume = volume * c->decay >> 8;
         if (volume <= c->sustain)
-        { volume = c->sustain; c->statusFlags = (c->statusFlags & ~SOUND_CHANNEL_SF_ENV) | SOUND_CHANNEL_SF_ENV_SUSTAIN; }
+        {
+            volume = c->sustain;
+            if (!volume)
+            {
+                volume = c->pseudoEchoVolume;
+                if (!volume) { c->statusFlags = 0; return 0; }
+                c->statusFlags |= SOUND_CHANNEL_SF_IEC;
+            }
+            else c->statusFlags = (c->statusFlags & ~SOUND_CHANNEL_SF_ENV) | SOUND_CHANNEL_SF_ENV_SUSTAIN;
+        }
     }
     c->envelopeVolume = volume;
     return 1;
 }
 
-static int8_t ClipSample(int value)
-{ return value < -128 ? -128 : value > 127 ? 127 : value; }
+/* m4a's packed byte additions wrap; saturation would change loud passages. */
+static int8_t MixByte(int value) { return (int8_t)(uint8_t)value; }
 
 static void MixPcm(struct SoundInfo *sound)
 {
     int left[PCM_DMA_BUF_SIZE] = {0}, right[PCM_DMA_BUF_SIZE] = {0};
-    const unsigned period = sound->pcmDmaPeriod ? sound->pcmDmaPeriod : 1;
+    unsigned period = sound->pcmDmaPeriod ? sound->pcmDmaPeriod : 1;
+    const unsigned capacity = PCM_DMA_BUF_SIZE / sMixSamples;
+    if (period > capacity) period = capacity;
     const unsigned counter = sound->pcmDmaCounter <= period ? sound->pcmDmaCounter : 0;
-    const unsigned offset = ((period + 1 - counter) % period) * sMixSamples;
+    const unsigned offset = counter <= 1 ? 0 : (period + 1 - counter) * sMixSamples;
     const unsigned nextOffset = (offset + sMixSamples) % (period * sMixSamples);
     if (sound->reverb)
         for (unsigned i = 0; i < sMixSamples; ++i)
-            left[i] = right[i] = (sound->pcmBuffer[offset + i] + sound->pcmBuffer[offset + i + PCM_DMA_BUF_SIZE]
-                    + sound->pcmBuffer[nextOffset + i] + sound->pcmBuffer[nextOffset + i + PCM_DMA_BUF_SIZE]) * sound->reverb / 512;
+            {
+                int product = (sound->pcmBuffer[offset + i] + sound->pcmBuffer[offset + i + PCM_DMA_BUF_SIZE]
+                    + sound->pcmBuffer[nextOffset + i] + sound->pcmBuffer[nextOffset + i + PCM_DMA_BUF_SIZE]) * sound->reverb;
+                int value = product >> 9;
+                left[i] = right[i] = value < 0 ? value + 1 : value;
+            }
     for (unsigned channel = 0; channel < sound->maxChans && channel < MAX_DIRECTSOUND_CHANNELS; ++channel)
     {
         struct SoundChannel *c = &sound->chans[channel];
@@ -109,6 +124,8 @@ static void MixPcm(struct SoundInfo *sound)
         c->envelopeVolumeRight = rv;
         const uint64_t step = c->type & TONEDATA_TYPE_FIX ? 0x800000u : (uint64_t)c->frequency * (unsigned)sound->divFreq;
         unsigned position = sPositions[channel];
+        if (!wave || !wave->size || position >= wave->size)
+        { c->statusFlags = 0; continue; }
         const int reverse = (c->type & 0x10) != 0;
         for (unsigned i = 0; i < sMixSamples; ++i)
         {
@@ -144,8 +161,8 @@ static void MixPcm(struct SoundInfo *sound)
     }
     for (unsigned i = 0; i < sMixSamples; ++i)
     {
-        sLeft[i] = ClipSample(left[i]);
-        sRight[i] = ClipSample(right[i]);
+        sLeft[i] = MixByte(left[i]);
+        sRight[i] = MixByte(right[i]);
         sound->pcmBuffer[offset + i] = sLeft[i];
         sound->pcmBuffer[offset + i + PCM_DMA_BUF_SIZE] = sRight[i];
     }
@@ -495,7 +512,8 @@ void SoundMain(void)
 void PortM4a_GetLastMix(const int8_t **left, const int8_t **right, unsigned *samples)
 {
     const struct SoundInfo *sound = SOUND_INFO_PTR;
-    *left = sLeft;
-    *right = sRight;
+    static const int8_t silence[PCM_DMA_BUF_SIZE];
+    *left = REG_SOUNDCNT_X & 0x80 ? sLeft : silence;
+    *right = REG_SOUNDCNT_X & 0x80 ? sRight : silence;
     *samples = sound != NULL && sound->ident == ID_NUMBER ? sMixSamples : 0;
 }
