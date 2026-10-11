@@ -101,6 +101,19 @@ int main(void)
     assert(REG_TM1CNT_L == 0xffff);
     assert(PortIrq_Pending() == INTR_FLAG_TIMER1);
 
+    Reset();
+    PortTimer_Write32(REG_ADDR_TM0CNT_L, ((TIMER_ENABLE | TIMER_64CLK) << 16) | 10);
+    PortTimer_Advance(63);
+    assert(REG_TM0CNT_L == 10);
+    PortTimer_Write16(REG_ADDR_TM0CNT_H, TIMER_ENABLE);
+    PortTimer_Advance(1);
+    assert(REG_TM0CNT_L == 11); // Old divider remainder is not 63 new ticks.
+    PortTimer_Write16(REG_ADDR_TM0CNT_H, TIMER_ENABLE | TIMER_256CLK);
+    PortTimer_Advance(191);
+    assert(REG_TM0CNT_L == 11);
+    PortTimer_Advance(1);
+    assert(REG_TM0CNT_L == 12); // Prescaler aligns to the common device clock.
+
     VirtualFree(io, 0, MEM_RELEASE);
     VirtualFree(iwram, 0, MEM_RELEASE);
     return 0;

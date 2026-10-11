@@ -11,14 +11,15 @@ struct TimerState
     uint16_t reload;
     uint16_t lastWritten;
     uint16_t control;
-    uint16_t dividerRemainder;
 };
 
 static struct TimerState sTimers[4];
+static uint64_t sCycles;
 
 void PortTimer_Reset(void)
 {
     memset(sTimers, 0, sizeof(sTimers));
+    sCycles = 0;
     memset((void *)REG_ADDR_TM0CNT_L, 0, 16);
 }
 
@@ -35,7 +36,6 @@ void PortTimer_Write16(uintptr_t address, uint16_t value)
         if ((value & TIMER_ENABLE) && !(timer->control & TIMER_ENABLE))
         {
             timer->counter = timer->reload;
-            timer->dividerRemainder = 0;
         }
         timer->control = value;
         *(volatile uint16_t *)address = value;
@@ -71,6 +71,8 @@ void PortTimer_Advance(uint32_t cycles)
     static const unsigned prescaler[] = {1, 64, 256, 1024};
     volatile uint16_t *const registers = (volatile uint16_t *)REG_ADDR_TM0CNT_L;
     uint32_t previousOverflows = 0;
+    const uint64_t before = sCycles;
+    sCycles += cycles;
 
     for (unsigned i = 0; i < 4; i++)
     {
@@ -90,7 +92,6 @@ void PortTimer_Advance(uint32_t cycles)
         if (enabled && !wasEnabled)
         {
             timer->counter = timer->reload;
-            timer->dividerRemainder = 0;
         }
         if (enabled)
         {
@@ -99,9 +100,9 @@ void PortTimer_Advance(uint32_t cycles)
             else
             {
                 const uint32_t divider = prescaler[control & 3];
-                const uint64_t accumulated = (uint64_t)cycles + timer->dividerRemainder;
-                ticks = accumulated / divider;
-                timer->dividerRemainder = accumulated % divider;
+                // Hardware prescalers share a clock phase. A control change
+                // cannot reinterpret an old fractional tick as new ticks.
+                ticks = (uint32_t)(sCycles / divider - before / divider);
             }
             previousOverflows = AddTicks(timer, ticks);
             if (previousOverflows && (control & TIMER_INTR_ENABLE))
