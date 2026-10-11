@@ -15,6 +15,8 @@ typedef struct {
     uint8_t layer;
     uint8_t semiTransparent;
 } PixelLayer;
+static PixelLayer sObject[PORT_SCREEN_WIDTH];
+static uint8_t sObjectPriority[PORT_SCREEN_WIDTH];
 
 static PixelLayer sTop[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
 static PixelLayer sSecond[PORT_SCREEN_WIDTH * PORT_SCREEN_HEIGHT];
@@ -24,9 +26,7 @@ static uint32_t sAffineRegX[2], sAffineRegY[2];
 
 static void PlotPixel(unsigned position, uint16_t color, unsigned layer, int semiTransparent)
 {
-    // The GBA exposes only the frontmost OBJ pixel to color effects.
-    if (layer != 4 || sTop[position].layer != 4)
-        sSecond[position] = sTop[position];
+    sSecond[position] = sTop[position];
     sTop[position] = (PixelLayer){color, (uint8_t)layer, (uint8_t)semiTransparent};
 }
 
@@ -230,7 +230,7 @@ static void SpriteDimensions(unsigned shape, unsigned size, unsigned *width, uns
     *height = heights[shape][size];
 }
 
-static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y, int windowOnly)
+static void RenderSprites(uint16_t displayControl, unsigned y, int windowOnly)
 {
     const unsigned oneDimensional = (displayControl & DISPCNT_OBJ_1D_MAP) != 0;
     for (int sprite = 127; sprite >= 0; --sprite)
@@ -243,7 +243,7 @@ static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y
         const int affine = (attr0 & 0x0100) != 0;
         const int doubleSize = affine && (attr0 & 0x0200);
         if ((!affine && (attr0 & 0x0200)) || shape == 3 || objectMode == 3 ||
-            (windowOnly ? objectMode != 2 : objectMode == 2 || ((attr2 >> 10) & 3) != priority))
+            (windowOnly ? objectMode != 2 : objectMode == 2))
             continue;
 
         unsigned width, height;
@@ -320,8 +320,10 @@ static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y
                         continue;
                     }
                     const unsigned paletteIndex = bpp8 ? index : ((attr2 >> 12) * 16 + index);
-                    PlotPixel(screenY * PORT_SCREEN_WIDTH + screenX,
-                              PALETTE[256 + paletteIndex], 4, objectMode == 1);
+                    // Select one OBJ by OAM index before comparing it to BGs.
+                    // Hidden OBJs cannot become blend layers.
+                    sObject[screenX] = (PixelLayer){PALETTE[256 + paletteIndex], 4, objectMode == 1};
+                    sObjectPriority[screenX] = (attr2 >> 10) & 3;
                 }
             }
         }
@@ -419,14 +421,17 @@ void PortPpu_RenderLine(unsigned y, uint32_t *row)
             const unsigned i = y * PORT_SCREEN_WIDTH + x;
             sTop[i] = (PixelLayer){PALETTE[0], 5, 0};
             sSecond[i] = (PixelLayer){0, 6, 0};
+            sObjectPriority[x] = 4;
         }
 
         for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
             sObjWindow[x] = 0;
         if ((displayControl & (DISPCNT_OBJWIN_ON | DISPCNT_OBJ_ON)) ==
             (DISPCNT_OBJWIN_ON | DISPCNT_OBJ_ON))
-            RenderSprites(0, displayControl, y, 1);
+            RenderSprites(displayControl, y, 1);
         BuildWindowMasks(displayControl, y);
+        if (displayControl & DISPCNT_OBJ_ON)
+            RenderSprites(displayControl, y, 0);
 
     const unsigned mode = displayControl & 7;
     if (mode <= DISPCNT_MODE_5)
@@ -444,8 +449,10 @@ void PortPpu_RenderLine(unsigned y, uint32_t *row)
                          (mode >= 3 && bg == 2))
                     RenderAffineBackground(bg, y);
             }
-            if (displayControl & DISPCNT_OBJ_ON)
-                RenderSprites(priority, displayControl, y, 0);
+            for (unsigned x = 0; x < PORT_SCREEN_WIDTH; ++x)
+                if (sObjectPriority[x] == priority)
+                    PlotPixel(y * PORT_SCREEN_WIDTH + x, sObject[x].color, 4,
+                              sObject[x].semiTransparent);
         }
     }
         ResolvePixels(row, y);
