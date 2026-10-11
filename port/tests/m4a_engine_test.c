@@ -47,6 +47,7 @@ int main(void)
                            .attack = 255, .decay = 255, .sustain = 255, .release = 128};
     u8 sequence[] = {0xbb, 75, 0xbd, 0, 0xbe, 100, 0xe7, 60, 100, 0x98, 0xb1};
     struct SongHeader song = {.trackCount = 1, .tone = &tone, .part = {sequence}};
+    m4aMPlayStop(NULL); // First double-battle release may stop before any cry starts.
     m4aSoundInit();
     MPlayStart(&gMPlayInfo_BGM, &song);
     m4aSoundMain();

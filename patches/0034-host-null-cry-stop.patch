@@ -1,0 +1,29 @@
+From 3217fdfa97e12e91e5b9246162f7af4a69f6af68 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 14:05:10 -0400
+Subject: [PATCH] Allow stopping a not-yet-started cry on the native host
+
+---
+ src/m4a.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/m4a.c b/src/m4a.c
+index ee68bb7..158683a 100644
+--- a/src/m4a.c
++++ b/src/m4a.c
+@@ -694,6 +694,12 @@ void m4aMPlayStop(struct MusicPlayerInfo *mplayInfo)
+     s32 i;
+     struct MusicPlayerTrack *track;
+ 
++#ifdef PORT_PC
++    // A stop before the first cry is harmless on GBA, but NULL is unmapped on host.
++    if (mplayInfo == NULL)
++        return;
++#endif
++
+     if (mplayInfo->ident != ID_NUMBER)
+         return;
+ 
+-- 
+2.51.0.windows.2
+
