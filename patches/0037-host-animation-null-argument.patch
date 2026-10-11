@@ -1,0 +1,45 @@
+From 8540039cf6f1bfadbd15ba7db5717de2e41662f7 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 14:31:28 -0400
+Subject: [PATCH] Supply zero for absent host battle animation arguments
+
+---
+ src/battle_script_commands.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
+index e709010..fbfc8df 100644
+--- a/src/battle_script_commands.c
++++ b/src/battle_script_commands.c
+@@ -4007,6 +4007,14 @@ static void Cmd_playanimation(void)
+ 
+     gActiveBattler = GetBattlerForBattleScript(gBattlescriptCurrInstr[1]);
+     argumentPtr = T2_READ_PTR(gBattlescriptCurrInstr + 3);
++#ifdef PORT_PC
++    // Some animations have no arguments; GBA reads zero at address zero.
++    if (argumentPtr == NULL)
++    {
++        static const u16 noArgument = 0;
++        argumentPtr = &noArgument;
++    }
++#endif
+ 
+     if (gBattlescriptCurrInstr[2] == B_ANIM_STATS_CHANGE
+      || gBattlescriptCurrInstr[2] == B_ANIM_SNATCH_MOVE
+@@ -4051,6 +4059,13 @@ static void Cmd_playanimation_var(void)
+     gActiveBattler = GetBattlerForBattleScript(gBattlescriptCurrInstr[1]);
+     animationIdPtr = T2_READ_PTR(gBattlescriptCurrInstr + 2);
+     argumentPtr = T2_READ_PTR(gBattlescriptCurrInstr + 6);
++#ifdef PORT_PC
++    if (argumentPtr == NULL)
++    {
++        static const u16 noArgument = 0;
++        argumentPtr = &noArgument;
++    }
++#endif
+ 
+     if (*animationIdPtr == B_ANIM_STATS_CHANGE
+      || *animationIdPtr == B_ANIM_SNATCH_MOVE
+-- 
+2.51.0.windows.2
+
