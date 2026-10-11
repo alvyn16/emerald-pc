@@ -1,0 +1,35 @@
+From f28173367dabf415157b51333965ec50f5751b23 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 14:34:19 -0400
+Subject: [PATCH] Skip absent host serial transport background pump
+
+---
+ src/link.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/link.c b/src/link.c
+index bcce875..fa4f4e1 100644
+--- a/src/link.c
++++ b/src/link.c
+@@ -1789,6 +1789,10 @@ void LinkPlayerFromBlock(u32 who)
+ // When this function returns TRUE the callbacks are skipped
+ bool8 HandleLinkConnection(void)
+ {
++#ifdef PORT_PC
++    // Single-player host has no serial/RFU transport or IRQ completion.
++    return FALSE;
++#else
+     bool32 main1Failed, main2Failed;
+ 
+     if (gWirelessCommType == 0)
+@@ -1811,6 +1815,7 @@ bool8 HandleLinkConnection(void)
+         }
+     }
+     return FALSE;
++#endif
+ }
+ 
+ void SetWirelessCommType1(void)
+-- 
+2.51.0.windows.2
+

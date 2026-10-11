@@ -1,0 +1,37 @@
+From ae87552e26e825b34bb973421fbfa362cb1aa44f Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 14:31:28 -0400
+Subject: [PATCH] Report absent RFU adapter without hardware polling on host
+
+---
+ src/librfu_rfu.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/librfu_rfu.c b/src/librfu_rfu.c
+index fef91dc..20ed3aa 100644
+--- a/src/librfu_rfu.c
++++ b/src/librfu_rfu.c
+@@ -401,6 +401,12 @@ static void rfu_CB_stopMode(u8 reqCommand, u16 reqResult)
+ 
+ u32 rfu_REQBN_softReset_and_checkID(void)
+ {
++#ifdef PORT_PC
++    // No wireless adapter: never enter hardware timer or serial polling.
++    rfu_STC_clearAPIVariables();
++    REG_SIOCNT = SIO_MULTI_MODE;
++    return 0;
++#else
+     u32 id;
+ 
+     if (REG_IME == 0)
+@@ -410,6 +416,7 @@ u32 rfu_REQBN_softReset_and_checkID(void)
+     if ((id = AgbRFU_checkID(30)) == 0)
+         REG_SIOCNT = SIO_MULTI_MODE;
+     return id;
++#endif
+ }
+ 
+ void rfu_REQ_reset(void)
+-- 
+2.51.0.windows.2
+
