@@ -41,7 +41,7 @@ SONG_INCLUDE_DIR := ../build/host-song-includes
 SONG_OBJECTS := $(patsubst $(POKEEMERALD)/sound/songs/midi/%.s,$(SONG_OBJECT_DIR)/%.o,$(SONG_SOURCES))
 HOST_EXE_SOURCES := $(filter-out $(addprefix $(POKEEMERALD)/src/,librfu_intr.c multiboot.c),$(SOURCES))
 HOST_EXE_OBJECTS := $(patsubst $(POKEEMERALD)/src/%.c,$(OBJECT_DIR)/%.o,$(HOST_EXE_SOURCES))
-PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c speed_menu.c port_timer.c port_reset.c sdl_loader.c m4a_engine.c port_psg.c port_audio.c arm_stubs.c host_flash.c port_dma.c port_ppu.c port_irq.c
+PORT_EXE_SOURCES := main.c gba_memory.c bios.c frame.c speed_menu.c port_timer.c port_reset.c port_ram_reset.c sdl_loader.c m4a_engine.c port_psg.c port_audio.c arm_stubs.c host_flash.c port_dma.c port_ppu.c port_irq.c
 M4A_LDFLAGS := -Wl,--defsym,_gNumMusicPlayers=4 -Wl,--defsym,_gMaxLines=0
 EXE := ../build/emerald-pc.exe
 
@@ -56,12 +56,14 @@ endif
 # Host-only unit tests. Keep each binary's dependencies explicit so changes
 # to a port module rebuild the test that exercises it.
 TEST_DIR := ../build/tests
-TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu bitmap ppu_priority ppu_affine speed_menu timer reset m4a_engine psg audio irq
+TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu bitmap ppu_priority ppu_affine speed_menu timer reset ram_reset m4a_engine psg audio irq
 TEST_ppu_affine_SOURCES := port_ppu.c tests/ppu_affine_test.c
 TEST_ppu_priority_SOURCES := port_ppu.c tests/ppu_priority_test.c
 TEST_bitmap_SOURCES := port_ppu.c tests/bitmap_test.c
 TEST_irq_SOURCES := port_irq.c tests/irq_test.c
-TEST_bios_SOURCES := bios.c port_irq.c tests/bios_test.c
+RAM_RESET_SOURCES := port_ram_reset.c port_dma.c port_ppu.c port_psg.c
+TEST_ram_reset_SOURCES := $(RAM_RESET_SOURCES) port_timer.c port_irq.c tests/ram_reset_test.c
+TEST_bios_SOURCES := bios.c port_irq.c port_timer.c $(RAM_RESET_SOURCES) tests/bios_test.c
 TEST_dma_SOURCES := port_dma.c port_irq.c port_ppu.c tests/dma_test.c
 TEST_frame_SOURCES := frame.c speed_menu.c port_timer.c port_irq.c tests/frame_test.c
 TEST_gba_memory_SOURCES := gba_memory.c tests/gba_memory_test.c
@@ -71,7 +73,7 @@ TEST_ppu_SOURCES := port_ppu.c tests/ppu_test.c
 TEST_speed_menu_SOURCES := speed_menu.c tests/speed_menu_test.c
 TEST_timer_SOURCES := port_timer.c port_irq.c tests/timer_test.c
 TEST_reset_SOURCES := port_reset.c host_flash.c tests/reset_test.c
-TEST_m4a_engine_SOURCES := m4a_engine.c bios.c port_timer.c port_irq.c $(OBJECT_DIR)/m4a.o $(OBJECT_DIR)/m4a_tables.o tests/m4a_engine_test.c
+TEST_m4a_engine_SOURCES := m4a_engine.c bios.c port_timer.c port_irq.c $(RAM_RESET_SOURCES) $(OBJECT_DIR)/m4a.o $(OBJECT_DIR)/m4a_tables.o tests/m4a_engine_test.c
 TEST_m4a_engine_LIBS := -lm $(M4A_LDFLAGS)
 TEST_psg_SOURCES := port_psg.c tests/psg_test.c
 TEST_audio_SOURCES := port_audio.c tests/audio_test.c

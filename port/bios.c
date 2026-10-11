@@ -12,6 +12,7 @@
 #include "port_reset.h"
 #include "port_irq.h"
 #include "port_bios.h"
+#include "port_ram_reset.h"
 #include "gba/io_reg.h"
 #include "gba/defines.h"
 
@@ -279,12 +280,7 @@ void SoftReset(u32 resetFlags)
 
 void RegisterRamReset(u32 resetFlags)
 {
-    static int warned;
-    if (!warned)
-    {
-        fprintf(stderr, "BIOS: RegisterRamReset(0x%02X) is a safe no-op on PC\n", resetFlags);
-        warned = 1;
-    }
+    PortRamReset(resetFlags);
 }
 
 void VBlankIntrWait(void)
