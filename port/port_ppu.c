@@ -274,19 +274,27 @@ static void RenderSprites(uint16_t displayControl, unsigned y, int windowOnly)
         const unsigned mosaic = REG_MOSAIC;
         const unsigned mosaicWidth = (attr0 & 0x1000) ? ((mosaic >> 8) & 15) + 1 : 1;
         const unsigned mosaicHeight = (attr0 & 0x1000) ? ((mosaic >> 12) & 15) + 1 : 1;
+        const int endX = originX + (int)renderWidth;
+        const unsigned trailing = endX > 0 && endX % (int)mosaicWidth
+                ? mosaicWidth - endX % mosaicWidth : 0;
 
         const int sy = (int)y - originY;
         if (sy < 0 || sy >= (int)renderHeight)
             continue;
         {
             const int screenY = y;
-            for (unsigned sx = 0; sx < renderWidth; ++sx)
+            for (unsigned sx = 0; sx < renderWidth + trailing; ++sx)
             {
                 const int screenX = originX + (int)sx;
                 if (screenX < 0 || screenX >= PORT_SCREEN_WIDTH) continue;
                 if (!windowOnly && !(sWindowMask[screenY * PORT_SCREEN_WIDTH + screenX] & 0x10)) continue;
-                const int sampleX = (int)sx - (int)sx % (int)mosaicWidth;
-                const int sampleY = (int)y - (int)y % (int)mosaicHeight - originY;
+                int sampleX = screenX - screenX % (int)mosaicWidth - originX;
+                int sampleY = (int)y - (int)y % (int)mosaicHeight - originY;
+                // Mosaic grid is anchored to the screen. Clamp the leading
+                // partial group at the OBJ boundary before applying flips.
+                if (sampleX < 0) sampleX = 0;
+                if (sampleY < 0) sampleY = 0;
+                if (!affine && sampleX >= (int)width) sampleX = width - 1;
                 int tileX, tileY;
                 if (affine)
                 {
@@ -460,8 +468,8 @@ void PortPpu_RenderLine(unsigned y, uint32_t *row)
     for (unsigned i = 0; i < 2; ++i)
     {
         const volatile int16_t *matrix = (const volatile int16_t *)(REG_ADDR_BG2PA + i * 0x10);
-        sAffineX[i] += matrix[1];
-        sAffineY[i] += matrix[3];
+        sAffineX[i] = SignExtend28((uint32_t)sAffineX[i] + matrix[1]);
+        sAffineY[i] = SignExtend28((uint32_t)sAffineY[i] + matrix[3]);
     }
 }
 
