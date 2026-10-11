@@ -26,6 +26,8 @@ assert int(gdb.parse_and_eval("(unsigned int)GetMonData3((void *)&gPlayerParty,1
 commands += f'assert int(gdb.parse_and_eval("(unsigned int)VarGet(0x4085)")) == {args.progress}\n'
 for badge in range(8):
     commands += f'assert int(gdb.parse_and_eval("(int)FlagGet({0x867+badge})")) == {int(badge < args.badges)}\n'
+    commands += f'assert int(gdb.parse_and_eval("(int)FlagGet({0xA5+badge})")) == {int(badge < args.badges)}\n'
+commands += f'assert int(gdb.parse_and_eval("(int)FlagGet(0x7A)")) == {int(args.badges >= 5)}\n'
 commands += '''end
 printf "CAMPAIGN RELOAD PASS\\n"
 set $pc = (unsigned int)&Port_ExitCleanly

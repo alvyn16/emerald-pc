@@ -26,12 +26,12 @@ def prepare(name, inputs):
     return scratch, commands
 
 
-def run(scratch, commands, markers):
+def run(scratch, commands, markers, timeout=600):
     script = scratch / "test.gdb"; script.write_text(commands, encoding="ascii")
     log = scratch / "gdb.log"
     code = run_logged(["gdb", "-batch", "-x", str(script),
                        str(scratch / "build/emerald-pc-diagnostic.exe")],
-                      PROJECT, log, "PC diagnostic: frame=")
+                      PROJECT, log, "PC diagnostic: frame=", timeout=timeout)
     text = log.read_text(encoding="utf-8", errors="replace")
     assert code == 0 and "received signal" not in text and "exited normally" in text, text[-4000:]
     for marker in markers:
