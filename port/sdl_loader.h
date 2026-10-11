@@ -31,6 +31,13 @@ struct PortSDL
     __typeof__(&SDL_RenderPresent) RenderPresent;
     __typeof__(&SDL_PollEvent) PollEvent;
     __typeof__(&SDL_GetKeyboardState) GetKeyboardState;
+    __typeof__(&SDL_NumJoysticks) NumJoysticks;
+    __typeof__(&SDL_IsGameController) IsGameController;
+    __typeof__(&SDL_GameControllerOpen) GameControllerOpen;
+    __typeof__(&SDL_GameControllerClose) GameControllerClose;
+    __typeof__(&SDL_GameControllerGetAttached) GameControllerGetAttached;
+    __typeof__(&SDL_GameControllerGetButton) GameControllerGetButton;
+    __typeof__(&SDL_GameControllerGetAxis) GameControllerGetAxis;
     __typeof__(&SDL_GetPerformanceFrequency) GetPerformanceFrequency;
     __typeof__(&SDL_GetPerformanceCounter) GetPerformanceCounter;
     __typeof__(&SDL_Delay) Delay;

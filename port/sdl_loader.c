@@ -52,6 +52,13 @@ int Port_LoadSDL2(void)
     LOAD(RenderPresent);
     LOAD(PollEvent);
     LOAD(GetKeyboardState);
+    LOAD(NumJoysticks);
+    LOAD(IsGameController);
+    LOAD(GameControllerOpen);
+    LOAD(GameControllerClose);
+    LOAD(GameControllerGetAttached);
+    LOAD(GameControllerGetButton);
+    LOAD(GameControllerGetAxis);
     LOAD(GetPerformanceFrequency);
     LOAD(GetPerformanceCounter);
     LOAD(Delay);
