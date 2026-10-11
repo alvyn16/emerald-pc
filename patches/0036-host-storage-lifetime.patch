@@ -1,0 +1,40 @@
+From d24f189656cc5a5cdbb13d43ea20fac15627b276 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 14:19:18 -0400
+Subject: [PATCH] Guard host storage callbacks after withdrawal and teardown
+
+---
+ src/pokemon_storage_system.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/src/pokemon_storage_system.c b/src/pokemon_storage_system.c
+index ca27d4a..35312cc 100644
+--- a/src/pokemon_storage_system.c
++++ b/src/pokemon_storage_system.c
+@@ -1988,6 +1988,11 @@ static void VBlankCB_PokeStorage(void)
+ static void CB2_PokeStorage(void)
+ {
+     RunTasks();
++#ifdef PORT_PC
++    // A task can release storage and switch callback during this frame.
++    if (sStorage == NULL)
++        return;
++#endif
+     DoScheduledBgTilemapCopiesToVram();
+     ScrollBackground();
+     UpdateCloseBoxButtonFlash();
+@@ -5081,6 +5086,11 @@ static bool8 ResetReleaseMonSpritePtr(void)
+ 
+ static void SetMovingMonPriority(u8 priority)
+ {
++#ifdef PORT_PC
++    // The cursor also moves after a withdrawal, without a held sprite.
++    if (sStorage->movingMonSprite == NULL)
++        return;
++#endif
+     sStorage->movingMonSprite->oam.priority = priority;
+ }
+ 
+-- 
+2.51.0.windows.2
+
