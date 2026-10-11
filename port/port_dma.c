@@ -4,6 +4,7 @@
 
 #include "gba/io_reg.h"
 #include "port_dma.h"
+#include "port_irq.h"
 
 struct DmaState
 {
@@ -17,6 +18,12 @@ struct DmaState
 
 static struct DmaState sChannels[4];
 
+static unsigned TransferCount(int channel, unsigned count)
+{
+    count &= channel == 3 ? 0xffff : 0x3fff;
+    return count ? count : (channel == 3 ? 0x10000 : 0x4000);
+}
+
 static void Transfer(int channel, struct DmaState *dma)
 {
     const unsigned width = dma->flags & DMA_32BIT ? 4 : 2;
@@ -26,6 +33,7 @@ static void Transfer(int channel, struct DmaState *dma)
     {
         fprintf(stderr, "PC: invalid DMA%d request\n", channel);
         dma->armed = 0;
+        *(volatile uint16_t *)(uintptr_t)(REG_ADDR_DMA0CNT_H + channel * 12) &= ~DMA_ENABLE;
         return;
     }
 
@@ -44,15 +52,18 @@ static void Transfer(int channel, struct DmaState *dma)
     dma->source = from;
     dma->destination = to;
     volatile uint32_t *registers = (volatile uint32_t *)(uintptr_t)(REG_ADDR_DMA0 + channel * 12);
-    registers[0] = (uint32_t)(uintptr_t)from;
-    registers[1] = (uint32_t)(uintptr_t)to;
+    // Programmed SAD/DAD are not the advancing internal DMA pointers.
     if (!(dma->flags & DMA_REPEAT) || (dma->flags & DMA_START_MASK) == DMA_START_NOW)
     {
         registers[2] &= ~(DMA_ENABLE << 16);
         dma->armed = 0;
     }
     else if (destinationMode == 3)
-        dma->destination = dma->initialDestination;
+        dma->destination = (uint8_t *)(uintptr_t)(registers[1] & ~(width - 1));
+    if (dma->armed)
+        dma->count = TransferCount(channel, registers[2]);
+    if (dma->flags & DMA_INTR_ENABLE)
+        PortIrq_Raise(INTR_FLAG_DMA0 << channel);
 }
 
 void PortDma_Set(int channel, const void *source, void *destination, unsigned control)
@@ -67,13 +78,15 @@ void PortDma_Set(int channel, const void *source, void *destination, unsigned co
     registers[1] = (uint32_t)(uintptr_t)destination;
     registers[2] = control;
 
-    const unsigned flags = control >> 16;
+    const unsigned flags = (control >> 16) & (channel == 3 ? 0xffe0 : 0xf7e0);
+    registers[2] = (flags << 16) | (control & (channel == 3 ? 0xffff : 0x3fff));
     if (!(flags & DMA_ENABLE))
         return;
 
-    unsigned count = control & 0xffff;
-    if (count == 0)
-        count = channel == 3 ? 0x10000 : 0x4000;
+    unsigned count = TransferCount(channel, control);
+    const unsigned alignmentMask = (flags & DMA_32BIT) ? 3 : 1;
+    source = (const void *)((uintptr_t)source & ~(uintptr_t)alignmentMask);
+    destination = (void *)((uintptr_t)destination & ~(uintptr_t)alignmentMask);
     *dma = (struct DmaState){source, destination, destination, count, flags, 1};
     if ((flags & DMA_START_MASK) == DMA_START_NOW)
         Transfer(channel, dma);
@@ -88,7 +101,10 @@ static void OnEvent(unsigned start)
                 (REG_ADDR_DMA0CNT_H + channel * 12);
         if (dma->armed && (*control & DMA_ENABLE) &&
             (dma->flags & DMA_START_MASK) == start)
+        {
+            dma->flags = *control;
             Transfer(channel, dma);
+        }
         else if (!(*control & DMA_ENABLE))
             dma->armed = 0;
     }

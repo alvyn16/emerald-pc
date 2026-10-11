@@ -5,12 +5,18 @@
 #include "gba/types.h"
 #include "gba/io_reg.h"
 #include "port_dma.h"
+#include "port_irq.h"
+void (*gIntrTable[14])(void);
 
 int main(void)
 {
     void *io = VirtualAlloc((void *)0x04000000, 4096,
                             MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     assert(io == (void *)0x04000000);
+    void *iwram = VirtualAlloc((void *)0x03000000, 32768,
+                              MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    assert(iwram == (void *)0x03000000);
+    PortIrq_Reset();
 
     uint16_t source16[] = {1, 2, 3, 4};
     uint16_t output16[4] = {0};
@@ -18,6 +24,8 @@ int main(void)
                 ((DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_INC | DMA_DEST_INC) << 16) | 4);
     for (int i = 0; i < 4; ++i) assert(output16[i] == source16[i]);
     assert(!(REG_DMA3CNT_H & DMA_ENABLE));
+    assert(REG_DMA3SAD == (uint32_t)(uintptr_t)source16);
+    assert(REG_DMA3DAD == (uint32_t)(uintptr_t)output16);
 
     uint32_t fill = 0x12345678;
     uint32_t output32[3] = {0};
@@ -78,6 +86,28 @@ int main(void)
     assert(REG_DMA1CNT_H & DMA_ENABLE);
     assert(REG_DMA2CNT_H & DMA_ENABLE);
 
+    for (int channel = 0; channel < 4; ++channel)
+    {
+        uint16_t output = 0;
+        const unsigned count = channel == 3 ? 1 : 0x4001;
+        PortDma_Set(channel, source16, &output,
+                    ((DMA_ENABLE | DMA_INTR_ENABLE) << 16) | count);
+        assert(output == 1);
+        assert(PortIrq_Pending() == (INTR_FLAG_DMA0 << channel));
+        PortIrq_Acknowledge(INTR_FLAG_DMA0 << channel);
+    }
+
+    static uint16_t large[0x10000];
+    for (int channel = 0; channel < 4; ++channel)
+    {
+        large[0x3fff] = large[0xffff] = 0;
+        PortDma_Set(channel, &source16[1], large,
+                    ((DMA_ENABLE | DMA_SRC_FIXED) << 16));
+        assert(large[0x3fff] == 2);
+        assert(large[0xffff] == (channel == 3 ? 2 : 0));
+    }
+
     VirtualFree(io, 0, MEM_RELEASE);
+    VirtualFree(iwram, 0, MEM_RELEASE);
     return 0;
 }
