@@ -56,7 +56,8 @@ endif
 # Host-only unit tests. Keep each binary's dependencies explicit so changes
 # to a port module rebuild the test that exercises it.
 TEST_DIR := ../build/tests
-TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu speed_menu timer reset m4a_engine psg audio irq
+TEST_NAMES := bios dma frame gba_memory host_flash input_script ppu bitmap speed_menu timer reset m4a_engine psg audio irq
+TEST_bitmap_SOURCES := port_ppu.c tests/bitmap_test.c
 TEST_irq_SOURCES := port_irq.c tests/irq_test.c
 TEST_bios_SOURCES := bios.c port_irq.c tests/bios_test.c
 TEST_dma_SOURCES := port_dma.c port_irq.c tests/dma_test.c

@@ -134,12 +134,16 @@ static int32_t SignExtend28(uint32_t value)
 
 static void RenderAffineBackground(unsigned bg, unsigned y)
 {
+    const unsigned mode = REG_DISPCNT & 7;
+    const int bitmap = mode == 3 || mode == 4;
     const uint16_t control = ((const volatile uint16_t *)REG_ADDR_BG0CNT)[bg];
     const unsigned size = 128u << ((control >> 14) & 3);
     const unsigned tilesWide = size / 8;
     const unsigned screenBase = ((control >> 8) & 31) * 0x800;
     const unsigned charBase = ((control >> 2) & 3) * 0x4000;
-    const int wrap = (control & BGCNT_WRAP) != 0;
+    const int wrap = !bitmap && (control & BGCNT_WRAP) != 0;
+    const unsigned sourceWidth = bitmap ? 240 : size;
+    const unsigned sourceHeight = bitmap ? 160 : size;
     const uintptr_t registers = REG_ADDR_BG2PA + (bg - 2) * 0x10;
     const volatile int16_t *matrix = (const volatile int16_t *)registers;
     const unsigned index = bg - 2;
@@ -179,8 +183,23 @@ static void RenderAffineBackground(unsigned bg, unsigned y)
                 sourceX &= size - 1;
                 sourceY &= size - 1;
             }
-            else if (sourceX < 0 || sourceY < 0 || sourceX >= (int)size || sourceY >= (int)size)
+            else if (sourceX < 0 || sourceY < 0 || sourceX >= (int)sourceWidth || sourceY >= (int)sourceHeight)
                 continue;
+
+            if (bitmap)
+            {
+                const unsigned pixel = sourceY * sourceWidth + sourceX;
+                if (mode == 3)
+                    PlotPixel(y * PORT_SCREEN_WIDTH + x, ReadVram16(pixel * 2), bg, 0);
+                else
+                {
+                    const unsigned page = (REG_DISPCNT & 0x10) ? 0xa000 : 0;
+                    const unsigned colorIndex = VRAM[page + pixel];
+                    if (colorIndex)
+                        PlotPixel(y * PORT_SCREEN_WIDTH + x, PALETTE[colorIndex], bg, 0);
+                }
+                continue;
+            }
 
             const unsigned mapOffset = screenBase + (sourceY / 8) * tilesWide + sourceX / 8;
             if (mapOffset >= 0x10000)
@@ -246,6 +265,8 @@ static void RenderSprites(unsigned priority, uint16_t displayControl, unsigned y
         const unsigned bpp8 = (attr0 & 0x2000) != 0;
         const unsigned tileStep = bpp8 ? 2 : 1;
         const unsigned tileBase = (attr2 & 0x3ff) & (bpp8 ? ~1u : ~0u);
+        if ((displayControl & 7) >= 3 && tileBase < 512)
+            continue; // Bitmap BG owns the lower half of OBJ tile memory.
         const unsigned rowStride = oneDimensional ? (width / 8) * tileStep : 32;
         const unsigned mosaic = REG_MOSAIC;
         const unsigned mosaicWidth = (attr0 & 0x1000) ? ((mosaic >> 8) & 15) + 1 : 1;
@@ -405,7 +426,7 @@ void PortPpu_RenderLine(unsigned y, uint32_t *row)
         BuildWindowMasks(displayControl, y);
 
     const unsigned mode = displayControl & 7;
-    if (mode <= DISPCNT_MODE_2)
+    if (mode <= DISPCNT_MODE_4)
     {
         for (int priority = 3; priority >= 0; --priority)
         {
@@ -416,7 +437,8 @@ void PortPpu_RenderLine(unsigned y, uint32_t *row)
                     continue;
                 if (mode == DISPCNT_MODE_0 || (mode == DISPCNT_MODE_1 && bg < 2))
                     RenderBackground(bg, y);
-                else if (bg >= 2 && (mode == DISPCNT_MODE_2 || bg == 2))
+                else if ((mode == 1 && bg == 2) || (mode == 2 && bg >= 2) ||
+                         (mode >= 3 && bg == 2))
                     RenderAffineBackground(bg, y);
             }
             if (displayControl & DISPCNT_OBJ_ON)
