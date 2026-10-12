@@ -2,13 +2,17 @@
 from pathlib import Path
 import shutil
 import sys
+import argparse
 import gameplay_smoke
 from process_watchdog import run_logged
 
 
 def main():
     project=Path(__file__).resolve().parents[2]
-    scratch=project/"build/natural-campaign-replay"
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--phase",choices=("r01","r02-devon"),default="r01")
+    phase=parser.parse_args().phase
+    scratch=project/("build/natural-campaign-replay" if phase == "r01" else "build/natural-campaign-replay-r02-devon")
     for directory in ("build","roms","saves"):
         (scratch/directory).mkdir(parents=True,exist_ok=True)
     for filename in ("emerald-pc-diagnostic.exe","SDL2.dll"):
@@ -19,22 +23,33 @@ def main():
     save=scratch/"saves/emerald-pc-diagnostic.sav"
     if save.exists():
         shutil.copy2(save,scratch/"previous-replay.sav")
-    save.write_bytes(b"\xff"*131072)
+    save.write_bytes(b"\xff"*131072 if phase == "r01" else
+                     (project/"build/natural-campaign/r02-roxanne.sav").read_bytes())
     inputs=scratch/"input.txt"
     previous=sys.argv
     try:
         sys.argv=["gameplay_smoke.py",str(inputs)]
-        gameplay_smoke.main()
+        if phase == "r01":
+            gameplay_smoke.main()
+        else:
+            inputs.write_text("".join(f"{frame} {frame+1} A\n" for frame in range(1000,8000,45)))
     finally:
         sys.argv=previous
     script=scratch/"campaign.gdb"
+    actions='''route.meet_may()
+route.rescue_birch()
+route.rival_and_dex()''' if phase == "r01" else '''d.RUN_WILD=True
+d.settle(30000)
+assert d.state()['map'] == 'RustboroCity_Gym'
+d.go(5,19); d.cross('DOWN','RustboroCity')
+route.cut_peeko_and_pokenav()'''
     script.write_text(f'''set pagination off
 set confirm off
 set environment SDL_VIDEODRIVER dummy
 set environment SDL_AUDIODRIVER dummy
 set environment EMERALD_PC_FAST 1
 set environment EMERALD_PC_INPUT_SCRIPT {inputs.as_posix()}
-set environment EMERALD_PC_STOP_FRAME 30500
+set environment EMERALD_PC_STOP_FRAME {30500 if phase == 'r01' else 10000}
 break Port_ExitCleanly
 run
 commands 1
@@ -47,10 +62,8 @@ sys.path.insert(0,'port/tests')
 import campaign_driver as d
 import natural_campaign_routes as route
 d.SCRATCH=Path({scratch.as_posix()!r})
-route.meet_may()
-route.rescue_birch()
-route.rival_and_dex()
-print('NATURAL R01 REPLAY PASS')
+{actions}
+print('NATURAL {phase.upper()} REPLAY PASS')
 end
 continue
 quit
@@ -58,9 +71,9 @@ quit
     log=scratch/"campaign.log"
     result=run_logged(["gdb","-batch","-x",str(script),str(scratch/"build/emerald-pc-diagnostic.exe")],project,log,"PC diagnostic: frame=",timeout=1800)
     output=log.read_text(errors="replace")
-    assert result==0 and "NATURAL R01 REPLAY PASS" in output
+    assert result==0 and f"NATURAL {phase.upper()} REPLAY PASS" in output
     assert "received signal" not in output and "exited normally" in output
-    print("Natural R01 campaign replay PASS")
+    print(f"Natural {phase} campaign replay PASS")
 
 
 if __name__ == "__main__":

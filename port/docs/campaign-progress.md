@@ -173,3 +173,38 @@ deadlines fallan explícitamente. No se acredita todavía el resto de R02–R15.
 
 Verificación de 0041 en el clon de reproducción: normal/diagnóstico,
 21 suites y `verify-normal` PASS (`build/t27-shadow-clean-build.log`).
+
+### Peeko, PokéNav y Brawly
+
+En el mismo save, Corte se obtuvo por diálogo y el combate de Rusturf Tunnel
+rescató a Peeko: flag 0x8F activo, estado de Briney 1. Checkpoint `r02-peeko`,
+frame 131996 del segundo proceso: Marshtomp nivel 17 y una medalla.
+La devolución de bienes activó 0x90; Mr Stone entregó carta y PokéNav por
+su secuencia. El tutorial de Match Call se completó con direcciones/A/B y
+dejó Rustboro en estado 7. `r02-matchcall` guarda ese avance.
+
+La espera de Match Call era de la prueba: A repetido no selecciona su opción
+ni sale del dispositivo. El driver lee el cursor/callback y pulsa las teclas
+correctas. Un SIGINT de GDB pausó deliberadamente el harness para actualizarlo;
+se continuó hasta el siguiente checkpoint de frames, sin saltar código del
+juego. No fue una excepción del port.
+
+`python port/tests/natural_campaign_smoke.py --phase r02-devon` reabre una
+copia del save real de Roxanne y repite Corte, Peeko, entrega a Stone y llamada.
+Repetición independiente PASS, sin escribir progreso desde GDB:
+`build/natural-campaign-replay-r02-devon/campaign.log`.
+
+Briney llevó al jugador a Dewford por la secuencia real del barco. Se caminó
+el gimnasio y Brawly fue derrotado: flag de segunda medalla 0x868 activo.
+Checkpoint `r02-brawly` (frame 247673): Marshtomp nivel 19, dos medallas,
+estado de Norman 4. Una copia reabre por Continue y conserva equipo, ubicación,
+medallas y flags de los eventos anteriores, sin modificar el save: PASS
+(`build/t27-brawly-reload.log`). Capturas privadas: `r02-brawly.png` y
+`r02-dewford.png` en `build/natural-campaign/`.
+
+Al entrar realmente a Granite Cave B1F se encontró el copyvar literal
+documentado en `first-run-report.md`. Seleccionar UBFIX en los datos host
+corrige esa transición. Tras reabrir el checkpoint de Brawly y repetir
+enfermera, costa, hiker y escalera, B1F carga y VAR_ICE_STEP_COUNT vale 1.
+También pasan normal/diagnóstico, 21 suites y verify-normal en el clon de
+reproducción (`build/t27-script-ubfix-clean-build.log`). R02 sigue parcial.

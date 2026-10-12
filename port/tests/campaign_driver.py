@@ -8,6 +8,8 @@ import gdb
 ROOT = Path.cwd()
 SCRATCH = ROOT / "build/natural-campaign"
 RUN_WILD = False  # Opt in after starter/rival; preserves HP during travel.
+EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0x90,
+               "match_call":0x12f,"pokenav":0x862,"letter":0xbd}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -69,6 +71,26 @@ def settle(limit=10000):
             advance("START",24,4)
             advance("A",24,4)
             continue
+        if (current["map"] == "RustboroCity" and current["callback"] == "CB2_Overworld"
+                and value("(int)VarGet(0x405a)") == 6
+                and value("(int)FuncIsActiveTask((void *)Task_HandleMultichoiceInput)")):
+            cursor=value("(int)Menu_GetCursorPos()")
+            advance("DOWN" if cursor < 3 else "UP" if cursor > 3 else "A",24,1)
+            continue
+        if current["callback"] == "CB2_Pokenav":
+            mode=value("(int)GetPokenavMode()")
+            if mode == 2:
+                advance("B",96,1)
+                continue
+            pointer=value("(unsigned int)GetSubstructPtr(1)")
+            if mode == 1 and pointer:
+                menu=bytes(gdb.selected_inferior().read_memory(pointer,16))
+                callback=struct.unpack_from("<I",menu,12)[0]
+                name=gdb.execute("info symbol %d" % callback,to_string=True).split(" in ")[0]
+                if name == "HandleMainMenuInputTutorial":
+                    cursor=struct.unpack_from("<h",menu,2)[0]
+                    advance("DOWN" if cursor < 2 else "UP" if cursor > 2 else "A",24,1)
+                    continue
         button=battle_button() if current["callback"] == "BattleMainCB2" else "A"
         # One pulse avoids reopening NPC dialogue or accepting a move before
         # the next checkpoint can inspect the move-selection cursor.
@@ -98,12 +120,33 @@ def battle_button():
         choices=memory("gBattleBufferA",2048)[battler*512+4:battler*512+24]
         moves=struct.unpack_from("<4H",choices)
         types=choices[18:20]
+        opponent=1 if battler == 0 else 3
+        if memory("gAbsentBattlerFlags",1)[0] & (1<<opponent):
+            opponent=1
+        battle=memory("gBattleMons",4*88)
+        enemy_types=set(battle[opponent*88+33:opponent*88+35])
+        chart=memory("gTypeEffectiveness",336)
         candidates=[]
         for index,move in enumerate(moves):
             if move and choices[8+index]:
                 definition=bytes(gdb.selected_inferior().read_memory(value("(unsigned int)&gBattleMoves")+move*9,9))
                 power=definition[1]
                 score=power*(3 if definition[2] in types else 2)
+                physical=definition[2] < 10  # Gen III categories are by type.
+                attack_offset,defense_offset=(2,4) if physical else (8,10)
+                attack_stage,defense_stage=(1,2) if physical else (4,5)
+                attack=struct.unpack_from("<H",battle,battler*88+attack_offset)[0]
+                defense=struct.unpack_from("<H",battle,opponent*88+defense_offset)[0]
+                attack *= stat_stage_factor(battle[battler*88+24+attack_stage])
+                defense *= stat_stage_factor(battle[opponent*88+24+defense_stage])
+                score *= attack/max(1,defense)
+                for enemy_type in enemy_types:
+                    multiplier=10
+                    for attack,defense,factor in struct.iter_unpack("BBB",chart):
+                        if attack == definition[2] and defense == enemy_type:
+                            multiplier=factor
+                            break
+                    score *= multiplier
                 candidates.append((score,-index,index))
         if not candidates:
             return "A"  # Engine offers Struggle when all PP are exhausted.
@@ -111,6 +154,11 @@ def battle_button():
         cursor=memory("gMoveSelectionCursor",4)[battler]
         return cursor_button(cursor,target)
     return "A"
+
+
+def stat_stage_factor(stage):
+    assert 0 <= stage <= 12
+    return (2+max(stage-6,0))/(2+max(6-stage,0))
 
 
 def cursor_button(cursor,target):
@@ -123,6 +171,8 @@ def cursor_button(cursor,target):
 
 def cross(button,destination,limit=4):
     """Face then cross a door/connection and check the resulting map."""
+    if state()["map"] == destination:
+        return settle()
     for attempt in range(limit):
         advance(button,300,8)
         current=settle()
@@ -189,6 +239,9 @@ def save_checkpoint(name):
     facts["badges"]=[value(f"(int)FlagGet({0x867+i})") for i in range(8)]
     facts["norman"]=value("(int)VarGet(0x4085)")
     facts["woods"]=value("(int)VarGet(0x4098)")
+    facts["events"]={key:value(f"(int)FlagGet({flag})") for key,flag in EVENT_FLAGS.items()}
+    facts["rustboro"]=value("(int)VarGet(0x405a)")
+    facts["briney"]=value("(int)VarGet(0x4090)")
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")
     gdb.execute(f"dump binary memory {SCRATCH.as_posix()}/{name}.raw &sPixels ((char *)&sPixels)+153600")
     print("NATURAL SAVE PASS",facts)

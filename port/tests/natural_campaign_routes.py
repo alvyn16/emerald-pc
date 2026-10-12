@@ -71,3 +71,34 @@ def rival_and_dex():
     assert d.value("(int)CountTotalItemQuantityInBag(4)") == 5
     assert d.value("(int)VarGet(0x4084)") == 5
     d.save_checkpoint("r01-birch-dex")
+
+
+def cut_peeko_and_pokenav():
+    """Continue after the real Stone Badge; includes the forced call tutorial."""
+    assert d.state()["map"] == "RustboroCity"
+    assert d.value("(int)FlagGet(0x867)") == 1
+    d.go(23,20); d.settle(); d.go(29,10); d.settle()
+    d.go(16,39); d.cross("UP","RustboroCity_PokemonCenter_1F"); d.nurse()
+    d.go(7,8); d.cross("DOWN","RustboroCity")
+    d.go(9,39); d.cross("UP","RustboroCity_CuttersHouse")
+    d.talk(7,6,"UP")
+    assert d.value("(int)FlagGet(0x89)") == 1
+    d.go(5,8); d.cross("DOWN","RustboroCity")
+    d.go(39,10); d.cross("RIGHT","Route116")
+    d.go(47,9); d.cross("UP","RusturfTunnel")
+    d.go(9,5); d.settle(); d.talk(13,5,"RIGHT")
+    assert d.value("(int)FlagGet(0x8f)") == 1
+    assert d.value("(int)VarGet(0x4090)") == 1
+    d.save_checkpoint("r02-peeko")
+    d.go(4,10); d.cross("DOWN","Route116")
+    d.go(0,10); d.cross("LEFT","RustboroCity")
+    d.go(31,10); d.settle(30000)
+    assert d.state()["map"] == "RustboroCity_DevonCorp_3F"
+    assert d.value("(int)FlagGet(0x862)") == 1
+    assert d.value("(int)VarGet(0x405a)") == 6
+    d.save_checkpoint("r02-pokenav")
+    d.go(2,2); d.cross("UP","RustboroCity_DevonCorp_2F")
+    d.go(14,2); d.cross("UP","RustboroCity_DevonCorp_1F")
+    d.go(5,8); d.cross("DOWN","RustboroCity")
+    assert d.value("(int)VarGet(0x405a)") == 7
+    d.save_checkpoint("r02-matchcall")

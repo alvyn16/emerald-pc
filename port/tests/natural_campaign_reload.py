@@ -52,9 +52,12 @@ assert d.value('(int)FlagGet(0x82)') == expected['rival']
 assert d.value('(int)CountTotalItemQuantityInBag(4)') == expected['balls']
 if 'badges' in expected:
     assert [d.value(f'(int)FlagGet({{0x867+i}})') for i in range(8)] == expected['badges']
-for key,var in (('norman',0x4085),('woods',0x4098)):
+for key,var in (('norman',0x4085),('woods',0x4098),('rustboro',0x405a),('briney',0x4090)):
     if key in expected:
         assert d.value(f'(int)VarGet({{var}})') == expected[key]
+for key,expected_value in expected.get('events',{{}}).items():
+    flag=d.EVENT_FLAGS[key]
+    assert d.value(f'(int)FlagGet({{flag}})') == expected_value
 print('NATURAL RELOAD PASS',actual)
 end
 continue
