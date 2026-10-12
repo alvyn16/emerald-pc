@@ -1,0 +1,27 @@
+From bde3168c4b0ff070fb3f72987ef36067a069e18f Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Mon, 12 Oct 2026 01:43:36 -0400
+Subject: [PATCH] Retire host naming sprites before returning to battle
+
+---
+ src/naming_screen.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/naming_screen.c b/src/naming_screen.c
+index a7248f6..3d098a0 100644
+--- a/src/naming_screen.c
++++ b/src/naming_screen.c
+@@ -703,6 +703,10 @@ static bool8 MainState_Exit(void)
+         // The cooperative host invokes VBlank before the next main callback.
+         // The naming VBlank callback must not retain the soon-to-be-freed data.
+         SetVBlankCallback(NULL);
++        // Caught-mon naming returns directly to BattleMainCB2, which animates
++        // sprites before restoring the field. Retire the naming sprites while
++        // their backing data is still valid.
++        ResetSpriteData();
+ #endif
+         SetMainCallback2(sNamingScreen->returnCallback);
+         DestroyTask(FindTaskIdByFunc(Task_NamingScreen));
+-- 
+2.51.0.windows.2
+

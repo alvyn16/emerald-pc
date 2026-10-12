@@ -973,3 +973,37 @@ recorrido Sky Pillar en la campaña.
 Build normal/diagnóstico, 21 suites y verify-normal PASS;
 `build/t27-script-ubfix-gba.log`: `pokeemerald.gba: OK`.
 La campaña se reanuda desde el guardado real de Brawly para repetir la escalera.
+
+## T27 natural: cierre del nombre después de capturar
+
+Tras entregar los bienes a Stern, la primera captura por bolsa/teclas en
+Ruta 110 abrió la pantalla de nombre. Al confirmarla, frame 154610 del tercer
+proceso, SIGSEGV en `CurrentPageToKeyboardId+8`, `0x10228c37`:
+`movzbl 0x1e22(%eax),%eax`, con EAX=0. `sNamingScreen` ya había sido liberado
+y puesto a NULL. Backtrace: CurrentPageToKeyboardId →
+GetCurrentPageColumnCount → SpriteCB_Cursor → AnimateSprites → BattleMainCB2.
+El script de combate había avanzado hasta BattleScript_GiveCaughtMonEnd;
+el Pokémon todavía no estaba incorporado al equipo.
+
+La pantalla de nombre para capturas retorna directamente a BattleMainCB2,
+que anima sprites antes de restaurar el campo. Retenía sprites del teclado
+con callbacks que dependían del bloque liberado. El parche 0042 añade
+ResetSpriteData antes de liberar ese bloque, exclusivamente bajo PORT_PC.
+Se conserva el callback de retorno y la lógica de captura; no se salta ninguna
+función del combate ni se modifica el comportamiento de GBA.
+
+`caught_naming_teardown_smoke.py` usa un encuentro y Master Ball preparados
+en un fixture independiente; selecciona bolsa, bola y nombre con teclas.
+No acredita captura natural de campaña. El binario anterior reproduce el
+mismo SIGSEGV (`build/t27-naming-before0042-gdb.log`). El corregido pasa por
+MainState_Exit, consume la bola, añade Wingull al equipo, deja sNamingScreen
+NULL y retorna al campo con outcome 7: PASS
+(`build/caught-naming-teardown/gdb.log`).
+
+Build normal/diagnóstico, 21 suites y verify-normal PASS
+(`build/t27-naming-build.log`); `build/t27-naming-gba.log`:
+`pokeemerald.gba: OK`. Clon limpio más los 42 parches: árbol
+`35365585bab00d57aceea569202ad6d006e26a5b`, igual al árbol de trabajo upstream.
+El clon también compila normal/diagnóstico y pasa las 21 suites y
+verify-normal (`build/t27-naming-clean-build.log`). Se reabre por Continue
+el último guardado real de Ruta 110 para repetir la captura en la campaña.
