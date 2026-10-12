@@ -7,9 +7,12 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
 
 ## Orden y criterios de aceptación
 
-- [ ] R01: intro, elección real del inicial, rescate de Birch, rival y entrega
+- [x] R01: intro, elección real del inicial, rescate de Birch, rival y entrega
   de Pokédex/bolas. Sin CreateMon, warps, flags, objetos o experiencia concedidos
   por el debugger. Guardar y reabrir: especie, nivel, mapa y progreso coinciden.
+  Evidencia: `build/natural-campaign/r01-birch-dex.json` y
+  `build/natural-campaign-reload/reload.log`; recorrido y lectura descritos
+  en `campaign-progress.md`. R02–R15 siguen abiertos.
 - [ ] R02: desplazamientos reales y puzzles para los primeros cuatro gimnasios;
   Devon/Peeko/Briney, Aqua en Slateport, meteorito y Magma en Mt. Chimney.
   Comprobar rechazo de pasos bloqueados antes de completar su requisito y

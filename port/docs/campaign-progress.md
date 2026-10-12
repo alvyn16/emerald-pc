@@ -91,7 +91,7 @@ de las 30 bolas.
 ## Cobertura pendiente
 
 Este recorrido dirigido valida continuidad de estado entre scripts. Todavía
-quedan intro y obtención natural del equipo, desplazamientos y puzzles,
+quedan desplazamientos y puzzles,
 Aqua/Magma, meteorito, Weather Institute, Space Center, Sky Pillar/Rayquaza
 y las condiciones que permiten llegar a cada gimnasio y entrar en la Liga.
 El estado/save dirigido sí continúa desde Wally hasta los créditos.
@@ -101,3 +101,41 @@ T27 y Checkpoint E permanecen abiertos.
 
 Verificación de base: 21 suites host y `verify-normal` PASS;
 `make compare KEEP_TEMPS=1 NODEP=1`: `pokeemerald.gba: OK`.
+
+## R01: inicio natural y recarga mediante Continue
+
+Partida nueva en `build/natural-campaign/`, con save privado vacío. La intro,
+reloj, madre y visita a May se controlaron con entradas de teclado. El driver
+lee colisiones del mapa y posición del jugador para planear desplazamientos;
+solo recarga el archivo de input y mueve el límite de frames del diagnóstico.
+No llama funciones para conceder Pokémon, experiencia, objetos, flags o warps.
+Solo omite la salida programada de `Port_ExitCleanly` para continuar el test;
+una parada en otra función falla y conserva el backtrace.
+
+Checkpoints medidos:
+
+| Frame | Resultado leído |
+|---:|---|
+| 35540 | Visita a May, estado de casa rival 3; equipo vacío |
+| 39272 | Selector de inicial abierto desde la bolsa de Birch |
+| 42176 | Victoria en el rescate, Mudkip recibido, laboratorio de Birch |
+| 45932 | Entrega/nombre completados; especie 283, nivel 5 |
+| 56696 | Enfermera de Oldale cura por diálogo: HP 23/23 |
+| 64928 | May en Ruta 103 derrotada: outcome 1, flag 0x82 activo |
+| 78680 | Pokédex entregada, cinco Poké Balls; guardado por Start/Save |
+
+Los encuentros salvajes del camino elevaron naturalmente a Mudkip a nivel 7.
+El save final está en el laboratorio, casilla (6,5), un miembro en el equipo.
+`r01-birch-dex.json` registra mapa, especie, nivel, flags y bolas.
+`natural_campaign_reload.py` abre una copia en un proceso nuevo, pulsa A
+en intro/título/Continue y comprueba esos campos sin escribir progreso.
+Resultado: `Natural campaign Continue/reload PASS; save unchanged`.
+
+Los helpers medidos están en `campaign_driver.py` y
+`natural_campaign_routes.py`. El recorrido interactivo conserva inputs y
+checkpoints en `build/natural-campaign/route.jsonl`; no se publica la partida,
+ROM, mapas, capturas ni datos del juego. ROM y save originales mantienen sus
+hashes anteriores. Esta evidencia cierra R01; no acredita R02–R15.
+
+Reproducción de la recarga tras generar el checkpoint privado:
+`python port/tests/natural_campaign_reload.py`, desde MINGW32 con GDB.

@@ -29,6 +29,7 @@ def state():
     callback = value("(unsigned int)gMain.callback2")
     return dict(frame=value("sDiagnosticFrame"), map=MAPS[tuple(location)], x=x-7,y=y-7,
                 script=memory("sGlobalScriptContextStatus",1)[0],
+                locked=memory("sLockFieldControls",1)[0],
                 callback=gdb.execute("info symbol %d" % callback,to_string=True).split(" in ")[0],
                 party=memory("gPlayerPartyCount",1)[0])
 
@@ -57,10 +58,65 @@ def settle(limit=10000):
     start = value("sDiagnosticFrame")
     while value("sDiagnosticFrame")-start < limit:
         current = state()
-        if current["callback"] == "CB2_Overworld" and current["script"] == 2:
-            return current
+        if field_ready(current):
+            current = advance("NONE",24)
+            if field_ready(current):
+                return current
+            continue
+        if current["callback"] == "CB2_NamingScreen":
+            advance("START",24,4)
+            advance("A",24,4)
+            continue
         advance("A",24,1)
     raise RuntimeError("Dialog/battle needs a specific input: "+str(state()))
+
+
+def field_ready(current):
+    return (current["callback"] == "CB2_Overworld" and current["script"] == 2
+            and not current["locked"])
+
+
+def go(x,y,limit=50):
+    """Resume a path after dialogues/battles; never continue across a map warp."""
+    origin=state()["map"]
+    for attempt in range(limit):
+        current=settle()
+        if current["map"] != origin or (current["x"],current["y"]) == (x,y):
+            return current
+        walk(x,y)
+    raise RuntimeError("Repeated movement interruptions: "+str(state()))
+
+
+def save_checkpoint(name):
+    """Use the actual Start/Save menu, then preserve a private save copy."""
+    assert field_ready(state())
+    previous=value("*(unsigned int *)&gSaveCounter")
+    advance("START",120,4)
+    actions=memory("sCurrentStartMenuActions",memory("sNumStartMenuActions",1)[0])
+    target=actions.index(5)
+    for step in range(9):
+        cursor=memory("sStartMenuCursorPos",1)[0]
+        if cursor == target:
+            break
+        advance("DOWN" if cursor < target else "UP",24,4)
+    assert memory("sStartMenuCursorPos",1)[0] == target
+    advance("A",24,4)
+    settle()
+    assert value("*(unsigned int *)&gSaveCounter") == previous+1
+    assert memory("gSaveAttemptStatus",1)[0] == 1
+    destination=SCRATCH/(name+".sav")
+    destination.write_bytes((SCRATCH/"saves/emerald-pc-diagnostic.sav").read_bytes())
+    facts=state()
+    facts["team"]=[dict(species=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),11,0)"),
+                        level=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),56,0)"))
+                   for i in range(facts["party"])]
+    facts["dex"]=value("(int)FlagGet(0x861)")
+    facts["rival"]=value("(int)FlagGet(0x82)")
+    facts["balls"]=value("(int)CountTotalItemQuantityInBag(4)")
+    (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")
+    gdb.execute(f"dump binary memory {SCRATCH.as_posix()}/{name}.raw &sPixels ((char *)&sPixels)+153600")
+    print("NATURAL SAVE PASS",facts)
+    return facts
 
 
 def path_to(x,y):
