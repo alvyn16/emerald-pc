@@ -1,0 +1,32 @@
+From 52f1fec072fb7f044bd1c0ed4e8d889682d9795b Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sun, 11 Oct 2026 20:23:23 -0400
+Subject: [PATCH] Hide host enemy shadows after battle data teardown
+
+---
+ src/battle_gfx_sfx_util.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/src/battle_gfx_sfx_util.c b/src/battle_gfx_sfx_util.c
+index ef18ff4..943a183 100644
+--- a/src/battle_gfx_sfx_util.c
++++ b/src/battle_gfx_sfx_util.c
+@@ -1202,6 +1202,15 @@ void LoadAndCreateEnemyShadowSprites(void)
+ 
+ void SpriteCB_EnemyShadow(struct Sprite *shadowSprite)
+ {
++#ifdef PORT_PC
++    // Battle teardown can free this data while the final fade still animates.
++    if (gBattleSpritesDataPtr == NULL)
++    {
++        shadowSprite->invisible = TRUE;
++        shadowSprite->callback = SpriteCB_SetInvisible;
++        return;
++    }
++#endif
+     bool8 invisible = FALSE;
+     u8 battler = shadowSprite->tBattlerId;
+     struct Sprite *battlerSprite = &gSprites[gBattlerSpriteIds[battler]];
+-- 
+2.51.0.windows.2
+

@@ -908,3 +908,37 @@ pokeemerald.gba: OK. ROM/save originales intactos. La campaña está asistida
 con warps/equipo; intro, Aqua/Magma, eventos y gating natural, eclosión y
 ampliación del Frontier siguen pendientes. T27 permanece abierta.
 Evidencia y reproducción: [campaign-progress.md](campaign-progress.md).
+
+## T27 natural: derrota de Roxanne y sombra tras liberar datos
+
+La campaña con teclado completó intro, Mudkip, rescate de Birch, May,
+Pokédex/bolas, guardado y Continue. Wally completó su captura; la puerta de
+Norman siguió bloqueada antes de las medallas. Devon en Petalburg Woods llegó
+al estado 1 mediante victoria y diálogo, después de una derrota legítima y
+retorno al Centro Pokémon. Los helpers no conceden progreso a esta partida.
+
+Al perder contra el primer Geodude de Roxanne, frame 230741 del primer
+proceso, apareció `SIGSEGV` en `SpriteCB_EnemyShadow+126`, dirección
+`0x100bba6b`. La instrucción `mov (%eax),%eax` recibió EAX=0. GDB confirmó
+`gBattleSpritesDataPtr=0`, `gMonSpritesGfxPtr=0`, especie enemiga 74 y
+`gBattleMainFunc=FreeResetData_ReturnToOvOrDoEvolutions`.
+
+El cierre libera los datos de combate durante el fundido, antes de que
+`ResetSpriteData` retire los sprites. Geodude tiene elevación 16, así que su
+sombra aún ejecuta un callback que consulta datos liberados. El parche 0041
+oculta la sombra y cambia su callback cuando esos datos ya son NULL, solo bajo
+`PORT_PC`. El fundido sigue avanzando; no se omite `UpdatePaletteFade` ni se
+retorna desde la función que falló para fingir un resultado.
+
+Regresión propia `battle_shadow_teardown_smoke.py`: Magikarp débil contra
+Roxanne en un fixture independiente. El binario anterior reproduce el mismo
+SIGSEGV en frame 33206 (`build/t27-shadow-before0041.log`). Con 0041, el mismo
+caso registra `SHADOW AFTER TEARDOWN`, outcome 2, blackout, HP restaurados y
+callback de campo: PASS (`build/battle-shadow-teardown/gdb.log`).
+
+Build normal/diagnóstico, 21 suites y `verify-normal`: PASS.
+`build/t27-shadow-gba.log`: `pokeemerald.gba: OK`.
+El clon de reproducción aplica 0041 después de los 40 parches anteriores y
+produce el mismo árbol `a1e2ff89b49b2936363b001617e0d6644165264e`.
+La campaña se reinicia con el binario corregido desde el guardado real de
+Devon; todavía no se acredita la primera medalla ni se cierra R02/T27.
