@@ -941,4 +941,7 @@ Build normal/diagnóstico, 21 suites y `verify-normal`: PASS.
 El clon de reproducción aplica 0041 después de los 40 parches anteriores y
 produce el mismo árbol `a1e2ff89b49b2936363b001617e0d6644165264e`.
 La campaña se reinicia con el binario corregido desde el guardado real de
-Devon; todavía no se acredita la primera medalla ni se cierra R02/T27.
+Devon. El clon también compila normal/diagnóstico, pasa las 21 suites y
+`verify-normal` (`build/t27-shadow-clean-build.log`). Roxanne fue derrotada
+después: Marshtomp nivel 16, primera medalla y estado de Norman 3 guardados
+y comprobados mediante Continue en un proceso nuevo. R02/T27 siguen abiertos.

@@ -2,21 +2,27 @@
 from pathlib import Path
 import json
 import shutil
+import argparse
+import re
 from process_watchdog import run_logged
 
 
 def main():
     project=Path(__file__).resolve().parents[2]
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("checkpoint",nargs="?",default="r01-birch-dex")
+    name=parser.parse_args().checkpoint
+    assert re.fullmatch(r"[a-z0-9-]+",name), "Checkpoint must be a private fixture name"
     source=project/"build/natural-campaign"
-    scratch=project/"build/natural-campaign-reload"
-    expected=json.loads((source/"r01-birch-dex.json").read_text())
+    scratch=project/("build/natural-campaign-reload-"+name)
+    expected=json.loads((source/(name+".json")).read_text())
     for directory in ("build","roms","saves"):
         (scratch/directory).mkdir(parents=True,exist_ok=True)
     for filename in ("emerald-pc-diagnostic.exe","SDL2.dll"):
         shutil.copy2(source/"build"/filename,scratch/"build"/filename)
     shutil.copy2(source/"roms/test.gba",scratch/"roms/test.gba")
     save=scratch/"saves/emerald-pc-diagnostic.sav"
-    saved=(source/"r01-birch-dex.sav").read_bytes()
+    saved=(source/(name+".sav")).read_bytes()
     save.write_bytes(saved)
     inputs=scratch/"input.txt"
     inputs.write_text("".join(f"{frame} {frame+1} A\n" for frame in range(1000,8000,45)))
@@ -44,6 +50,11 @@ for index,mon in enumerate(expected['team']):
 assert d.value('(int)FlagGet(0x861)') == expected['dex']
 assert d.value('(int)FlagGet(0x82)') == expected['rival']
 assert d.value('(int)CountTotalItemQuantityInBag(4)') == expected['balls']
+if 'badges' in expected:
+    assert [d.value(f'(int)FlagGet({{0x867+i}})') for i in range(8)] == expected['badges']
+for key,var in (('norman',0x4085),('woods',0x4098)):
+    if key in expected:
+        assert d.value(f'(int)VarGet({{var}})') == expected[key]
 print('NATURAL RELOAD PASS',actual)
 end
 continue

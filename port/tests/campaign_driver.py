@@ -7,6 +7,7 @@ import gdb
 
 ROOT = Path.cwd()
 SCRATCH = ROOT / "build/natural-campaign"
+RUN_WILD = False  # Opt in after starter/rival; preserves HP during travel.
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -38,6 +39,7 @@ def advance(buttons="NONE", frames=24, hold=None):
     assert gdb.newest_frame().name() == "Port_ExitCleanly", "Unexpected debugger stop; inspect backtrace"
     frame = value("sDiagnosticFrame")
     hold = frames-1 if hold is None else hold
+    assert frames > 0 and 0 < hold < frames
     (SCRATCH / "input.txt").write_text(f"{frame+1} {frame+hold} {buttons}\n",encoding="ascii")
     gdb.execute("call (int)PortInputScript_Init()",to_string=True)
     gdb.execute("set var sStopFrame = %d" % (frame+frames))
@@ -67,7 +69,10 @@ def settle(limit=10000):
             advance("START",24,4)
             advance("A",24,4)
             continue
-        advance("A",24,1)
+        button=battle_button() if current["callback"] == "BattleMainCB2" else "A"
+        # One pulse avoids reopening NPC dialogue or accepting a move before
+        # the next checkpoint can inspect the move-selection cursor.
+        advance(button,96 if button == "A" else 24,1)
     raise RuntimeError("Dialog/battle needs a specific input: "+str(state()))
 
 
@@ -76,11 +81,79 @@ def field_ready(current):
             and not current["locked"])
 
 
-def go(x,y,limit=50):
+def battle_button():
+    """Choose a damaging move with PP using only the actual menu's keys."""
+    controllers=struct.unpack("<4I",memory("gBattlerControllerFuncs",16))
+    can_run=RUN_WILD and not value("*(unsigned int *)&gBattleTypeFlags") & (8|16|512)
+    for battler in (0,2):
+        function=gdb.execute("info symbol %d" % controllers[battler],to_string=True).split(" in ")[0]
+        if function == "HandleInputChooseAction":
+            target=3 if can_run else 0
+            cursor=memory("gActionSelectionCursor",4)[battler]
+            return cursor_button(cursor,target)
+        if function != "HandleInputChooseMove":
+            continue
+        if can_run:
+            return "B"
+        choices=memory("gBattleBufferA",2048)[battler*512+4:battler*512+24]
+        moves=struct.unpack_from("<4H",choices)
+        types=choices[18:20]
+        candidates=[]
+        for index,move in enumerate(moves):
+            if move and choices[8+index]:
+                definition=bytes(gdb.selected_inferior().read_memory(value("(unsigned int)&gBattleMoves")+move*9,9))
+                power=definition[1]
+                score=power*(3 if definition[2] in types else 2)
+                candidates.append((score,-index,index))
+        if not candidates:
+            return "A"  # Engine offers Struggle when all PP are exhausted.
+        target=max(candidates)[2]
+        cursor=memory("gMoveSelectionCursor",4)[battler]
+        return cursor_button(cursor,target)
+    return "A"
+
+
+def cursor_button(cursor,target):
+    if cursor&1 != target&1:
+        return "RIGHT" if target&1 else "LEFT"
+    if cursor&2 != target&2:
+        return "DOWN" if target&2 else "UP"
+    return "A"
+
+
+def cross(button,destination,limit=4):
+    """Face then cross a door/connection and check the resulting map."""
+    for attempt in range(limit):
+        advance(button,300,8)
+        current=settle()
+        if current["map"] == destination:
+            return current
+    raise RuntimeError("Expected transition to "+destination+": "+str(state()))
+
+
+def talk(x,y,facing,limit=30000):
+    origin=state()["map"]
+    go(x,y)
+    assert state()["map"] == origin and (state()["x"],state()["y"]) == (x,y)
+    advance(facing,24,4)
+    advance("A",24,4)
+    return settle(limit)
+
+
+def nurse():
+    assert state()["map"].endswith("PokemonCenter_1F")
+    talk(7,4,"UP")
+    for index in range(state()["party"]):
+        mon=f"(void *)((char *)&gPlayerParty+{index*100})"
+        assert value(f"(int)GetMonData3({mon},57,0)") == value(f"(int)GetMonData3({mon},58,0)")
+    return state()
+
+
+def go(x,y,limit=50,dialogue_limit=30000):
     """Resume a path after dialogues/battles; never continue across a map warp."""
     origin=state()["map"]
     for attempt in range(limit):
-        current=settle()
+        current=settle(dialogue_limit)
         if current["map"] != origin or (current["x"],current["y"]) == (x,y):
             return current
         walk(x,y)
@@ -113,6 +186,9 @@ def save_checkpoint(name):
     facts["dex"]=value("(int)FlagGet(0x861)")
     facts["rival"]=value("(int)FlagGet(0x82)")
     facts["balls"]=value("(int)CountTotalItemQuantityInBag(4)")
+    facts["badges"]=[value(f"(int)FlagGet({0x867+i})") for i in range(8)]
+    facts["norman"]=value("(int)VarGet(0x4085)")
+    facts["woods"]=value("(int)VarGet(0x4098)")
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")
     gdb.execute(f"dump binary memory {SCRATCH.as_posix()}/{name}.raw &sPixels ((char *)&sPixels)+153600")
     print("NATURAL SAVE PASS",facts)
@@ -123,6 +199,21 @@ def path_to(x,y):
     current = state(); start = (current["x"]+7,current["y"]+7); goal=(x+7,y+7)
     width,height,address = struct.unpack("<III",memory("gBackupMapLayout",12))
     cells = struct.unpack("<%dH" % (width*height),bytes(gdb.selected_inferior().read_memory(address,width*height*2)))
+    read=gdb.selected_inferior().read_memory
+    layout=struct.unpack("<I",memory("gMapHeader",4))[0]
+    tilesets=struct.unpack("<2I",bytes(read(layout+16,8)))
+    attributes=[]
+    for tileset in tilesets:
+        pointer=struct.unpack("<I",bytes(read(tileset+16,4)))[0]
+        attributes.extend(struct.unpack("<512H",bytes(read(pointer,1024))))
+    traits=memory("sTileBitAttributes",256)
+    surfing=bool(memory("gPlayerAvatar",1)[0]&8)
+    def passable(cell):
+        tile=cell&0x3ff
+        if cell&0xc00 or tile == 0x3ff:
+            return False
+        behavior=attributes[tile]&0xff
+        return (surfing or not traits[behavior]&2) and not 0x30 <= behavior <= 0x37
     objects = memory("gObjectEvents",16*36); player=memory("gPlayerAvatar",6)[5]
     blocked = {struct.unpack_from("<hh",objects,i*36+16) for i in range(16)
                if i != player and objects[i*36]&1}
@@ -136,7 +227,7 @@ def path_to(x,y):
             return route[::-1]
         for dx,dy,button in ((1,0,"RIGHT"),(-1,0,"LEFT"),(0,1,"DOWN"),(0,-1,"UP")):
             nxt=(node[0]+dx,node[1]+dy)
-            if 0 <= nxt[0] < width and 0 <= nxt[1] < height and nxt not in previous and nxt not in blocked and cells[nxt[1]*width+nxt[0]] & 0xC00 == 0:
+            if 0 <= nxt[0] < width and 0 <= nxt[1] < height and nxt not in previous and nxt not in blocked and passable(cells[nxt[1]*width+nxt[0]]):
                 previous[nxt]=(node,button); queue.append(nxt)
     raise RuntimeError("No walkable path to "+str(goal)+" from "+str(current))
 
@@ -148,7 +239,11 @@ def walk(x,y,limit=200):
         if current["map"] != origin or (current["x"],current["y"]) == (x,y):
             return current
         route=path_to(x,y)
-        advance(route[0],24,4)
+        straight=1
+        while straight < min(4,len(route)) and route[straight] == route[0]:
+            straight += 1
+        hold=16*(straight-1)+4
+        advance(route[0],hold+20,hold)
         if state()["script"] != 2 or state()["callback"] != "CB2_Overworld":
             return state()
     raise RuntimeError("Movement deadline: "+str(state()))

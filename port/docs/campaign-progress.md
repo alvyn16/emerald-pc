@@ -139,3 +139,37 @@ hashes anteriores. Esta evidencia cierra R01; no acredita R02–R15.
 
 Reproducción de la recarga tras generar el checkpoint privado:
 `python port/tests/natural_campaign_reload.py`, desde MINGW32 con GDB.
+
+Reproducción completa desde un save vacío:
+`python port/tests/natural_campaign_smoke.py`.
+La repetición independiente pasó y guardó Mudkip nivel 8 en el laboratorio
+(frame 85752). El nivel varía con los encuentros naturales y tiempos de
+desplazamiento; se compara con el JSON leído de cada guardado, no se fija por
+el debugger. Todos sus inputs y artefactos quedan en `build/natural-campaign-replay/`.
+
+## R02: Wally, Devon y primera medalla — parcial
+
+La misma campaña completó el tutorial de Wally (estado del gimnasio 2,
+frame 125108) y comprobó que Norman todavía rechaza el combate y que la puerta
+superior izquierda permanece bloqueada: posición (1,106) antes/después de Up.
+Después del robo en el bosque, la primera derrota contra Aqua volvió a la
+enfermería; un segundo recorrido ganó, recibió la Great Ball y dejó el estado
+del bosque en 1. Checkpoint `r02-devon-woods`: Mudkip nivel 11, frame 189536.
+
+La derrota contra Geodude en Rustboro descubrió la excepción corregida por
+0041, descrita en `first-run-report.md`. Se reanudó desde ese último guardado
+mediante Continue. El equipo subió y evolucionó mediante combates del juego.
+Victoria contra Roxanne: flag 0x4F0 activo, medalla 0x867 activa, estado de
+Norman 3. `r02-roxanne` guarda Marshtomp (especie 284) nivel 16, mapa gimnasio
+de Rustboro, casilla (5,3), frame 83784 del proceso reanudado.
+Su copia reabre por Continue y conserva especie/nivel, mapa/casilla, Pokédex,
+bolas, medalla, estado del bosque y estado de Norman; save sin cambios: PASS.
+
+`python port/tests/natural_campaign_reload.py r02-roxanne` reproduce esa
+recarga. Los mapas se recorren con teclas; el planner lee colisiones, atributos
+y objetos activos para evitar agua sin Surf. Las opciones de combate también
+se eligen con direcciones/A/B, leyendo PP y el cursor. Las excepciones y los
+deadlines fallan explícitamente. No se acredita todavía el resto de R02–R15.
+
+Verificación de 0041 en el clon de reproducción: normal/diagnóstico,
+21 suites y `verify-normal` PASS (`build/t27-shadow-clean-build.log`).
