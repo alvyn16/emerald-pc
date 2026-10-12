@@ -33,7 +33,9 @@ DATA_SOURCES := $(sort $(wildcard $(POKEEMERALD)/data/*.s))
 DATA_OBJECT_DIR := ../build/host-data-i686
 DATA_RAW_OBJECT_DIR := ../build/host-data-i686-raw
 DATA_OBJECTS := $(patsubst $(POKEEMERALD)/data/%.s,$(DATA_OBJECT_DIR)/%.o,$(DATA_SOURCES))
-DATA_CPPFLAGS := -iquote include -Wno-trigraphs -DMODERN=0 -I tools/agbcc/include -I tools/agbcc -nostdinc -undef -std=gnu89
+# Select upstream's host-safe script variants. Keep UBFIX as an identifier
+# for gas .ifdef while also making CPP #ifdef UBFIX true.
+DATA_CPPFLAGS := -iquote include -Wno-trigraphs -DMODERN=0 -DPORT_PC -DUBFIX=UBFIX -I tools/agbcc/include -I tools/agbcc -nostdinc -undef -std=gnu89
 SONG_SOURCES := $(sort $(wildcard $(POKEEMERALD)/sound/songs/midi/*.s))
 SONG_OBJECT_DIR := ../build/host-songs-i686
 SONG_RAW_OBJECT_DIR := ../build/host-songs-i686-raw
@@ -161,6 +163,7 @@ $(OBJECT_DIR)/agb_flash.o $(OBJECT_DIR)/agb_flash_1m.o: host_flash.h
 $(OBJECT_DIR)/siirtc.o: port_rtc.h
 $(OBJECT_DIR)/m4a.o: port_psg.h
 $(OBJECTS): $(POKEEMERALD)/include/gba/macro.h $(POKEEMERALD)/include/global.h
+$(DATA_OBJECTS): Makefile
 
 $(DATA_OBJECT_DIR)/%.o: $(POKEEMERALD)/data/%.s | check-tools
 	@mkdir -p $(DATA_OBJECT_DIR) $(DATA_RAW_OBJECT_DIR)
@@ -170,7 +173,7 @@ $(DATA_OBJECT_DIR)/%.o: $(POKEEMERALD)/data/%.s | check-tools
 		$(HOST_CC) -E $(DATA_CPPFLAGS) - | \
 		PATH="$(PREPROC_PATH_PREFIX)$$PATH" tools/preproc/preproc.exe -ie "data/$*.s" charmap.txt | \
 		sed -E -f ../port/asm_compat.sed | \
-		$(HOST_CC) -c -x assembler -I. -Wa,--defsym,MODERN=0 -o "../build/host-data-i686-raw/$*.o" -; \
+		$(HOST_CC) -c -x assembler -I. -Wa,--defsym,MODERN=0,--defsym,UBFIX=1 -o "../build/host-data-i686-raw/$*.o" -; \
 	}
 	@objcopy --prefix-symbols=_ $(DATA_RAW_OBJECT_DIR)/$*.o $(DATA_OBJECT_DIR)/$*.o
 

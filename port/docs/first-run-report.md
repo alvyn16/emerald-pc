@@ -945,3 +945,31 @@ Devon. El clon también compila normal/diagnóstico, pasa las 21 suites y
 `verify-normal` (`build/t27-shadow-clean-build.log`). Roxanne fue derrotada
 después: Marshtomp nivel 16, primera medalla y estado de Norman 3 guardados
 y comprobados mediante Continue en un proceso nuevo. R02/T27 siguen abiertos.
+
+## T27 natural: copyvar literal en Granite Cave
+
+Con dos medallas y Marshtomp nivel 19, el acceso real a Granite Cave B1F
+falló en `ScrCmd_copyvar+53`, dirección `0x102d0356`, al cargar el mapa.
+La instrucción `movzwl (%eax),%edx` recibió EAX=0. El contexto inmediato
+apuntaba a `CaveHole_FixCrackedGround`; bytes `19 22 40 01 00`:
+`copyvar VAR_ICE_STEP_COUNT, 1`. `GetVarPointer(1)` retorna NULL, porque
+1 es un literal, no un identificador de variable. El destino era válido.
+
+Upstream ofrece `setvar` bajo UBFIX en ese script y en Sky Pillar 2F/4F.
+La compilación C host seleccionaba SAFE_DIV bajo PORT_PC, pero los datos
+ensamblados mantenían las variantes originales. `port/Makefile` selecciona
+UBFIX en CPP y gas exclusivamente para los objetos host. La macro
+`UBFIX=UBFIX` conserva el identificador que requiere `.ifdef UBFIX` de gas;
+`--defsym UBFIX=1` activa también la variante de Magnitude. La dependencia
+en Makefile asegura reconstruir los objetos de datos al cambiar esas opciones.
+No se editaron scripts ni fuentes upstream; no corresponde un parche 0042.
+
+`script_ubfix_smoke.py` comprueba `16 22 40 01 00` (`setvar`) y carga
+Granite Cave B1F, Sky Pillar 2F y 4F con el contador inicialmente a cero.
+Las tres transiciones dejan VAR_ICE_STEP_COUNT=1 y callback de campo: PASS
+en `build/script-ubfix/gdb.log`. Son fixtures dirigidos, no evidencia de haber
+recorrido Sky Pillar en la campaña.
+
+Build normal/diagnóstico, 21 suites y verify-normal PASS;
+`build/t27-script-ubfix-gba.log`: `pokeemerald.gba: OK`.
+La campaña se reanuda desde el guardado real de Brawly para repetir la escalera.
