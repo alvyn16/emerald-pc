@@ -102,3 +102,42 @@ def cut_peeko_and_pokenav():
     d.go(5,8); d.cross("DOWN","RustboroCity")
     assert d.value("(int)VarGet(0x405a)") == 7
     d.save_checkpoint("r02-matchcall")
+
+
+def steven_letter():
+    """Walk from the real Knuckle Badge checkpoint through Granite Cave."""
+    assert d.state()['map'] == 'DewfordTown_Gym'
+    assert d.value('(int)FlagGet(0x868)') == 1
+    d.go(5,27); d.cross('DOWN','DewfordTown')
+    d.go(2,11); d.cross('UP','DewfordTown_PokemonCenter_1F'); d.nurse()
+    d.go(7,8); d.cross('DOWN','DewfordTown')
+    d.go(8,0); d.cross('UP','Route106')
+    d.go(48,17); d.cross('UP','GraniteCave_1F')
+    d.talk(36,10,'UP')
+    assert d.value('(int)FlagGet(0x6d)') == 1
+    d.go(17,11); d.cross('NONE','GraniteCave_B1F')
+    assert d.value('(int)VarGet(0x4022)') == 1
+    d.go(28,21); d.cross('NONE','GraniteCave_B2F')
+    d.go(29,13); d.cross('NONE','GraniteCave_B1F')
+    d.go(25,13); d.cross('NONE','GraniteCave_1F')
+    d.go(5,10); d.cross('DOWN','GraniteCave_StevensRoom')
+    d.talk(7,7,'DOWN')
+    assert d.value('(int)FlagGet(0xbd)') == 1
+    d.save_checkpoint('r02-steven')
+
+
+def sail_to_slateport():
+    assert d.state()['map'] == 'GraniteCave_StevensRoom'
+    assert d.value('(int)FlagGet(0xbd)') == 1
+    d.go(7,3); d.cross('UP','GraniteCave_1F')
+    d.go(35,3); d.cross('NONE','GraniteCave_B1F')
+    d.go(29,13); d.cross('NONE','GraniteCave_B2F')
+    d.go(28,21); d.cross('NONE','GraniteCave_B1F')
+    d.go(4,21); d.cross('NONE','GraniteCave_1F')
+    d.go(37,12); d.cross('DOWN','Route106')
+    d.go(68,19); d.cross('DOWN','DewfordTown')
+    d.choose_dialogue(11,9,'RIGHT',1)
+    assert d.state()['map'] == 'Route109'
+    d.go(20,0); d.cross('UP','SlateportCity')
+    d.go(19,20); d.cross('UP','SlateportCity_PokemonCenter_1F'); d.nurse()
+    d.go(7,8); d.cross('DOWN','SlateportCity')

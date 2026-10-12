@@ -10,9 +10,9 @@ from process_watchdog import run_logged
 def main():
     project=Path(__file__).resolve().parents[2]
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase",choices=("r01","r02-devon"),default="r01")
+    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven"),default="r01")
     phase=parser.parse_args().phase
-    scratch=project/("build/natural-campaign-replay" if phase == "r01" else "build/natural-campaign-replay-r02-devon")
+    scratch=project/("build/natural-campaign-replay" if phase == "r01" else "build/natural-campaign-replay-"+phase)
     for directory in ("build","roms","saves"):
         (scratch/directory).mkdir(parents=True,exist_ok=True)
     for filename in ("emerald-pc-diagnostic.exe","SDL2.dll"):
@@ -23,8 +23,9 @@ def main():
     save=scratch/"saves/emerald-pc-diagnostic.sav"
     if save.exists():
         shutil.copy2(save,scratch/"previous-replay.sav")
+    checkpoint={'r02-devon':'r02-roxanne','r02-steven':'r02-brawly'}
     save.write_bytes(b"\xff"*131072 if phase == "r01" else
-                     (project/"build/natural-campaign/r02-roxanne.sav").read_bytes())
+                     (project/('build/natural-campaign/'+checkpoint[phase]+'.sav')).read_bytes())
     inputs=scratch/"input.txt"
     previous=sys.argv
     try:
@@ -42,7 +43,11 @@ route.rival_and_dex()''' if phase == "r01" else '''d.RUN_WILD=True
 d.settle(30000)
 assert d.state()['map'] == 'RustboroCity_Gym'
 d.go(5,19); d.cross('DOWN','RustboroCity')
-route.cut_peeko_and_pokenav()'''
+route.cut_peeko_and_pokenav()''' if phase == 'r02-devon' else '''d.RUN_WILD=True
+d.settle(30000)
+route.steven_letter()
+route.sail_to_slateport()
+d.save_checkpoint('r02-slateport-arrival')'''
     script.write_text(f'''set pagination off
 set confirm off
 set environment SDL_VIDEODRIVER dummy

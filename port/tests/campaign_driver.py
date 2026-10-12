@@ -8,8 +8,9 @@ import gdb
 ROOT = Path.cwd()
 SCRATCH = ROOT / "build/natural-campaign"
 RUN_WILD = False  # Opt in after starter/rival; preserves HP during travel.
+CATCH_SPECIES = set()  # Optional natural catches; never constructs a Pokemon.
 EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0x90,
-               "match_call":0x12f,"pokenav":0x862,"letter":0xbd}
+               "match_call":0x12f,"pokenav":0x862,"letter":0xbd,"delivered_goods":0x95}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -71,6 +72,9 @@ def settle(limit=10000):
             advance("START",24,4)
             advance("A",24,4)
             continue
+        if current['callback'] == 'CB2_BagMenuRun' and CATCH_SPECIES:
+            advance(catch_bag_button(),24,1)
+            continue
         if (current["map"] == "RustboroCity" and current["callback"] == "CB2_Overworld"
                 and value("(int)VarGet(0x405a)") == 6
                 and value("(int)FuncIsActiveTask((void *)Task_HandleMultichoiceInput)")):
@@ -106,16 +110,18 @@ def field_ready(current):
 def battle_button():
     """Choose a damaging move with PP using only the actual menu's keys."""
     controllers=struct.unpack("<4I",memory("gBattlerControllerFuncs",16))
-    can_run=RUN_WILD and not value("*(unsigned int *)&gBattleTypeFlags") & (8|16|512)
+    wild=not value("*(unsigned int *)&gBattleTypeFlags") & (8|16|512)
+    catching=wild and struct.unpack_from('<H',memory('gBattleMons',352),88)[0] in CATCH_SPECIES
+    can_run=RUN_WILD and wild and not catching
     for battler in (0,2):
         function=gdb.execute("info symbol %d" % controllers[battler],to_string=True).split(" in ")[0]
         if function == "HandleInputChooseAction":
-            target=3 if can_run else 0
+            target=1 if catching else 3 if can_run else 0
             cursor=memory("gActionSelectionCursor",4)[battler]
             return cursor_button(cursor,target)
         if function != "HandleInputChooseMove":
             continue
-        if can_run:
+        if can_run or catching:
             return "B"
         choices=memory("gBattleBufferA",2048)[battler*512+4:battler*512+24]
         moves=struct.unpack_from("<4H",choices)
@@ -156,6 +162,21 @@ def battle_button():
     return "A"
 
 
+def catch_bag_button():
+    if not value('(int)FuncIsActiveTask((void *)Task_BagMenu_HandleInput)'):
+        return 'A'  # Context menu's default is Use.
+    position=memory('gBagPosition',28)
+    pocket=position[5]
+    if pocket != 1:  # Zero-based Poke Balls pocket.
+        return 'RIGHT' if pocket < 1 else 'LEFT'
+    cursor=struct.unpack_from('<H',position,8+pocket*2)[0]
+    scroll=struct.unpack_from('<H',position,18+pocket*2)[0]
+    # Prefer the first ball stack. Assert it really contains a Poke Ball type.
+    item=value('(int)BagGetItemIdByPocketPosition(2,0)')
+    assert 1 <= item <= 12, 'No available ball stack for natural capture'
+    return 'UP' if cursor+scroll else 'A'
+
+
 def stat_stage_factor(stage):
     assert 0 <= stage <= 12
     return (2+max(stage-6,0))/(2+max(6-stage,0))
@@ -188,6 +209,24 @@ def talk(x,y,facing,limit=30000):
     advance(facing,24,4)
     advance("A",24,4)
     return settle(limit)
+
+
+def choose_dialogue(x,y,facing,choice,limit=10000):
+    """Read a vertical script-menu cursor and select with real keys."""
+    go(x,y)
+    assert (state()['x'],state()['y']) == (x,y)
+    advance(facing,24,4); advance('A',24,4)
+    start=value('sDiagnosticFrame')
+    while not value('(int)FuncIsActiveTask((void *)Task_HandleMultichoiceInput)'):
+        assert value('sDiagnosticFrame')-start < limit, 'Expected script choice menu'
+        advance('A',96,1)
+    for step in range(16):
+        cursor=value('(int)Menu_GetCursorPos()')
+        if cursor == choice:
+            advance('A',24,1)
+            return settle(30000)
+        advance('DOWN' if cursor < choice else 'UP',24,1)
+    raise RuntimeError('Script menu did not reach requested choice')
 
 
 def nurse():
@@ -249,7 +288,7 @@ def save_checkpoint(name):
 
 
 def path_to(x,y):
-    current = state(); start = (current["x"]+7,current["y"]+7); goal=(x+7,y+7)
+    current = state(); goal=(x+7,y+7)
     width,height,address = struct.unpack("<III",memory("gBackupMapLayout",12))
     cells = struct.unpack("<%dH" % (width*height),bytes(gdb.selected_inferior().read_memory(address,width*height*2)))
     read=gdb.selected_inferior().read_memory
@@ -268,19 +307,29 @@ def path_to(x,y):
         behavior=attributes[tile]&0xff
         return (surfing or not traits[behavior]&2) and not 0x30 <= behavior <= 0x37
     objects = memory("gObjectEvents",16*36); player=memory("gPlayerAvatar",6)[5]
+    start=(current['x']+7,current['y']+7,objects[player*36+11]&15)
     blocked = {struct.unpack_from("<hh",objects,i*36+16) for i in range(16)
                if i != player and objects[i*36]&1}
     queue=deque([start]); previous={start:None}
     while queue:
         node=queue.popleft()
-        if node == goal:
+        if node[:2] == goal:
             route=[]
             while previous[node] is not None:
                 node,button = previous[node]; route.append(button)
             return route[::-1]
         for dx,dy,button in ((1,0,"RIGHT"),(-1,0,"LEFT"),(0,1,"DOWN"),(0,-1,"UP")):
-            nxt=(node[0]+dx,node[1]+dy)
-            if 0 <= nxt[0] < width and 0 <= nxt[1] < height and nxt not in previous and nxt not in blocked and passable(cells[nxt[1]*width+nxt[0]]):
+            point=(node[0]+dx,node[1]+dy)
+            if not (0 <= point[0] < width and 0 <= point[1] < height) or point in blocked:
+                continue
+            cell=cells[point[1]*width+point[0]]
+            elevation=cell>>12
+            # Match IsElevationMismatchAt/ObjectEventUpdateElevation: 0 is
+            # a transition tile; 15 preserves the object's current elevation.
+            if node[2] != 0 and elevation not in (0,15,node[2]):
+                continue
+            nxt=(*point,node[2] if elevation == 15 else elevation)
+            if nxt not in previous and passable(cell):
                 previous[nxt]=(node,button); queue.append(nxt)
     raise RuntimeError("No walkable path to "+str(goal)+" from "+str(current))
 

@@ -208,3 +208,33 @@ corrige esa transición. Tras reabrir el checkpoint de Brawly y repetir
 enfermera, costa, hiker y escalera, B1F carga y VAR_ICE_STEP_COUNT vale 1.
 También pasan normal/diagnóstico, 21 suites y verify-normal en el clon de
 reproducción (`build/t27-script-ubfix-clean-build.log`). R02 sigue parcial.
+
+### Carta a Steven y museo de Slateport
+
+Desde Brawly se recorrieron las escaleras reales de Granite Cave hasta Steven.
+El hiker entregó Flash (flag 0x6D); Steven recibió la carta por diálogo
+(0xBD). Checkpoint `r02-steven`: frame 53044 del tercer proceso, Marshtomp
+nivel 19 y dos medallas. `natural_campaign_reload.py r02-steven` reabre
+Continue y conserva los campos del checkpoint y el save sin cambios: PASS
+(`build/t27-steven-reload.log`).
+
+Se salió de la cueva, se seleccionó Slateport en el menú de Briney y se
+recorrió Ruta 109. El planner anterior intentaba subir directamente del muelle
+(elevación 4) a la playa (3): GetCollisionAtCoords devuelve 3, rechazo correcto
+del juego. El planner ahora conserva elevación y busca las transiciones 0/15.
+Usa las escaleras reales, sin escribir coordenadas ni colisiones.
+
+`natural_campaign_smoke.py --phase r02-steven` repite en otro proceso desde
+una copia del save de Brawly: Flash, escaleras, Steven, retorno, menú del barco,
+Ruta 109, enfermera y guardado en Slateport. PASS, salida normal, sin señales:
+`build/t27-natural-steven-replay.log`. La diferencia de frames/combates entre
+recorridos procede del avance real de RNG; no se modifica la semilla.
+
+En la campaña principal se habló con Dock (0x94 activo), se pagó la entrada
+del museo y se completaron los dos combates seguidos de Aqua y la intervención
+de Archie. Stern recibió los bienes (0x95 activo); el script curó el equipo.
+`r02-stern`: frame 132876, Marshtomp nivel 20; `r02-slateport`: frame 138224,
+tras salir del museo y completar el diálogo de Scott. Ruta 110 se alcanzó
+desde la conexión norte de la ciudad; checkpoint `r02-route110`, frame 148256.
+R02 aún requiere Wattson, Flannery y los eventos de Mt. Chimney; R03–R15
+siguen pendientes. Este tramo no cierra T27 ni Checkpoint E.
