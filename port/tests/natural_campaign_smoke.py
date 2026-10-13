@@ -10,7 +10,7 @@ from process_watchdog import run_logged
 def main():
     project=Path(__file__).resolve().parents[2]
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven"),default="r01")
+    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum"),default="r01")
     phase=parser.parse_args().phase
     scratch=project/("build/natural-campaign-replay" if phase == "r01" else "build/natural-campaign-replay-"+phase)
     for directory in ("build","roms","saves"):
@@ -23,7 +23,8 @@ def main():
     save=scratch/"saves/emerald-pc-diagnostic.sav"
     if save.exists():
         shutil.copy2(save,scratch/"previous-replay.sav")
-    checkpoint={'r02-devon':'r02-roxanne','r02-steven':'r02-brawly'}
+    checkpoint={'r02-devon':'r02-roxanne','r02-steven':'r02-brawly',
+                'r02-catch':'r02-route110','r02-museum':'r02-steven'}
     save.write_bytes(b"\xff"*131072 if phase == "r01" else
                      (project/('build/natural-campaign/'+checkpoint[phase]+'.sav')).read_bytes())
     inputs=scratch/"input.txt"
@@ -37,17 +38,27 @@ def main():
     finally:
         sys.argv=previous
     script=scratch/"campaign.gdb"
-    actions='''route.meet_may()
+    actions={
+        'r01':'''route.meet_may()
 route.rescue_birch()
-route.rival_and_dex()''' if phase == "r01" else '''d.RUN_WILD=True
+route.rival_and_dex()''',
+        'r02-devon':'''d.RUN_WILD=True
 d.settle(30000)
 assert d.state()['map'] == 'RustboroCity_Gym'
 d.go(5,19); d.cross('DOWN','RustboroCity')
-route.cut_peeko_and_pokenav()''' if phase == 'r02-devon' else '''d.RUN_WILD=True
+route.cut_peeko_and_pokenav()''',
+        'r02-steven':'''d.RUN_WILD=True
 d.settle(30000)
 route.steven_letter()
 route.sail_to_slateport()
-d.save_checkpoint('r02-slateport-arrival')'''
+d.save_checkpoint('r02-slateport-arrival')''',
+        'r02-catch':'''d.settle(30000)
+route.catch_wingull()''',
+        'r02-museum':'''d.RUN_WILD=True
+d.settle(30000)
+route.sail_to_slateport()
+route.museum_delivery()''',
+    }[phase]
     script.write_text(f'''set pagination off
 set confirm off
 set environment SDL_VIDEODRIVER dummy

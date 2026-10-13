@@ -141,3 +141,93 @@ def sail_to_slateport():
     d.go(20,0); d.cross('UP','SlateportCity')
     d.go(19,20); d.cross('UP','SlateportCity_PokemonCenter_1F'); d.nurse()
     d.go(7,8); d.cross('DOWN','SlateportCity')
+
+
+def heal_slateport():
+    if d.state()['map'] == 'Route110':
+        d.go(15,99); d.cross('DOWN','SlateportCity')
+    assert d.state()['map'] == 'SlateportCity'
+    d.go(19,20); d.cross('UP','SlateportCity_PokemonCenter_1F'); d.nurse()
+    d.go(7,8); d.cross('DOWN','SlateportCity')
+
+
+def museum_delivery():
+    """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
+    assert d.state()['map'] == 'SlateportCity'
+    assert d.value('(int)FlagGet(0x94)') == 0
+    d.go(30,28); d.advance('UP',48,4)
+    assert d.state()['map'] == 'SlateportCity'
+    assert (d.state()['x'],d.state()['y']) == (30,28)
+    print('MUSEUM GATE CLOSED PASS',d.state())
+    d.go(26,39); d.cross('UP','SlateportCity_SternsShipyard_1F')
+    d.talk(4,5,'RIGHT'); assert d.value('(int)FlagGet(0x94)') == 1
+    d.go(2,14); d.cross('DOWN','SlateportCity')
+    d.go(30,27)
+    save=d.value('*(unsigned int *)&gSaveBlock1Ptr')
+    money=d.value(f'(int)GetMoney((void *)({save}+0x490))')
+    d.cross('UP','SlateportCity_OceanicMuseum_1F')
+    d.go(9,7)  # The fee is a coordinate event one tile past the entrance warp.
+    save=d.value('*(unsigned int *)&gSaveBlock1Ptr')
+    assert d.value(f'(int)GetMoney((void *)({save}+0x490))') == money-50
+    assert d.value('(int)VarGet(0x40aa)') == 1
+    print('MUSEUM ADMISSION FEE PASS',d.state())
+    d.go(6,2); d.cross('UP','SlateportCity_OceanicMuseum_2F')
+    d.talk(13,5,'DOWN',40000)
+    assert d.value('(int)FlagGet(0x95)') == 1
+    assert d.memory('gBattleOutcome',1)[0] == 1
+    d.save_checkpoint('r02-stern')
+    d.go(6,1); d.cross('UP','SlateportCity_OceanicMuseum_1F')
+    d.go(9,8); d.cross('DOWN','SlateportCity')
+    return d.save_checkpoint('r02-slateport')
+
+
+def catch_wingull():
+    assert d.state()['map'] == 'Route110' and d.state()['party'] == 1
+    previous=(d.RUN_WILD,d.CATCH_SPECIES)
+    try:
+        d.RUN_WILD=True; d.CATCH_SPECIES={309}
+        d.go(9,93)
+        for step in range(600):
+            # Face alternating waypoints; releasing input for dialog/battles
+            # can interrupt a step, so never assume symmetric held-key travel.
+            d.go(11 if step%2 == 0 else 9,93)
+            d.settle(30000)
+            if d.state()['party'] > 1:
+                break
+        assert d.value('(int)GetMonData3((void *)((char *)&gPlayerParty+100),11,0)') == 309
+        return d.save_checkpoint('r02-first-catch')
+    finally:
+        d.RUN_WILD,d.CATCH_SPECIES=previous
+
+
+def train_wingull(target=17,visits=6):
+    """Experience from actual wild fights, with real nurse visits as needed."""
+    assert d.value('(int)GetMonData3((void *)&gPlayerParty,11,0)') == 309
+    previous=(d.RUN_WILD,d.RUN_FROM_TYPES,d.SWITCH_FROM_TYPES)
+    try:
+        d.RUN_FROM_TYPES=set()
+        d.SWITCH_FROM_TYPES={13}  # Switch to Marshtomp before Electric attacks.
+        for visit in range(visits):
+            d.RUN_WILD=True; heal_slateport()
+            d.save_checkpoint('r02-training')
+            if d.value('(int)GetMonData3((void *)&gPlayerParty,56,0)') >= target:
+                return d.save_checkpoint('r02-wingull-trained')
+            d.go(15,0); d.cross('UP','Route110'); d.go(9,93)
+            d.RUN_WILD=False
+            for step in range(200):
+                d.go(11 if step%2 == 0 else 9,93)
+                d.settle(30000)
+                owned={d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),11,0)')
+                       for i in range(d.state()['party'])}
+                d.CATCH_SPECIES.difference_update(owned)
+                if d.state()['map'] != 'Route110':
+                    break
+                level=d.value('(int)GetMonData3((void *)&gPlayerParty,56,0)')
+                hp=d.value('(int)GetMonData3((void *)&gPlayerParty,57,0)')
+                if level >= target or hp < 10:
+                    break
+            if d.field_ready(d.state()):
+                d.save_checkpoint('r02-training')
+        raise RuntimeError('Training target not reached through actual battles')
+    finally:
+        d.RUN_WILD,d.RUN_FROM_TYPES,d.SWITCH_FROM_TYPES=previous

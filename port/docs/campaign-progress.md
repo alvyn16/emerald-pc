@@ -238,3 +238,54 @@ tras salir del museo y completar el diálogo de Scott. Ruta 110 se alcanzó
 desde la conexión norte de la ciudad; checkpoint `r02-route110`, frame 148256.
 R02 aún requiere Wattson, Flannery y los eventos de Mt. Chimney; R03–R15
 siguen pendientes. Este tramo no cierra T27 ni Checkpoint E.
+
+### Capturas, aprendizaje y rival de Ruta 110
+
+La captura natural de Wingull abrió el nombre y descubrió el fallo 0042.
+Tras corregirlo se reabrió `r02-route110` por Continue y se repitió la captura:
+`r02-first-catch`, frame 19448 del cuarto proceso, Marshtomp 20/Wingull 12,
+Poké Balls 5→4. La recarga conserva equipo, ubicación, eventos y save sin
+cambios: PASS (`build/t27-first-catch-reload.log`).
+
+`natural_campaign_smoke.py --phase r02-catch` repite desde esa copia previa
+de Ruta 110 y captura Wingull con bolsa/teclas, acepta el nombre y guarda:
+PASS (`build/t27-natural-catch-replay.log`). Buscar una especie rara tiene
+un límite explícito; los waypoints se alcanzan leyendo la posición, porque
+un encuentro puede interrumpir una pulsación y deshacer la simetría de un
+recorrido basado únicamente en tiempo. No se modifica RNG ni se crea el mon.
+
+La campaña perdió inicialmente contra el rival y volvió al Centro Pokémon.
+Se cambió el orden del equipo desde su menú, se entrenó mediante combates,
+se visitó la enfermera y se capturó Oddish por la misma bolsa. En encuentros
+eléctricos el driver cambia a Marshtomp con el menú real; el juego concede
+experiencia compartida. `r02-wingull-trained`, frame 245100 del quinto
+proceso, guarda Wingull 17/Marshtomp 22/Oddish 13. Los guardados `r02-training`
+conservan cada visita/tramo para reanudar sin conceder experiencia.
+
+Una interrupción de la sesión de terminal obligó a reabrir el último save
+real; el entrenamiento no guardado del proceso anterior se repitió.
+Las pausas SIGINT posteriores fueron deliberadas para ajustar el driver,
+sin saltar funciones del juego. La espera en el menú de equipo era del
+harness: al abrirlo se reordena gPlayerParty para mostrarlo; los índices de
+los battlers conservan el orden de campo. Ahora se compara mediante los
+nibbles de gBattlePartyCurrentOrder antes de seleccionar con direcciones/A.
+
+Regresiones aisladas (no progreso de campaña): reemplazo tras desmayo,
+rechazo de Mist conservando ataques, aprendizaje de Quick Attack en un slot
+de estado, cambio para compartir experiencia y dos cambios consecutivos con
+orden no identidad: PASS (`build/t27-battle-menu-regression.log` y
+`build/t27-switch-training-regression.log`). Los dos casos de aprendizaje
+usan Chansey con Splash para aislar la UI de la táctica del rival.
+
+Tras corregir el driver se completó el segundo intento del rival por teclas:
+outcome 1 y VAR_ROUTE110_STATE (0x4069)=1. `r02-may110`, frame 315256,
+guarda Marshtomp 23/Wingull 18/Oddish 13, dos medallas. Una recarga conserva
+los campos registrados y el save sin cambios: PASS
+(`build/t27-may110-reload.log`).
+
+`--phase r02-museum` también pasó desde una copia del save de Steven:
+Up ante el grunt mantiene (30,28), Dock desbloquea la entrada, el evento de
+la casilla (9,7) cobra exactamente 50 y cambia el estado del museo a 1.
+Terminan los dos combates y la entrega a Stern por diálogo; salida normal:
+`build/t27-natural-museum-replay.log`. R02 sigue abierto para los gimnasios
+y eventos restantes; T27/Checkpoint E continúan abiertos.
