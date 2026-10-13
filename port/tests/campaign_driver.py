@@ -9,8 +9,11 @@ ROOT = Path.cwd()
 SCRATCH = ROOT / "build/natural-campaign"
 RUN_WILD = False  # Opt in after starter/rival; preserves HP during travel.
 CATCH_SPECIES = set()  # Optional natural catches; never constructs a Pokemon.
+RUN_FROM_TYPES = set()  # Training may avoid unfavorable wild matchups.
+SWITCH_FROM_TYPES = set()  # Lead training can share XP with a healthy partner.
 EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0x90,
-               "match_call":0x12f,"pokenav":0x862,"letter":0xbd,"delivered_goods":0x95}
+               "match_call":0x12f,"pokenav":0x862,"letter":0xbd,"delivered_goods":0x95,
+               "wally_mauville":0xbe}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -72,8 +75,18 @@ def settle(limit=10000):
             advance("START",24,4)
             advance("A",24,4)
             continue
+        if value('(int)FuncIsActiveTask((void *)Task_HandleReplaceMoveInput)'):
+            pointer=value('*(unsigned int *)&sMonSummaryScreen')
+            if pointer:
+                selected=bytes(gdb.selected_inferior().read_memory(pointer+0x40c4,4))
+                if struct.unpack_from('<H',selected)[0]:
+                    advance(learn_move_button(pointer,selected[2]),24,1)
+                    continue
         if current['callback'] == 'CB2_BagMenuRun' and CATCH_SPECIES:
             advance(catch_bag_button(),24,1)
+            continue
+        if current['callback'] == 'CB2_UpdatePartyMenu' and memory('gPartyMenu',9)[8]&15 == 1:
+            advance(battle_party_button(),24,1)
             continue
         if (current["map"] == "RustboroCity" and current["callback"] == "CB2_Overworld"
                 and value("(int)VarGet(0x405a)") == 6
@@ -109,14 +122,26 @@ def field_ready(current):
 
 def battle_button():
     """Choose a damaging move with PP using only the actual menu's keys."""
+    instruction=value('(unsigned int)gBattlescriptCurrInstr')
+    if instruction and bytes(gdb.selected_inferior().read_memory(instruction,1))[0] == 0x5a:
+        move=value('*(unsigned short *)&gMoveToLearn')
+        definition=bytes(gdb.selected_inferior().read_memory(value('(unsigned int)&gBattleMoves')+move*9,9))
+        if definition[1] == 0:
+            return 'B'  # Decline status moves instead of replacing an attack.
     controllers=struct.unpack("<4I",memory("gBattlerControllerFuncs",16))
     wild=not value("*(unsigned int *)&gBattleTypeFlags") & (8|16|512)
-    catching=wild and struct.unpack_from('<H',memory('gBattleMons',352),88)[0] in CATCH_SPECIES
-    can_run=RUN_WILD and wild and not catching
+    battle_mons=memory('gBattleMons',352)
+    catching=wild and struct.unpack_from('<H',battle_mons,88)[0] in CATCH_SPECIES
+    avoid=bool(set(battle_mons[88+33:88+35]) & RUN_FROM_TYPES)
+    can_run=(RUN_WILD or avoid) and wild and not catching
+    share=wild and bool(set(battle_mons[88+33:88+35]) & SWITCH_FROM_TYPES)
+    share=share and struct.unpack_from('<H',memory('gBattlerPartyIndexes',8))[0] == 0
     for battler in (0,2):
         function=gdb.execute("info symbol %d" % controllers[battler],to_string=True).split(" in ")[0]
+        if function == 'PlayerHandleYesNoInput':
+            return 'B'  # Keep current mon for optional between-opponent swaps.
         if function == "HandleInputChooseAction":
-            target=1 if catching else 3 if can_run else 0
+            target=1 if catching else 3 if can_run else 2 if share else 0
             cursor=memory("gActionSelectionCursor",4)[battler]
             return cursor_button(cursor,target)
         if function != "HandleInputChooseMove":
@@ -175,6 +200,44 @@ def catch_bag_button():
     item=value('(int)BagGetItemIdByPocketPosition(2,0)')
     assert 1 <= item <= 12, 'No available ball stack for natural capture'
     return 'UP' if cursor+scroll else 'A'
+
+
+def battle_party_button():
+    if not value('(int)FuncIsActiveTask((void *)Task_HandleChooseMonInput)'):
+        return 'A'  # Send Out is the first battle context-menu action.
+    count=memory('gPlayerPartyCount',1)[0]
+    slots=struct.unpack('<4H',memory('gBattlerPartyIndexes',8))
+    active={slots[0]}
+    if value('*(unsigned int *)&gBattleTypeFlags')&1:
+        active.add(slots[2])
+    order=memory('gBattlePartyCurrentOrder',3)
+    field_slots=[order[i//2] >> 4 if i%2 == 0 else order[i//2]&15 for i in range(count)]
+    # Opening the battle party menu reorders gPlayerParty to display order;
+    # battler indexes still refer to its saved field order.
+    candidates=[i for i in range(count) if field_slots[i] not in active and
+                value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),57,0)')>0]
+    assert candidates, 'No legal healthy replacement in battle party menu'
+    target=candidates[0]; cursor=memory('gPartyMenu',10)[9]
+    if cursor == target:
+        return 'A'
+    if cursor == 0:
+        return 'RIGHT'
+    if target == 0:
+        return 'LEFT'
+    return 'DOWN' if cursor < target else 'UP'
+
+
+def learn_move_button(pointer,cursor):
+    """Replace the weakest non-HM slot using the summary-screen cursor."""
+    assert 0 <= cursor <= 4
+    moves=struct.unpack('<4H',bytes(gdb.selected_inferior().read_memory(pointer+0x84,8)))
+    candidates=[]
+    for index,move in enumerate(moves):
+        if not value(f'(int)IsHMMove2({move})'):
+            power=bytes(gdb.selected_inferior().read_memory(value('(unsigned int)&gBattleMoves')+move*9+1,1))[0]
+            candidates.append((power,index))
+    target=min(candidates)[1] if candidates else 4  # Cancel if all are HMs.
+    return 'A' if cursor == target else 'DOWN' if cursor < target else 'UP'
 
 
 def stat_stage_factor(stage):
@@ -238,6 +301,59 @@ def nurse():
     return state()
 
 
+def open_start_action(action):
+    assert field_ready(state())
+    advance('START',120,4)
+    actions=memory('sCurrentStartMenuActions',memory('sNumStartMenuActions',1)[0])
+    target=actions.index(action)
+    for step in range(10):
+        cursor=memory('sStartMenuCursorPos',1)[0]
+        if cursor == target:
+            advance('A',300,1)
+            return state()
+        advance('DOWN' if cursor < target else 'UP',24,1)
+    raise RuntimeError('Start menu did not reach requested action')
+
+
+def select_party_slot(target,switching=False):
+    assert 0 <= target < memory('gPlayerPartyCount',1)[0]
+    for step in range(12):
+        cursor=memory('gPartyMenu',11)[10 if switching else 9]
+        if cursor == target:
+            return
+        button=('RIGHT' if cursor == 0 else 'LEFT' if target == 0 else
+                'DOWN' if cursor < target else 'UP')
+        advance(button,24,1)
+    raise RuntimeError('Party cursor did not reach requested slot')
+
+
+def set_lead(slot):
+    """Swap a party slot to first place through the field Pokemon menu."""
+    if slot == 0:
+        return state()
+    species=value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{slot*100}),11,0)')
+    open_start_action(1)
+    assert state()['callback'] == 'CB2_UpdatePartyMenu'
+    select_party_slot(slot); advance('A',48,1)
+    internal=value('*(unsigned int *)&sPartyMenuInternal')
+    context=bytes(gdb.selected_inferior().read_memory(internal+15,9))
+    target=context[:context[8]].index(1)  # MENU_SWITCH; field moves may precede it.
+    for step in range(10):
+        cursor=value('(int)Menu_GetCursorPos()')
+        if cursor == target:
+            break
+        advance('DOWN' if cursor < target else 'UP',24,1)
+    else:
+        raise RuntimeError('Expected field party Switch option')
+    advance('A',48,1)
+    assert memory('gPartyMenu',12)[11] == 8  # PARTY_ACTION_SWITCH.
+    select_party_slot(0,True); advance('A',180,1)
+    advance('B',180,1); advance('B',48,1)
+    assert field_ready(state())
+    assert value('(int)GetMonData3((void *)&gPlayerParty,11,0)') == species
+    return state()
+
+
 def go(x,y,limit=50,dialogue_limit=30000):
     """Resume a path after dialogues/battles; never continue across a map warp."""
     origin=state()["map"]
@@ -281,6 +397,7 @@ def save_checkpoint(name):
     facts["events"]={key:value(f"(int)FlagGet({flag})") for key,flag in EVENT_FLAGS.items()}
     facts["rustboro"]=value("(int)VarGet(0x405a)")
     facts["briney"]=value("(int)VarGet(0x4090)")
+    facts['route110']=value('(int)VarGet(0x4069)')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")
     gdb.execute(f"dump binary memory {SCRATCH.as_posix()}/{name}.raw &sPixels ((char *)&sPixels)+153600")
     print("NATURAL SAVE PASS",facts)
