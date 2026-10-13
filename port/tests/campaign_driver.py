@@ -11,6 +11,9 @@ RUN_WILD = False  # Opt in after starter/rival; preserves HP during travel.
 CATCH_SPECIES = set()  # Optional natural catches; never constructs a Pokemon.
 RUN_FROM_TYPES = set()  # Training may avoid unfavorable wild matchups.
 SWITCH_FROM_TYPES = set()  # Lead training can share XP with a healthy partner.
+TARGET_CHOICES = {}  # Planned targets, applied exclusively through menu keys.
+HEAL_ITEMS = ()  # Optional campaign consumables, never granted by the driver.
+HEAL_PLAN = {}
 EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0x90,
                "match_call":0x12f,"pokenav":0x862,"letter":0xbd,"delivered_goods":0x95,
                "wally_mauville":0xbe}
@@ -67,6 +70,7 @@ def settle(limit=10000):
     while value("sDiagnosticFrame")-start < limit:
         current = state()
         if field_ready(current):
+            HEAL_PLAN.clear()
             current = advance("NONE",24)
             if field_ready(current):
                 return current
@@ -82,11 +86,14 @@ def settle(limit=10000):
                 if struct.unpack_from('<H',selected)[0]:
                     advance(learn_move_button(pointer,selected[2]),24,1)
                     continue
-        if current['callback'] == 'CB2_BagMenuRun' and CATCH_SPECIES:
-            advance(catch_bag_button(),24,1)
+        if current['callback'] == 'CB2_BagMenuRun' and (CATCH_SPECIES or HEAL_PLAN):
+            advance(item_bag_button(HEAL_PLAN.get('item')),24,1)
             continue
         if current['callback'] == 'CB2_UpdatePartyMenu' and memory('gPartyMenu',9)[8]&15 == 1:
-            advance(battle_party_button(),24,1)
+            if HEAL_PLAN and memory('gPartyMenu',12)[11] == 3:
+                advance(heal_party_button(),24,1)
+            else:
+                advance(battle_party_button(),24,1)
             continue
         if (current["map"] == "RustboroCity" and current["callback"] == "CB2_Overworld"
                 and value("(int)VarGet(0x405a)") == 6
@@ -123,12 +130,17 @@ def field_ready(current):
 def battle_button():
     """Choose a damaging move with PP using only the actual menu's keys."""
     instruction=value('(unsigned int)gBattlescriptCurrInstr')
-    if instruction and bytes(gdb.selected_inferior().read_memory(instruction,1))[0] == 0x5a:
+    opcode=bytes(gdb.selected_inferior().read_memory(instruction,1))[0] if instruction else None
+    if opcode == 0x67 and value('*(unsigned int *)&gBattleTypeFlags')&8:
+        return 'B'  # Script-level optional switch after an opposing trainer mon.
+    if opcode == 0x5a:
         move=value('*(unsigned short *)&gMoveToLearn')
         definition=bytes(gdb.selected_inferior().read_memory(value('(unsigned int)&gBattleMoves')+move*9,9))
         if definition[1] == 0:
             return 'B'  # Decline status moves instead of replacing an attack.
     controllers=struct.unpack("<4I",memory("gBattlerControllerFuncs",16))
+    if HEAL_PLAN and value(f"(int)CountTotalItemQuantityInBag({HEAL_PLAN['item']})") < HEAL_PLAN['quantity']:
+        HEAL_PLAN.clear()
     wild=not value("*(unsigned int *)&gBattleTypeFlags") & (8|16|512)
     battle_mons=memory('gBattleMons',352)
     catching=wild and struct.unpack_from('<H',battle_mons,88)[0] in CATCH_SPECIES
@@ -141,9 +153,25 @@ def battle_button():
         if function == 'PlayerHandleYesNoInput':
             return 'B'  # Keep current mon for optional between-opponent swaps.
         if function == "HandleInputChooseAction":
+            hp,max_hp=struct.unpack_from('<H',battle_mons,battler*88+40)[0],struct.unpack_from('<H',battle_mons,battler*88+44)[0]
+            if HEAL_ITEMS and not catching and hp and hp*2 <= max_hp:
+                for item in HEAL_ITEMS:
+                    quantity=value(f'(int)CountTotalItemQuantityInBag({item})')
+                    if quantity:
+                        HEAL_PLAN.update(item=item,quantity=quantity,
+                                         field_slot=struct.unpack_from('<H',memory('gBattlerPartyIndexes',8),battler*2)[0])
+                        break
+            if HEAL_PLAN:
+                return cursor_button(memory('gActionSelectionCursor',4)[battler],1)
             target=1 if catching else 3 if can_run else 2 if share else 0
             cursor=memory("gActionSelectionCursor",4)[battler]
             return cursor_button(cursor,target)
+        if function == 'HandleInputChooseTarget':
+            desired=TARGET_CHOICES.get(battler,1)
+            cursor=memory('gMultiUsePlayerCursor',1)[0]
+            if cursor == desired:
+                log_battle_choice('target',battler,target=cursor)
+            return 'A' if cursor == desired else 'RIGHT'
         if function != "HandleInputChooseMove":
             continue
         if can_run or catching:
@@ -151,55 +179,85 @@ def battle_button():
         choices=memory("gBattleBufferA",2048)[battler*512+4:battler*512+24]
         moves=struct.unpack_from("<4H",choices)
         types=choices[18:20]
-        opponent=1 if battler == 0 else 3
-        if memory("gAbsentBattlerFlags",1)[0] & (1<<opponent):
-            opponent=1
         battle=memory("gBattleMons",4*88)
-        enemy_types=set(battle[opponent*88+33:opponent*88+35])
+        absent=memory('gAbsentBattlerFlags',1)[0]
+        opponents=[opponent for opponent in (1,3)
+                   if opponent < memory('gBattlersCount',1)[0] and
+                   not absent&(1<<opponent) and struct.unpack_from('<H',battle,opponent*88+40)[0]]
         chart=memory("gTypeEffectiveness",336)
         candidates=[]
         for index,move in enumerate(moves):
             if move and choices[8+index]:
                 definition=bytes(gdb.selected_inferior().read_memory(value("(unsigned int)&gBattleMoves")+move*9,9))
-                power=definition[1]
-                score=power*(3 if definition[2] in types else 2)
                 physical=definition[2] < 10  # Gen III categories are by type.
                 attack_offset,defense_offset=(2,4) if physical else (8,10)
                 attack_stage,defense_stage=(1,2) if physical else (4,5)
                 attack=struct.unpack_from("<H",battle,battler*88+attack_offset)[0]
-                defense=struct.unpack_from("<H",battle,opponent*88+defense_offset)[0]
                 attack *= stat_stage_factor(battle[battler*88+24+attack_stage])
-                defense *= stat_stage_factor(battle[opponent*88+24+defense_stage])
-                score *= attack/max(1,defense)
-                for enemy_type in enemy_types:
-                    multiplier=10
-                    for attack,defense,factor in struct.iter_unpack("BBB",chart):
-                        if attack == definition[2] and defense == enemy_type:
-                            multiplier=factor
-                            break
-                    score *= multiplier
-                candidates.append((score,-index,index))
+                for opponent in opponents:
+                    score=definition[1]*(3 if definition[2] in types else 2)
+                    defense=struct.unpack_from('<H',battle,opponent*88+defense_offset)[0]
+                    defense *= stat_stage_factor(battle[opponent*88+24+defense_stage])
+                    score *= attack/max(1,defense)
+                    for enemy_type in set(battle[opponent*88+33:opponent*88+35]):
+                        multiplier=10
+                        for move_type,defender_type,factor in struct.iter_unpack('BBB',chart):
+                            if move_type == definition[2] and defender_type == enemy_type:
+                                multiplier=factor; break
+                        score *= multiplier
+                    immunity={4:26,10:18,11:11,13:10}.get(definition[2])
+                    if immunity and battle[opponent*88+32] == immunity:
+                        score=0
+                    candidates.append((score,-index,-opponent,index,opponent))
         if not candidates:
             return "A"  # Engine offers Struggle when all PP are exhausted.
-        target=max(candidates)[2]
+        best=max(candidates); target=best[3]; TARGET_CHOICES[battler]=best[4]
         cursor=memory("gMoveSelectionCursor",4)[battler]
-        return cursor_button(cursor,target)
+        button=cursor_button(cursor,target)
+        if button == 'A':
+            log_battle_choice('move',battler,move=moves[target],target=best[4])
+        return button
     return "A"
 
 
-def catch_bag_button():
+def log_battle_choice(kind,battler,**fields):
+    if memory('gBattlersCount',1)[0] != 4:
+        return
+    entry=dict(frame=value('sDiagnosticFrame'),kind=kind,battler=battler,**fields)
+    with (SCRATCH/'battle-choices.jsonl').open('a',encoding='utf-8') as output:
+        output.write(json.dumps(entry)+'\n')
+
+
+def item_bag_button(item=None):
     if not value('(int)FuncIsActiveTask((void *)Task_BagMenu_HandleInput)'):
         return 'A'  # Context menu's default is Use.
     position=memory('gBagPosition',28)
     pocket=position[5]
-    if pocket != 1:  # Zero-based Poke Balls pocket.
-        return 'RIGHT' if pocket < 1 else 'LEFT'
+    desired_pocket=0 if item else 1  # Items or Poke Balls.
+    if pocket != desired_pocket:
+        return 'RIGHT' if pocket < desired_pocket else 'LEFT'
     cursor=struct.unpack_from('<H',position,8+pocket*2)[0]
     scroll=struct.unpack_from('<H',position,18+pocket*2)[0]
+    if item:
+        entries=[value(f'(int)BagGetItemIdByPocketPosition(1,{i})') for i in range(30)]
+        target=entries.index(item)
+        current=cursor+scroll
+        return 'A' if current == target else 'DOWN' if current < target else 'UP'
     # Prefer the first ball stack. Assert it really contains a Poke Ball type.
     item=value('(int)BagGetItemIdByPocketPosition(2,0)')
     assert 1 <= item <= 12, 'No available ball stack for natural capture'
     return 'UP' if cursor+scroll else 'A'
+
+
+def heal_party_button():
+    if not value('(int)FuncIsActiveTask((void *)Task_HandleChooseMonInput)'):
+        return 'A'
+    order=memory('gBattlePartyCurrentOrder',3)
+    fields=[order[i//2] >> 4 if i%2 == 0 else order[i//2]&15 for i in range(6)]
+    target=fields.index(HEAL_PLAN['field_slot']); cursor=memory('gPartyMenu',10)[9]
+    if cursor == target:
+        return 'A'
+    return 'RIGHT' if cursor == 0 else 'LEFT' if target == 0 else 'DOWN' if cursor < target else 'UP'
 
 
 def battle_party_button():

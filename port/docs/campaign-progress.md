@@ -289,3 +289,39 @@ la casilla (9,7) cobra exactamente 50 y cambia el estado del museo a 1.
 Terminan los dos combates y la entrega a Stern por diálogo; salida normal:
 `build/t27-natural-museum-replay.log`. R02 sigue abierto para los gimnasios
 y eventos restantes; T27/Checkpoint E continúan abiertos.
+
+### Mauville: acceso, puzzle y controles de combate
+
+En la campaña se comprobó el bloqueo de la puerta del gimnasio por Wally
+desde (8,7), se completó su combate y diálogo y se activó 0xBE. El checkpoint
+`r02-wally-mauville` conserva Marshtomp 23/Wingull 18/Oddish 13. Dentro del
+gimnasio, Up desde (4,15) mantiene esa posición ante la barrera eléctrica.
+Pisar los interruptores (0,15), (3,9) y (8,9) abre el camino hasta (5,3),
+delante de Wattson. Los entrenadores se derrotaron mediante encuentros
+reales; `r02-gym-trainers` conserva Marshtomp 25/Wingull 19/Oddish 16.
+
+Las derrotas y retornos al Centro Pokémon de este tramo fueron resultados
+del combate. El driver necesitaba escoger tanto movimiento como objetivo
+en dobles, en vez de asumir un rival fijo. Ahora lee los rivales vivos,
+tipos, habilidades y modificadores, y confirma el objetivo con direcciones/A.
+La regresión aislada comprueba Mud-Slap contra el objetivo 3 y Wing Attack
+contra el 1, incluyendo el cursor real: PASS
+(`build/t27-double-target-regression.log`).
+
+Se compraron tres Super Potions en la tienda de Mauville con los menús de
+cantidad y confirmación: dinero 2434→334, coste 2100, cantidad 0→3.
+`r02-supplies` (frame 477172 del quinto proceso) guarda Marshtomp 26,
+Wingull 19 y Oddish 16, dos medallas y el puzzle/entrenadores anteriores.
+El driver permite consumir medicina disponible mediante acción, bolsillo y
+selección de Pokémon; no concede objetos. La regresión aislada de HP bajo
+consume una Super Potion real del fixture: PASS
+(`build/t27-healing-regression.log`).
+
+Otro intento aceptaba el cambio opcional entre Pokémon de Wattson mediante
+el opcode 0x67 del script de combate, enviando compañeros débiles frente a
+ataques eléctricos. El controlador ahora rechaza esa pregunta con B.
+Un fixture separado de entrenador con dos Pokémon comprueba victoria,
+retorno al campo, inicial conservado y compañero sin experiencia: PASS
+(`build/t27-no-optional-swap-regression.log`). Estos fixtures preparados
+validan los controles; no cuentan como progreso natural. Wattson y el resto
+de R02 aún requieren sus propios checkpoints de victoria.
