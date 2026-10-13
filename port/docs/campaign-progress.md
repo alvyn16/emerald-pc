@@ -325,3 +325,22 @@ retorno al campo, inicial conservado y compañero sin experiencia: PASS
 (`build/t27-no-optional-swap-regression.log`). Estos fixtures preparados
 validan los controles; no cuentan como progreso natural. Wattson y el resto
 de R02 aún requieren sus propios checkpoints de victoria.
+
+En el sexto proceso se reabrió `r02-supplies` mediante Continue. Las pulsaciones
+de A de la recarga entraron de nuevo en la tienda y compraron una Poké Ball
+adicional; se salió con B según la tarea activa. Durante el paseo apareció
+una llamada de PokéNav: script inactivo, pero controles bloqueados. El planner
+ahora devuelve el control a `settle` también ante ese bloqueo. La regresión
+`campaign_incoming_call_smoke.py` prepara una llamada de un entrenador válido,
+comprueba que no se camina durante ella, la confirma por teclas y continúa:
+PASS (`build/t27-incoming-call-regression.log`). Su primer fixture omitía el
+trainerId requerido y fallaba al construir el texto; se corrigió la preparación
+del test, sin modificar el juego.
+
+Wattson finalmente fue derrotado: outcome 1, tercera medalla 0x869 activa,
+Norman=5. Se consumieron las tres Super Potions. `r02-wattson` (frame 69068
+del sexto proceso) conserva Marshtomp 27/Wingull 19/Oddish 16 y cuatro Poké
+Balls. La recarga independiente conserva los campos registrados y el archivo
+sin cambios: PASS (`build/t27-wattson-reload.log`). Registro de ruta/combate:
+`build/natural-campaign/gdb-wattson-supply-reload.log`. R02 sigue abierto para
+Flannery, meteorito y Mt. Chimney; R03–R15 continúan pendientes.

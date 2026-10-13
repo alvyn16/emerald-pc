@@ -521,6 +521,6 @@ def walk(x,y,limit=200):
             straight += 1
         hold=16*(straight-1)+4
         advance(route[0],hold+20,hold)
-        if state()["script"] != 2 or state()["callback"] != "CB2_Overworld":
+        if not field_ready(state()):
             return state()
     raise RuntimeError("Movement deadline: "+str(state()))
