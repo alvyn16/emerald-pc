@@ -16,7 +16,7 @@ HEAL_ITEMS = ()  # Optional campaign consumables, never granted by the driver.
 HEAL_PLAN = {}
 EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0x90,
                "match_call":0x12f,"pokenav":0x862,"letter":0xbd,"delivered_goods":0x95,
-               "wally_mauville":0xbe}
+               "wally_mauville":0xbe,"rock_smash":0x6b}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -412,6 +412,50 @@ def set_lead(slot):
     return state()
 
 
+def teach_tm(item,slot):
+    """Use an owned TM/HM via bag, party and move-summary menus."""
+    assert field_ready(state())
+    assert value(f'(int)CountTotalItemQuantityInBag({item})') > 0
+    move=value(f'(int)ItemIdToBattleMoveId({item})')
+    mon=f'(void *)((char *)&gPlayerParty+{slot*100})'
+    assert value(f'(unsigned int)CanMonLearnTMHM({mon},{item-289})'), 'Incompatible TM/HM'
+    open_start_action(2)
+    for step in range(160):
+        if value('(int)FuncIsActiveTask((void *)Task_BagMenu_HandleInput)'):
+            position=memory('gBagPosition',28); pocket=position[5]
+            if pocket != 2:
+                advance('RIGHT' if pocket < 2 else 'LEFT',24,1)
+                continue
+            entries=[value(f'(int)BagGetItemIdByPocketPosition(3,{i})') for i in range(64)]
+            target=entries.index(item)
+            current=struct.unpack_from('<H',position,12)[0]+struct.unpack_from('<H',position,22)[0]
+            if current == target:
+                advance('A',24,1)
+                break
+            advance('DOWN' if current < target else 'UP',24,1)
+        else:
+            advance('NONE',24,1)
+    else:
+        raise RuntimeError('TM/HM bag selection deadline')
+    start=value('sDiagnosticFrame')
+    while value('sDiagnosticFrame')-start < 16000:
+        if state()['callback'] == 'CB2_UpdatePartyMenu' and value('(int)FuncIsActiveTask((void *)Task_HandleChooseMonInput)'):
+            select_party_slot(slot); advance('A',24,1)
+        elif value('(int)FuncIsActiveTask((void *)Task_HandleReplaceMoveInput)'):
+            pointer=value('*(unsigned int *)&sMonSummaryScreen')
+            advance(learn_move_button(pointer,bytes(gdb.selected_inferior().read_memory(pointer+0x40c6,1))[0]),24,1)
+        else:
+            advance('A',96,1)
+        learned=[value(f'(int)GetMonData3({mon},{13+i},0)') for i in range(4)]
+        if move in learned and state()['callback'] == 'CB2_BagMenuRun' and value('(int)FuncIsActiveTask((void *)Task_BagMenu_HandleInput)'):
+            advance('B',300,1); advance('B',120,1)
+            settle()
+            assert field_ready(state())
+            print('NATURAL TM/HM LEARNED',item,move,slot,learned)
+            return state()
+    raise RuntimeError('TM/HM teaching deadline: '+str(state()))
+
+
 def go(x,y,limit=50,dialogue_limit=30000):
     """Resume a path after dialogues/battles; never continue across a map warp."""
     origin=state()["map"]
@@ -444,7 +488,8 @@ def save_checkpoint(name):
     destination.write_bytes((SCRATCH/"saves/emerald-pc-diagnostic.sav").read_bytes())
     facts=state()
     facts["team"]=[dict(species=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),11,0)"),
-                        level=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),56,0)"))
+                        level=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),56,0)"),
+                        moves=[value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),{13+j},0)") for j in range(4)])
                    for i in range(facts["party"])]
     facts["dex"]=value("(int)FlagGet(0x861)")
     facts["rival"]=value("(int)FlagGet(0x82)")
@@ -456,6 +501,10 @@ def save_checkpoint(name):
     facts["rustboro"]=value("(int)VarGet(0x405a)")
     facts["briney"]=value("(int)VarGet(0x4090)")
     facts['route110']=value('(int)VarGet(0x4069)')
+    facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
+                        for item in (13,22,*range(339,347))}
+    save=value('*(unsigned int *)&gSaveBlock1Ptr')
+    facts['money']=value(f'(int)GetMoney((void *)({save}+0x490))')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")
     gdb.execute(f"dump binary memory {SCRATCH.as_posix()}/{name}.raw &sPixels ((char *)&sPixels)+153600")
     print("NATURAL SAVE PASS",facts)

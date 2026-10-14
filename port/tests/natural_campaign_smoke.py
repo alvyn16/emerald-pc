@@ -10,7 +10,7 @@ from process_watchdog import run_logged
 def main():
     project=Path(__file__).resolve().parents[2]
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum"),default="r01")
+    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum","r02-rocksmash"),default="r01")
     phase=parser.parse_args().phase
     scratch=project/("build/natural-campaign-replay" if phase == "r01" else "build/natural-campaign-replay-"+phase)
     for directory in ("build","roms","saves"):
@@ -24,7 +24,8 @@ def main():
     if save.exists():
         shutil.copy2(save,scratch/"previous-replay.sav")
     checkpoint={'r02-devon':'r02-roxanne','r02-steven':'r02-brawly',
-                'r02-catch':'r02-route110','r02-museum':'r02-steven'}
+                'r02-catch':'r02-route110','r02-museum':'r02-steven',
+                'r02-rocksmash':'r02-wattson'}
     save.write_bytes(b"\xff"*131072 if phase == "r01" else
                      (project/('build/natural-campaign/'+checkpoint[phase]+'.sav')).read_bytes())
     inputs=scratch/"input.txt"
@@ -58,6 +59,8 @@ route.catch_wingull()''',
 d.settle(30000)
 route.sail_to_slateport()
 route.museum_delivery()''',
+        'r02-rocksmash':'''d.settle(30000)
+route.rock_smash_route111()''',
     }[phase]
     script.write_text(f'''set pagination off
 set confirm off

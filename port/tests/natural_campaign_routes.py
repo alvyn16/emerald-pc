@@ -151,6 +151,29 @@ def heal_slateport():
     d.go(7,8); d.cross('DOWN','SlateportCity')
 
 
+def rock_smash_route111():
+    """Receive/teach the HM, reject the rock collision, then use it by dialog."""
+    assert d.state()['map'] == 'MauvilleCity_Gym'
+    assert d.value('(int)FlagGet(0x869)') == 1
+    d.RUN_WILD=True
+    d.go(4,20); d.cross('DOWN','MauvilleCity')
+    d.go(22,6); d.cross('UP','MauvilleCity_PokemonCenter_1F'); d.nurse()
+    d.go(7,8); d.cross('DOWN','MauvilleCity')
+    d.go(32,15); d.cross('UP','MauvilleCity_House1')
+    d.talk(4,5,'UP'); assert d.value('(int)FlagGet(0x6b)') == 1
+    d.teach_tm(344,0)
+    d.go(3,7); d.cross('DOWN','MauvilleCity')
+    d.go(18,0); d.cross('UP','Route111')
+    d.go(18,102); d.advance('UP',48,4)
+    assert (d.state()['x'],d.state()['y']) == (18,102)
+    print('ROCK COLLISION CLOSED PASS',d.state())
+    d.talk(18,102,'UP')
+    assert d.value('(int)FlagGet(0x11)') == 1
+    d.go(18,100)
+    assert (d.state()['x'],d.state()['y']) == (18,100)
+    return d.save_checkpoint('r02-route111-rock')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'

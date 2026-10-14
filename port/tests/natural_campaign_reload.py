@@ -47,6 +47,8 @@ for key in ('map','x','y','party'):
 for index,mon in enumerate(expected['team']):
     for field,key in ((11,'species'),(56,'level')):
         assert d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{{index*100}}),{{field}},0)') == mon[key]
+    if 'moves' in mon:
+        assert [d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{{index*100}}),{{13+j}},0)') for j in range(4)] == mon['moves']
 assert d.value('(int)FlagGet(0x861)') == expected['dex']
 assert d.value('(int)FlagGet(0x82)') == expected['rival']
 assert d.value('(int)CountTotalItemQuantityInBag(4)') == expected['balls']
@@ -58,6 +60,11 @@ for key,var in (('norman',0x4085),('woods',0x4098),('rustboro',0x405a),('briney'
 for key,expected_value in expected.get('events',{{}}).items():
     flag=d.EVENT_FLAGS[key]
     assert d.value(f'(int)FlagGet({{flag}})') == expected_value
+for item,quantity in expected.get('inventory',{{}}).items():
+    assert d.value(f'(int)CountTotalItemQuantityInBag({{int(item)}})') == quantity
+if 'money' in expected:
+    save=d.value('*(unsigned int *)&gSaveBlock1Ptr')
+    assert d.value(f'(int)GetMoney((void *)({{save}}+0x490))') == expected['money']
 print('NATURAL RELOAD PASS',actual)
 end
 continue
