@@ -344,3 +344,36 @@ Balls. La recarga independiente conserva los campos registrados y el archivo
 sin cambios: PASS (`build/t27-wattson-reload.log`). Registro de ruta/combate:
 `build/natural-campaign/gdb-wattson-supply-reload.log`. R02 sigue abierto para
 Flannery, meteorito y Mt. Chimney; R03–R15 continúan pendientes.
+
+### Rock Smash y continuación hacia el norte
+
+El NPC de Mauville entregó HM06 por diálogo (0x6B). Se enseñó Rock Smash a
+Marshtomp mediante bolsa, selección de Pokémon y resumen para olvidar un
+movimiento; se conservaron Growl, Mud-Slap y Water Gun. La HM permanece en la
+bolsa. Checkpoint `r02-rocksmash-learned`: frame 83332 del sexto proceso.
+La regresión aislada de enseñanza también pasa, incluyendo retorno al campo
+y conservación de la HM (`build/t27-hm-teaching-regression.log`).
+
+En Ruta 111, Up desde (18,102) no atraviesa la roca. El diálogo de Rock Smash
+activa FLAG_TEMP_11 y permite caminar a (18,100). Checkpoint
+`r02-route111-rock`: frame 95644, Marshtomp 27/Wingull 20/Oddish 16.
+`natural_campaign_smoke.py --phase r02-rocksmash` repite el recorrido desde
+una copia de la victoria de Wattson: enfermera, entrega, enseñanza, bloqueo,
+rotura, cruce y guardado. PASS, salida normal y sin señales
+(`build/t27-natural-rocksmash-replay.log`).
+
+Se comprobó el bloqueo del teleférico antes del evento de Meteor Falls:
+Up desde (26,31) mantiene la posición ante Magma (frame 118208). Se recorrió
+Fiery Path hasta su salida norte; esta salida se cruza hacia abajo desde
+(26,3). La conexión accesible de Ruta 112 hacia el norte pasa por el este,
+no por su borde superior. Las coordenadas propuestas incorrectamente por
+el harness produjeron rechazos explícitos; no se modificaron warps ni mapas.
+
+Un combate posterior en Ruta 111 agotó el equipo y devolvió al jugador a
+Mauville. `r02-road-blackout` guarda ese resultado real: frame 183628,
+Marshtomp 29/Wingull 20/Oddish 18. El manifiesto ahora registra también
+movimientos, cantidades de medicina/HM y dinero. Una recarga independiente
+comprueba esos campos y conserva el save sin cambios: PASS
+(`build/t27-road-blackout-reload.log`). Tras repetir el camino y Fiery Path,
+`r02-route111-north` guarda el acceso norte (0,30), frame 209464, dinero 4047.
+No se acredita todavía Ruta 113, Meteor Falls, Flannery ni el cierre de R02.
