@@ -21,7 +21,8 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "surf":0x7a,"fly":0x6e,"castform":0x97,"devon_scope":0x11d,
                "fortree_kecleon_fled":0x127,"lilycove_rival_cleared":0x3cb,
                "magma_emblem_received":0xd4,"jagged_guard_removed":0x34f,
-               "groudon_awakened_magma":0x6f}
+               "groudon_awakened_magma":0x6f,"aqua_harbor":0x61,
+               "aqua_gate1_removed":0x335,"aqua_gate2_removed":0x336}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}

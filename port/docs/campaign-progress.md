@@ -810,3 +810,31 @@ en JaggedPass (16,19), con progreso conservado. Se continúa para comprobar
 el bloqueo Aqua antes del robo del submarino; ese evento y el resto de R04
 siguen pendientes. Continue de r04-magma-2f también PASS
 (`build/t27-magma-2f-reload.log`).
+
+### Robo del submarino y bloqueo Aqua antes/después
+
+Antes del robo se voló a Lilycove, se curó en su Centro y se activó Surf desde
+(61,12), mirando RIGHT. La cueva se aborda desde (70,6), UP.
+r04-aqua-gate-ready conserva Harbor=1 y los flags 0x61/0x335/0x336 a cero.
+Se habló con ambos reclutas desde (13,12)/(14,12) y se mantuvo UP: ninguna
+entrada permitió cruzar su fila. r04-aqua-blocked (214628) verifica el rechazo
+físico, no solo la lectura de flags. `--phase r04-aqua-gate`: PASS, sin señales
+y con salida normal (`build/t27-natural-aqua-gate-replay.log`).
+
+Se volvió a Surf desde (13,12) mirando DOWN y se salió por la flecha acuática
+(13,27). Tras volar a Slateport se guardó r04-slateport-harbor-ready (219128).
+La entrevista debe abordarse desde (27,13), RIGHT: Gabby ocupa (28,14), Ty
+(29,13) y la puerta impide entrar por (28,12). Hablar por la izquierda hizo
+que el evento llevara al jugador al puerto y avanzara City=2. Caminar hasta
+(8,13) activó la escena de Archie/submarino; Harbor=2, flags 0x61/0x335/0x336=1.
+r04-submarine-theft (228712) guarda equipo 46/30/19/25, seis medallas, cinco
+Hyper Potions y dinero 16183. Continue verifica eventos/variables y todo el
+manifiesto sin cambiar el archivo: PASS (`build/t27-submarine-theft-reload.log`).
+
+Se salió del puerto por (11,14), se voló de nuevo a Lilycove y se repitió la
+entrada por Surf. El jugador cruzó la misma fila antes cerrada hasta (13,10),
+r04-aqua-opened (235776). `--phase r04-harbor` reproduce desde la ciudad la
+entrevista, el robo, salida/vuelo/Surf y el cruce abierto: PASS, sin señales y
+con salida normal (`build/t27-natural-harbor-replay.log`). No se alteran flags
+ni coordenadas por GDB. Quedan pendientes el interior Aqua/Matt y los tramos
+posteriores de R04; se continúa desde esa entrada abierta.

@@ -577,6 +577,46 @@ def maxie_magma():
     return d.save_checkpoint('r04-maxie')
 
 
+def aqua_gate_closed():
+    assert d.state()['map'] == 'AquaHideout_1F'
+    assert d.value('(int)VarGet(0x40a0)') == 1
+    assert d.value('(int)FlagGet(0x61)') == 0
+    assert d.value('(int)FlagGet(0x335)') == 0
+    assert d.value('(int)FlagGet(0x336)') == 0
+    for x in (13,14):
+        d.talk(x,12,'UP'); d.advance('UP',96,32); d.settle()
+        assert d.state()['map'] == 'AquaHideout_1F'
+        assert (d.state()['x'],d.state()['y']) == (x,12)
+    print('NATURAL AQUA GATE CLOSED PASS',d.state())
+    return d.save_checkpoint('r04-aqua-blocked')
+
+
+def harbor_submarine():
+    """See the interview/theft, then cross the previously blocked Aqua gate."""
+    assert d.state()['map'] == 'SlateportCity'
+    assert d.value('(int)VarGet(0x4058)') == 1
+    assert d.value('(int)VarGet(0x40a0)') == 1
+    assert all(d.value(f'(int)FlagGet({flag})') == 0 for flag in (0x61,0x335,0x336))
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.talk(27,13,'RIGHT',60000)
+    assert d.state()['map'] == 'SlateportCity_Harbor'
+    assert d.value('(int)VarGet(0x4058)') == 2
+    d.go(8,13,dialogue_limit=60000)
+    assert d.value('(int)VarGet(0x40a0)') == 2
+    assert all(d.value(f'(int)FlagGet({flag})') == 1 for flag in (0x61,0x335,0x336))
+    d.save_checkpoint('r04-submarine-theft')
+    d.warp_to(11,14,'SlateportCity')
+    d.fly_to('LilycoveCity')
+    d.talk(61,12,'RIGHT')
+    assert d.memory('gPlayerAvatar',1)[0]&8
+    d.go(70,6); d.cross('UP','AquaHideout_1F')
+    d.go(13,10)
+    assert d.state()['map'] == 'AquaHideout_1F'
+    assert (d.state()['x'],d.state()['y']) == (13,10)
+    print('NATURAL AQUA GATE OPEN PASS',d.state())
+    return d.save_checkpoint('r04-aqua-opened')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'
