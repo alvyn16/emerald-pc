@@ -780,3 +780,33 @@ El helper warp_to consulta el comportamiento real de la casilla y pulsa
 la dirección indicada por la flecha; cualquier destino inesperado falla.
 Se verifica con las transiciones de Monte Pírico y entrada Magma, evitando
 que una dirección asumida se confunda con un fallo del runtime.
+
+### Maxie, Groudon y desbloqueo del puerto
+
+r04-maxie-ready (169288) se guardó desde (15,21), mirando al NPC a la derecha.
+No hay casilla transitable en (16,22); esa aproximación se descartó leyendo
+la colisión, sin cambiar el mapa. Antes del diálogo: trainer 601 sin vencer,
+Groudon flag 0x6F=0, Slateport city/harbor states=0. La secuencia del orbe,
+el despertar/salida de Groudon y el combate terminaron normalmente:
+outcome=1, trainer 601 vencido y los tres eventos pasaron a 1.
+r04-maxie-result (188008) conserva equipo 46/30/19/25, seis medallas, cinco
+Hyper Potions y dinero 16183. Continue verifica también Groudon y ambas
+variables del puerto, sin reescribir el guardado: PASS
+(`build/t27-maxie-result-reload.log`).
+
+La repetición inicial mantenía pulsaciones A hasta el frame 8000 después de
+Continue: al estar guardado frente al NPC, iniciaba el evento antes de las
+precondiciones. La variante hasta 1450 todavía abrió el diálogo. Esas pruebas
+no se acreditan. Para este checkpoint se cortan las pulsaciones en 1180;
+el log verifica en 10000 campo desbloqueado, script terminado y eventos aún
+a cero, antes de hablar. `--phase r04-maxie`: PASS con victoria, eventos,
+guardado, ausencia de señales y salida normal
+(`build/t27-natural-maxie-magma-replay.log`). No se omite el evento ni el combate.
+
+La salida real usó 4F -> 3F_3R -> 2F_3R -> 1F. Las rocas vuelven a su posición
+al recargar el mapa: desde (5,21), Fuerza y un empuje DOWN, luego desde (6,22)
+un empuje RIGHT, abren el corredor de vuelta. r04-magma-exit (199136) queda
+en JaggedPass (16,19), con progreso conservado. Se continúa para comprobar
+el bloqueo Aqua antes del robo del submarino; ese evento y el resto de R04
+siguen pendientes. Continue de r04-magma-2f también PASS
+(`build/t27-magma-2f-reload.log`).

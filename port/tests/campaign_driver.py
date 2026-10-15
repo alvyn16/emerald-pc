@@ -20,7 +20,8 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "cable_car_clear":0x333,"chimney_defeated":0x8b,"meteorite":0x73,
                "surf":0x7a,"fly":0x6e,"castform":0x97,"devon_scope":0x11d,
                "fortree_kecleon_fled":0x127,"lilycove_rival_cleared":0x3cb,
-               "magma_emblem_received":0xd4,"jagged_guard_removed":0x34f}
+               "magma_emblem_received":0xd4,"jagged_guard_removed":0x34f,
+               "groudon_awakened_magma":0x6f}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -666,6 +667,8 @@ def save_checkpoint(name):
     facts['route121']=value('(int)VarGet(0x4074)')
     facts['mt_pyre']=value('(int)VarGet(0x40b9)')
     facts['jagged_pass']=value('(int)VarGet(0x40c8)')
+    facts['slateport_city']=value('(int)VarGet(0x4058)')
+    facts['slateport_harbor']=value('(int)VarGet(0x40a0)')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
                         for item in (13,21,22,288,302,375,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')

@@ -556,6 +556,27 @@ def magma_entry():
     return d.save_checkpoint('r04-magma-2f')
 
 
+def maxie_magma():
+    """Run Groudon's awakening and Maxie's battle, then check the story gates."""
+    print('NATURAL MAXIE PRECONDITION',d.state())
+    assert d.field_ready(d.state()), ('Continue must not start the NPC event',d.state())
+    assert d.state()['map'] == 'MagmaHideout_4F'
+    assert (d.state()['x'],d.state()['y']) == (15,21)
+    assert d.value('(int)FlagGet(0x6f)') == 0
+    assert d.value('(int)HasTrainerBeenFought(601)') == 0
+    assert d.value('(int)VarGet(0x4058)') == 0
+    assert d.value('(int)VarGet(0x40a0)') == 0
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.talk(15,21,'RIGHT',100000)
+    assert d.state()['map'] == 'MagmaHideout_4F'
+    assert d.memory('gBattleOutcome',1)[0] == 1
+    assert d.value('(int)HasTrainerBeenFought(601)') == 1
+    assert d.value('(int)FlagGet(0x6f)') == 1
+    assert d.value('(int)VarGet(0x4058)') == 1
+    assert d.value('(int)VarGet(0x40a0)') == 1
+    return d.save_checkpoint('r04-maxie')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'

@@ -36,7 +36,8 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Seafloor Cavern, Sky Pillar/Rayquaza, Sootopolis y octava medalla. Eventos y
   desbloqueos deben proceder de scripts; verificar sus condiciones previas.
   Monte Pírico/Emblema Magma por evento, repetición y Continue: PASS; el resto
-  de R04 sigue pendiente (detalle en campaign-progress.md).
+  de R04 sigue pendiente (detalle en campaign-progress.md). Magma/Fuerza,
+  Tatiano, despertar de Groudon y Maxie: PASS; replay/Continue de Maxie PASS.
 - [ ] R05: Waterfall, Victory Road, acceso a Liga, ocho medallas y créditos
   desde esa misma partida; sin warps del harness ni equipo preparado. Recarga
   final: game-clear, equipo y Hall of Fame válidos. Capturas privadas.
