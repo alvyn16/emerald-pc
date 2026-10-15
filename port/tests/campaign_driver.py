@@ -339,10 +339,16 @@ def connect(destination):
     source_span=layout['height' if horizontal else 'width']
     target_span=other['height' if horizontal else 'width']
     candidates=[]
+    dx,dy={'left':(-1,0),'right':(1,0),'up':(0,-1),'down':(0,1)}[direction]
     for index in range(max(0,link['offset']),min(source_span,link['offset']+target_span)):
         x,y=((0 if direction == 'left' else layout['width']-1),index) if horizontal else (index,(0 if direction == 'up' else layout['height']-1))
         try:
-            candidates.append((len(path_to(x,y)),x,y))
+            # The source edge can be walkable while the neighboring map's
+            # first tile is a wall (Route104 -> Petalburg at y=61).
+            # Loaded connection tiles let the planner check the actual step.
+            route=path_to(x+dx,y+dy)
+            if route and route[-1] == direction.upper():
+                candidates.append((len(path_to(x,y)),x,y))
         except RuntimeError:
             pass  # A blocked edge is not a route through the connection.
     assert candidates, 'No reachable connection to '+destination

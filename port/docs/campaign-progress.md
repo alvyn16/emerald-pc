@@ -500,3 +500,24 @@ R02 queda verificado junto con sus etapas anteriores: cuatro gimnasios,
 Devon/Peeko/Briney, Aqua/Slateport, meteorito/Magma y gating antes/después.
 R03–R15 y T27/Checkpoint E siguen abiertos. El runtime del juego no necesitó
 parches nuevos en este tramo; los cambios son del controlador y sus pruebas.
+
+### R03 en curso: Fuerza y regreso a Petalburgo
+
+Se compraron diez Super Potions en Lavaridge por el menú real (7000 de dinero).
+El regreso pasó por Route112/111, Mauville, Route117 y Verdanturf, con combates
+de entrenadores y Rock Smash sobre la roca regenerada de Route111.
+En Rusturf Tunnel, desde (25,5), LEFT fue rechazado por la roca (24,5)
+(frame 374900). La interacción con Rock Smash abrió el paso y completó la
+reunión de Wanda; HM Strength pasó de cero a una unidad en el frame 378068.
+`r03-strength` (388620) conserva Marshtomp 35/Wingull 22/Oddish 18,
+cuatro medallas, diez Super Potions y dinero 5771. No se enseñó Fuerza aún.
+
+Route104 permitía caminar hasta (39,61), pero el paso siguiente hacia
+Petalburgo era una pared. El planner ahora comprueba también la casilla
+cargada del mapa vecino y que el último paso cruce en la dirección de la
+conexión. El cruce real funciona en (39,63). La repetición independiente
+`natural_campaign_smoke.py --phase r03-petalburg`, desde el save de Fuerza,
+cruza Petalburg Woods, llega a la ciudad y cura/guarda: PASS, sin señales y
+salida normal (`build/t27-natural-petalburg-replay.log`).
+Checkpoint principal `r03-petalburg`: frame 407968, equipo 35/22/18,
+nueve Super Potions, dinero 5915 y HM Surf aún ausente.

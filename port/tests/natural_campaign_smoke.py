@@ -10,7 +10,7 @@ from process_watchdog import run_logged
 def main():
     project=Path(__file__).resolve().parents[2]
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum","r02-rocksmash","r02-rest","r02-meteor","r02-connections","r02-shop","r02-jagged","r02-flannery"),default="r01")
+    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum","r02-rocksmash","r02-rest","r02-meteor","r02-connections","r02-shop","r02-jagged","r02-flannery","r03-petalburg"),default="r01")
     phase=parser.parse_args().phase
     scratch=project/("build/natural-campaign-replay" if phase == "r01" else "build/natural-campaign-replay-"+phase)
     for directory in ("build","roms","saves"):
@@ -28,7 +28,7 @@ def main():
                 'r02-rocksmash':'r02-wattson','r02-rest':'r02-route111-north',
                 'r02-meteor':'r02-fallarbor','r02-connections':'r02-fallarbor',
                 'r02-shop':'r02-fallarbor','r02-jagged':'r02-maxie-meteorite',
-                'r02-flannery':'r02-lavaridge'}
+                'r02-flannery':'r02-lavaridge','r03-petalburg':'r03-strength'}
     save.write_bytes(b"\xff"*131072 if phase == "r01" else
                      (project/('build/natural-campaign/'+checkpoint[phase]+'.sav')).read_bytes())
     inputs=scratch/"input.txt"
@@ -80,6 +80,16 @@ d.buy_item(22,3)
 d.go(3,7); d.cross('DOWN','FallarborTown')
 d.save_checkpoint('r02-shop-supplies')''',
         'r02-jagged':'''route.jagged_pass_to_lavaridge()''',
+        'r03-petalburg':'''d.RUN_WILD=True
+d.HEAL_ITEMS=(22,13)
+d.go(10,29); d.cross('DOWN','PetalburgWoods')
+d.go(16,37); d.cross('DOWN','Route104')
+d.connect('PetalburgCity')
+assert d.state()['map'] == 'PetalburgCity'
+print('NATURAL CONNECTED BORDER PASS',d.state())
+d.go(20,17); d.cross('UP','PetalburgCity_PokemonCenter_1F')
+d.nurse(); d.go(7,8); d.cross('DOWN','PetalburgCity')
+d.save_checkpoint('r03-petalburg')''',
         'r02-flannery':'''d.go(15,6); d.cross('UP','LavaridgeTown_Mart')
 d.buy_item(22,6)
 d.go(3,7); d.cross('DOWN','LavaridgeTown')
