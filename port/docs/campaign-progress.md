@@ -401,3 +401,38 @@ oeste. `r02-route113` (frame 31652 del séptimo proceso) conserva Marshtomp 30,
 Wingull 20/Oddish 18, tres medallas y dinero 4863. El registro permanece en
 `build/natural-campaign/gdb-north-resume.log`; el tramo anterior se conserva
 en `route-before-north-resume.jsonl`. R02 y T27 continúan abiertos.
+
+### Meteor Falls y acceso al teleférico
+
+Se cruzó Ruta 113 y se curó el equipo en Fallarbor. `r02-fallarbor` (frame
+45744 del séptimo proceso) conserva tres medallas y el equipo 30/20/18.
+La recarga verifica los campos registrados y conserva el save: PASS
+(`build/t27-fallarbor-reload.log`). Se recorrió Ruta 114, sus entrenadores y
+la entrada a Meteor Falls. La escena de Magma/Aqua terminó con
+VAR_METEOR_FALLS_STATE (0x40BF)=1 y FLAG_HIDE_ROUTE_112_TEAM_MAGMA (0x333)=1.
+`r02-meteor-falls` se guardó inicialmente en 85564 y se volvió a guardar en
+86596 para incluir esos indicadores en el manifiesto: Marshtomp 31,
+Wingull 20/Oddish 18. La recarga de ese manifiesto ampliado pasa y no reescribe
+el save (`build/t27-meteor-falls-reload.log`).
+
+`--phase r02-meteor` repite desde la copia anterior de Fallarbor, comprueba
+ambos indicadores inicialmente a cero y su activación por la escena, y
+guarda. PASS, sin señales y salida normal
+(`build/t27-natural-meteor-replay.log`). El retorno correcto de la cueva es
+hacia abajo desde (27,17): la casilla de salida tiene comportamiento 0x65,
+flecha sur. La dirección este propuesta por el harness no cruzaba el warp.
+
+El driver ahora selecciona conexiones leyendo las dimensiones, dirección,
+offset y tamaño del mapa vecino, y busca el borde alcanzable más cercano.
+Así no supone que Fallarbor tenga 40 casillas de ancho ni mezcla los dos
+tramos de conexión oeste de Ruta 111. `--phase r02-connections` recorre
+Fallarbor→113→111→112→111→113→Fallarbor mediante teclas. Comprueba cada mapa
+y guarda al terminar: PASS (`build/t27-natural-connections-replay.log`).
+
+Tras volver a Fallarbor y curarse (`r02-meteor-return`, frame 105400), la
+campaña caminó por Ruta 113 y Fiery Path hasta el teleférico. Entrada libre
+medida en frame 152976, viaje por diálogo completado en 154416.
+`r02-chimney-arrival` (155892) guarda Mt. Chimney (17,37), equipo 32/21/18,
+tres medallas y dinero 9311. El bloqueo previo al evento y el acceso posterior
+están comprobados; Maxie, meteorito y Flannery aún requieren verificación.
+ROM original y save del usuario conservan los hashes registrados.

@@ -16,7 +16,8 @@ HEAL_ITEMS = ()  # Optional campaign consumables, never granted by the driver.
 HEAL_PLAN = {}
 EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0x90,
                "match_call":0x12f,"pokenav":0x862,"letter":0xbd,"delivered_goods":0x95,
-               "wally_mauville":0xbe,"rock_smash":0x6b}
+               "wally_mauville":0xbe,"rock_smash":0x6b,
+               "cable_car_clear":0x333,"chimney_defeated":0x8b,"meteorite":0x73}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -323,6 +324,34 @@ def cross(button,destination,limit=4):
     raise RuntimeError("Expected transition to "+destination+": "+str(state()))
 
 
+def connect(destination):
+    """Walk to a reachable edge within the actual map connection's span."""
+    origin=state()['map']; maps=ROOT/'pokeemerald/data/maps'
+    source=json.loads((maps/origin/'map.json').read_text())
+    target=json.loads((maps/destination/'map.json').read_text())
+    links=[link for link in source['connections'] or [] if link['map'] == target['id']]
+    assert len(links) == 1, 'Expected one map connection to '+destination
+    link=links[0]; direction=link['direction']
+    layouts=json.loads((ROOT/'pokeemerald/data/layouts/layouts.json').read_text())['layouts']
+    layout=next(entry for entry in layouts if entry['id'] == source['layout'])
+    other=next(entry for entry in layouts if entry['id'] == target['layout'])
+    horizontal=direction in ('left','right')
+    source_span=layout['height' if horizontal else 'width']
+    target_span=other['height' if horizontal else 'width']
+    candidates=[]
+    for index in range(max(0,link['offset']),min(source_span,link['offset']+target_span)):
+        x,y=((0 if direction == 'left' else layout['width']-1),index) if horizontal else (index,(0 if direction == 'up' else layout['height']-1))
+        try:
+            candidates.append((len(path_to(x,y)),x,y))
+        except RuntimeError:
+            pass  # A blocked edge is not a route through the connection.
+    assert candidates, 'No reachable connection to '+destination
+    _,x,y=min(candidates)
+    go(x,y)
+    assert state()['map'] in (origin,destination), 'Unexpected transition on approach'
+    return cross(direction.upper(),destination)
+
+
 def talk(x,y,facing,limit=30000):
     origin=state()["map"]
     go(x,y)
@@ -501,6 +530,7 @@ def save_checkpoint(name):
     facts["rustboro"]=value("(int)VarGet(0x405a)")
     facts["briney"]=value("(int)VarGet(0x4090)")
     facts['route110']=value('(int)VarGet(0x4069)')
+    facts['meteor_falls']=value('(int)VarGet(0x40bf)')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
                         for item in (13,22,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')

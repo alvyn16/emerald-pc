@@ -207,6 +207,20 @@ def rock_smash_route111():
     return d.save_checkpoint('r02-route111-rock')
 
 
+def meteor_falls_scene():
+    """Walk from Fallarbor to the scripted meteorite theft and cable-car gate."""
+    assert d.state()['map'] == 'FallarborTown'
+    assert d.value('(int)VarGet(0x40bf)') == 0
+    assert d.value('(int)FlagGet(0x333)') == 0
+    d.RUN_WILD=True
+    d.go(0,10); d.cross('LEFT','Route114')
+    d.go(8,64); d.cross('UP','MeteorFalls_1F_1R')
+    d.go(14,18); d.settle(30000)
+    assert d.value('(int)VarGet(0x40bf)') == 1
+    assert d.value('(int)FlagGet(0x333)') == 1
+    return d.save_checkpoint('r02-meteor-falls')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'
