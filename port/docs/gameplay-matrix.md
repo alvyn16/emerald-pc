@@ -107,7 +107,7 @@ cambian con input real y callback de campo conservado. Capturas privadas en buil
 | Safari | Huida previa más admisión/cobro 500/30 bolas, captura Magikarp, salida por pasos y limpieza de modo | PASS dirigido; rutina de pasos invocada, no paseo ni agotamiento de bolas |
 | Battle Frontier | Tower singles, rival generado de la tabla de facility, Swampert/Salamence/Metagross 50, victoria y save | PASS de un combate; no racha completa ni otras seis facilities |
 | Campaña continua | Wally → ocho medallas mediante NPC → Liga → créditos, mismo estado/save con reanudaciones comprobadas | R01–R02 naturales PASS hasta cuatro medallas; R03–R05 pendientes. Recorrido dirigido anterior no cierra la campaña natural |
-| Historia | Natural: Devon/Peeko/Briney/Steven, Aqua/Slateport, rival 110/Wally, Meteor Falls/teleférico/Maxie/meteorito y cuatro gimnasios. Norman/Surf y resto mantienen su cobertura dirigida anterior | PARCIAL; Weather Institute, Space Center y Sky Pillar/Rayquaza naturales pendientes |
+| Historia | Natural: Devon/Peeko/Briney/Steven, Aqua/Slateport, rival 110/Wally, Meteor Falls/teleférico/Maxie/meteorito y cinco gimnasios; Norman/Surf y Fuerza comprobados por input. Resto mantiene cobertura dirigida anterior | PARCIAL; Weather Institute, Space Center y Sky Pillar/Rayquaza naturales pendientes |
 
 El progreso medido procede de scripts NPC y guardados reales; warps y equipo
 asistidos no acreditan recorrido ni desbloqueos de historia. T27 y Checkpoint E

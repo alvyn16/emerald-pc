@@ -17,7 +17,8 @@ HEAL_PLAN = {}
 EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0x90,
                "match_call":0x12f,"pokenav":0x862,"letter":0xbd,"delivered_goods":0x95,
                "wally_mauville":0xbe,"rock_smash":0x6b,
-               "cable_car_clear":0x333,"chimney_defeated":0x8b,"meteorite":0x73}
+               "cable_car_clear":0x333,"chimney_defeated":0x8b,"meteorite":0x73,
+               "surf":0x7a,"fly":0x6e,"castform":0x97,"devon_scope":0x11d}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -607,6 +608,12 @@ def path_to(x,y):
     cells = struct.unpack("<%dH" % (width*height),bytes(gdb.selected_inferior().read_memory(address,width*height*2)))
     read=gdb.selected_inferior().read_memory
     layout=struct.unpack("<I",memory("gMapHeader",4))[0]
+    map_width,map_height=struct.unpack('<II',bytes(read(layout,8)))
+    def within_route(point):
+        # Loaded neighbor tiles are useful for checking a connection step,
+        # but must not become shortcuts that leave the current map en route.
+        return point == goal or (7 <= point[0] < 7+map_width and
+                                 7 <= point[1] < 7+map_height)
     tilesets=struct.unpack("<2I",bytes(read(layout+16,8)))
     attributes=[]
     for tileset in tilesets:
@@ -614,15 +621,15 @@ def path_to(x,y):
         attributes.extend(struct.unpack("<512H",bytes(read(pointer,1024))))
     traits=memory("sTileBitAttributes",256)
     surfing=bool(memory("gPlayerAvatar",1)[0]&8)
-    def passable(cell):
+    def passable(cell,surf_mode):
         tile=cell&0x3ff
         if cell&0xc00 or tile == 0x3ff:
             return False
         behavior=attributes[tile]&0xff
         # Bumpy slopes require Acro Bike hopping; walking must go around them.
-        return (surfing or not traits[behavior]&2) and not 0x30 <= behavior <= 0x3f and behavior != 0xd1
+        return (surf_mode or not traits[behavior]&2) and not 0x30 <= behavior <= 0x3f and behavior != 0xd1
     objects = memory("gObjectEvents",16*36); player=memory("gPlayerAvatar",6)[5]
-    start=(current['x']+7,current['y']+7,objects[player*36+11]&15)
+    start=(current['x']+7,current['y']+7,objects[player*36+11]&15,surfing)
     blocked = {struct.unpack_from("<hh",objects,i*36+16) for i in range(16)
                if i != player and objects[i*36]&1}
     queue=deque([start]); previous={start:None}
@@ -635,7 +642,7 @@ def path_to(x,y):
             return route[::-1]
         for dx,dy,button in ((1,0,"RIGHT"),(-1,0,"LEFT"),(0,1,"DOWN"),(0,-1,"UP")):
             point=(node[0]+dx,node[1]+dy)
-            if not (0 <= point[0] < width and 0 <= point[1] < height) or point in blocked:
+            if not (0 <= point[0] < width and 0 <= point[1] < height) or not within_route(point) or point in blocked:
                 continue
             cell=cells[point[1]*width+point[0]]
             behavior=attributes[cell&0x3ff]&0xff
@@ -647,17 +654,22 @@ def path_to(x,y):
             jump=behavior in ledges[button]
             if jump:
                 point=(point[0]+dx,point[1]+dy)
-                if not (0 <= point[0] < width and 0 <= point[1] < height) or point in blocked:
+                if not (0 <= point[0] < width and 0 <= point[1] < height) or not within_route(point) or point in blocked:
                     continue
                 cell=cells[point[1]*width+point[0]]
             elevation=cell>>12
+            # CanStopSurfing permits the otherwise mismatching step onto
+            # default elevation 3. After landing, water requires A/Yes again.
+            mismatch=node[2] != 0 and elevation not in (0,15,node[2])
+            landing=node[3] and mismatch and elevation == 3 and not jump
             # Match IsElevationMismatchAt/ObjectEventUpdateElevation: 0 is
             # a transition tile; 15 preserves the object's current elevation.
-            if not jump and node[2] != 0 and elevation not in (0,15,node[2]):
+            if not jump and mismatch and not landing:
                 continue
-            nxt=(*point,node[2] if elevation == 15 else elevation)
-            if nxt not in previous and passable(cell):
-                previous[nxt]=(node,'JUMP_'+button if jump else button); queue.append(nxt)
+            nxt=(*point,node[2] if elevation == 15 else elevation,False if landing else node[3])
+            if nxt not in previous and passable(cell,nxt[3]):
+                label=('JUMP_' if jump else 'LAND_' if landing else '')+button
+                previous[nxt]=(node,label); queue.append(nxt)
     raise RuntimeError("No walkable path to "+str(goal)+" from "+str(current))
 
 
@@ -668,8 +680,8 @@ def walk(x,y,limit=200):
         if current["map"] != origin or (current["x"],current["y"]) == (x,y):
             return current
         route=path_to(x,y)
-        if route[0].startswith('JUMP_'):
-            advance(route[0][5:],80,4)
+        if route[0].startswith(('JUMP_','LAND_')):
+            advance(route[0][5:],120 if route[0].startswith('LAND_') else 80,4)
             if not field_ready(state()):
                 return state()
             continue

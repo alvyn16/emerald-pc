@@ -521,3 +521,69 @@ cruza Petalburg Woods, llega a la ciudad y cura/guarda: PASS, sin señales y
 salida normal (`build/t27-natural-petalburg-replay.log`).
 Checkpoint principal `r03-petalburg`: frame 407968, equipo 35/22/18,
 nueve Super Potions, dinero 5915 y HM Surf aún ausente.
+
+La repetición `--phase r03-strength` parte del save de Verdanturf y comprueba
+rechazo de la roca, obtención de Fuerza y cruce posterior: PASS
+(`build/t27-natural-strength-replay.log`). Continue del checkpoint principal
+de Fuerza conserva todos los campos y el archivo: PASS
+(`build/t27-strength-reload.log`).
+
+### Norman y quinta medalla
+
+La sala de Velocidad se abre mediante A/Yes, no caminando contra su puerta.
+Ruta real: entrada desde (1,106), Randall desde (4,82), puerta (1,80), Parker
+desde (4,43), puerta (7,41), Jody desde (4,17), puerta (7,15), Norman (4,3).
+Los tres accesos rechazaron la entrada antes del entrenador correspondiente
+y permitieron el paso después de vencerlo. Marshtomp evolucionó a Swampert
+al nivel 36 durante los combates; Fuerza se enseñó por el menú real.
+
+Los intentos exploratorios con pocas medicinas perdieron normalmente:
+`r03-norman-result` (468120), `r03-norman-retry-result` (504324) y
+`r03-norman-special-result` (522448). Los dos primeros llegaron a Slaking;
+el tercero, sin medicinas, perdió ante Linoone. Ninguno produjo una señal
+del debugger o un fallo del runtime. No cuentan como victoria ni como
+regresión resuelta. Una preferencia experimental por Water Gun no mejoró
+ese intento y se retiró del controlador; no se cambia la estrategia general.
+
+`--phase r03-norman` repite desde `r03-petalburg`, compra seis Super Potions
+con 4200 del dinero existente, prueba la orilla (7,20) sin Surf/quinta medalla,
+enseña Fuerza, verifica los tres pares de puertas y gana a Norman. El script
+continúa hasta casa de Blasco y entrega HM Surf. PASS, sin señales y salida
+normal (`build/t27-natural-norman-replay.log`). El save `r03-norman` (91564
+de esa repetición) tiene Swampert 37/Wingull 22/Oddish 18, cinco medallas,
+Norman=7, Surf=1, Fuerza=1, tres Super Potions y dinero 8559.
+La recarga independiente conserva equipo, movimientos, progreso e inventario
+sin escribir el archivo: PASS (`build/t27-norman-reload.log`).
+
+Para continuar se ha cargado por Continue ese guardado ganador, que desciende
+del mismo checkpoint natural de Petalburgo. Se conservan aparte el guardado
+y la traza de los intentos perdidos; no se mezclan sus niveles/consumibles con
+los de la rama ganadora. El nuevo proceso reinicia su contador de frames.
+R03 sigue abierto: faltan Surf en campo, Weather Institute, Fly y Devon Scope.
+
+Surf en campo ya está comprobado: `--phase r03-surf` enseña HM03 a Swampert
+por mochila (Water Gun se sustituye por Surf), cura y usa A/Yes desde (7,20).
+El jugador entra en (6,20) con PLAYER_AVATAR_FLAG_SURFING, navega hasta (4,20)
+y desembarca de nuevo en (7,20), volviendo al modo a pie. PASS
+(`build/t27-natural-surf-replay.log`). El primer intento del harness falló al
+planear el desembarco: rechazaba el cambio de elevación 1→3 que el juego
+permite mediante CanStopSurfing. Ahora el BFS conserva el modo de movimiento
+por nodo, permite ese paso y espera la animación; una vez en tierra no puede
+volver al agua sin el diálogo real. El juego no requirió parche.
+Checkpoint principal `r03-surf`: frame 19812 del nuevo proceso, equipo 37/22/18,
+movimientos de Swampert Rock Smash/Take Down/Strength/Surf y cinco medallas.
+Capturas inspeccionadas: `build/natural-campaign/r03-{strength,norman,surf}.png`.
+
+Otro límite del planner apareció al regresar por Route117: el borde (0,6)
+es una casilla aislada; el carril útil está en y=8. El BFS podía intentar salir
+a Verdanturf para rodear la pared, cambiando de mapa antes de su objetivo.
+Ahora solo admite casillas del mapa actual y la casilla de salida pedida
+explícitamente. El recorrido medido usa Verdanturf (19,8)→Route117 (0,8).
+Una casilla transitable en el borde no garantiza que conecte con el interior;
+los recorridos deben seguir verificando el destino y usar waypoints medidos.
+
+Regresión de conexiones tras estos ajustes: ida/vuelta entre Fallarbor,
+Route113, Route111 y Route112 con combates reales: PASS, sin señales ni salida
+anormal (`build/t27-natural-connections-shore-regression.log`). El recorrido
+principal llegó después a Mauville, curó y guardó en `r03-mauville` (75624),
+con el mismo equipo 37/22/18, Surf aprendido, tres Super Potions y dinero 9439.

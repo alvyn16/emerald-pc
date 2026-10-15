@@ -260,6 +260,82 @@ def flannery_gym():
     return d.save_checkpoint('r02-flannery')
 
 
+def rusturf_strength():
+    """Break the reunion rock with the owned HM, then receive Strength."""
+    assert d.state()['map'] == 'VerdanturfTown'
+    assert d.value('(int)CountTotalItemQuantityInBag(342)') == 0
+    d.RUN_WILD=True; d.HEAL_ITEMS=(22,13)
+    d.go(8,2); d.cross('UP','RusturfTunnel')
+    d.go(25,5); d.advance('LEFT',48,4)
+    assert (d.state()['x'],d.state()['y']) == (25,5)
+    print('NATURAL RUSTURF ROCK CLOSED PASS',d.state())
+    d.talk(25,5,'LEFT',30000)
+    assert d.value('(int)CountTotalItemQuantityInBag(342)') == 1
+    d.go(24,5)
+    assert (d.state()['x'],d.state()['y']) == (24,5)
+    print('NATURAL RUSTURF ROCK OPEN PASS',d.state())
+    return d.save_checkpoint('r03-strength-reunion')
+
+
+def surf_gate_closed():
+    """A real shore remains impassable before receiving Surf and badge five."""
+    assert d.state()['map'] == 'PetalburgCity'
+    assert d.value('(int)FlagGet(0x86b)') == 0
+    assert d.value('(int)CountTotalItemQuantityInBag(341)') == 0
+    d.go(7,20); d.advance('LEFT',48,4); d.advance('A',24,1); d.settle()
+    assert (d.state()['x'],d.state()['y']) == (7,20)
+    assert not d.memory('gPlayerAvatar',1)[0]&8
+    print('NATURAL SURF GATE CLOSED PASS',d.state())
+
+
+def norman_gym():
+    """Unlock the Speed/Confusion/Strength rooms by winning their battles."""
+    assert d.state()['map'] == 'PetalburgCity'
+    surf_gate_closed()
+    d.HEAL_ITEMS=(22,13)
+    d.teach_tm(342,0)
+    d.go(15,9); d.cross('UP','PetalburgCity_Gym')
+    d.talk(1,106,'UP')  # These doors use A/Yes, not walking into the tile.
+    assert (d.state()['x'],d.state()['y']) == (7,85)
+    for trainer,door,arrival in (((4,82),(1,80),(7,46)),
+                                  ((4,43),(7,41),(1,20)),
+                                  ((4,17),(7,15),(1,7))):
+        d.talk(*door,'UP')
+        assert (d.state()['x'],d.state()['y']) == door
+        print('NATURAL NORMAN ROOM LOCKED PASS',door,d.state())
+        d.talk(*trainer,'UP',50000)
+        assert d.memory('gBattleOutcome',1)[0] == 1
+        d.talk(*door,'UP')
+        assert (d.state()['x'],d.state()['y']) == arrival
+        print('NATURAL NORMAN ROOM OPEN PASS',door,d.state())
+    d.save_checkpoint('r03-norman-ready')
+    d.talk(4,3,'UP',70000)
+    assert d.value('(int)FlagGet(0x86b)') == 1
+    assert d.memory('gBattleOutcome',1)[0] == 1
+    assert d.value('(int)CountTotalItemQuantityInBag(341)') == 1
+    return d.save_checkpoint('r03-norman')
+
+
+def surf_crossing():
+    """Teach the received Surf, enter water, cross it and dismount on land."""
+    assert d.state()['map'] == 'PetalburgCity_WallysHouse'
+    assert d.value('(int)FlagGet(0x86b)') == 1
+    assert d.value('(int)CountTotalItemQuantityInBag(341)') == 1
+    d.teach_tm(341,0)
+    d.go(3,7); d.cross('DOWN','PetalburgCity')
+    d.go(20,17); d.cross('UP','PetalburgCity_PokemonCenter_1F'); d.nurse()
+    d.go(7,8); d.cross('DOWN','PetalburgCity')
+    d.talk(7,20,'LEFT')
+    assert d.memory('gPlayerAvatar',1)[0]&8
+    assert (d.state()['x'],d.state()['y']) == (6,20)
+    d.go(4,20)
+    assert (d.state()['x'],d.state()['y']) == (4,20)
+    d.go(7,20)
+    assert not d.memory('gPlayerAvatar',1)[0]&8
+    print('NATURAL SURF CROSSING PASS',d.state())
+    return d.save_checkpoint('r03-surf')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'
