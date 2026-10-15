@@ -1,0 +1,28 @@
+From bcf207dcbe9700d357e079f1eaee8d8f1427932c Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Thu, 15 Oct 2026 16:45:10 -0400
+Subject: [PATCH] Retire host Fly map sprites before releasing shared state
+
+---
+ src/region_map.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/region_map.c b/src/region_map.c
+index 8989ccc..9e64840 100644
+--- a/src/region_map.c
++++ b/src/region_map.c
+@@ -2019,6 +2019,11 @@ static void CB_ExitFlyMap(void)
+             {
+                 SetMainCallback2(CB2_ReturnToPartyMenuFromFlyMap);
+             }
++#ifdef PORT_PC
++            // CB2_FlyMap still animates sprites after this callback returns.
++            // Retire its destination icons before releasing their shared data.
++            ResetSpriteData();
++#endif
+             TRY_FREE_AND_SET_NULL(sFlyMap);
+             FreeAllWindowBuffers();
+         }
+-- 
+2.51.0.windows.2
+

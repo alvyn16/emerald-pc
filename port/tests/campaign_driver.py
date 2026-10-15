@@ -19,7 +19,7 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "wally_mauville":0xbe,"rock_smash":0x6b,
                "cable_car_clear":0x333,"chimney_defeated":0x8b,"meteorite":0x73,
                "surf":0x7a,"fly":0x6e,"castform":0x97,"devon_scope":0x11d,
-               "fortree_kecleon_fled":0x127}
+               "fortree_kecleon_fled":0x127,"lilycove_rival_cleared":0x3cb}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -466,6 +466,43 @@ def choose_field_move(slot,field_move):
     raise RuntimeError('Party menu did not reach requested field move')
 
 
+def fly_to(destination,slot=1):
+    """Choose a visited destination on the real Fly map, then land there."""
+    assert destination in MAPS.values() and destination.isidentifier()
+    assert value('(int)FlagGet(0x86c)') == 1
+    target_map=json.loads((ROOT/'pokeemerald/data/maps'/destination/'map.json').read_text())
+    sections=json.loads((ROOT/'pokeemerald/src/data/region_map/region_map_sections.json').read_text())['map_sections']
+    section=next(entry for entry in sections if entry['id'] == target_map['region_map_section'])
+    target=section['x']+1,section['y']+2
+    choose_field_move(slot,5)
+    for step in range(100):
+        pointer=value('*(unsigned int *)&sFlyMap')
+        if state()['callback'] == 'CB2_FlyMap' and pointer:
+            callback=int.from_bytes(bytes(gdb.selected_inferior().read_memory(pointer,4)),'little')
+            if callback == value('(unsigned int)&CB_HandleFlyMapInput'):
+                break
+        advance('NONE',24)
+    else:
+        raise RuntimeError('Fly map did not become ready')
+    for step in range(80):
+        region=value('*(unsigned int *)&sRegionMap')
+        data=bytes(gdb.selected_inferior().read_memory(region,0x58))
+        cx,cy=struct.unpack_from('<HH',data,0x54)
+        if (cx,cy) == target:
+            break
+        advance('RIGHT' if cx < target[0] else 'LEFT' if cx > target[0]
+                else 'DOWN' if cy < target[1] else 'UP',24,1)
+    else:
+        raise RuntimeError('Fly cursor did not reach '+destination)
+    assert data[2] in (2,4), 'Fly destination has not been unlocked'
+    assert struct.unpack_from('<H',data)[0] == value(f'(int)GetRegionMapSecIdAt({target[0]},{target[1]})')
+    gdb.execute(f'dump binary memory {SCRATCH.as_posix()}/fly-map-{destination}.raw &sPixels ((char *)&sPixels)+153600')
+    advance('A',900,1); settle(30000)
+    assert state()['map'] == destination, ('Fly landed in unexpected map',state())
+    print('NATURAL FLY DESTINATION PASS',state())
+    return state()
+
+
 def teach_tm(item,slot):
     """Use an owned TM/HM via bag, party and move-summary menus."""
     assert field_ready(state())
@@ -510,8 +547,8 @@ def teach_tm(item,slot):
     raise RuntimeError('TM/HM teaching deadline: '+str(state()))
 
 
-def buy_item(item,quantity):
-    """Buy from the standard mart counter at (3,3), using real shop menus."""
+def buy_item(item,quantity,position=(3,3),facing='LEFT'):
+    """Buy through real shop menus, approaching the specified counter."""
     assert field_ready(state()) and 1 <= quantity <= 99
     def wait_task(function,button='NONE'):
         for step in range(80):
@@ -522,7 +559,7 @@ def buy_item(item,quantity):
     before=value(f'(int)CountTotalItemQuantityInBag({item})')
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
     money=value(f'(int)GetMoney((void *)({save}+0x490))')
-    go(3,3); advance('LEFT',24,4); advance('A',24,1)
+    go(*position); advance(facing,24,4); advance('A',24,1)
     wait_task('Task_ShopMenu','A'); advance('A',24,1)
     wait_task('Task_BuyMenu')
     info=memory('sMartInfo',16)
@@ -612,8 +649,9 @@ def save_checkpoint(name):
     facts['meteor_falls']=value('(int)VarGet(0x40bf)')
     facts['weather_institute']=value('(int)VarGet(0x40b3)')
     facts['route119']=value('(int)VarGet(0x4072)')
+    facts['route121']=value('(int)VarGet(0x4074)')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
-                        for item in (13,21,22,288,*range(339,347))}
+                        for item in (13,21,22,288,302,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
     facts['money']=value(f'(int)GetMoney((void *)({save}+0x490))')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")

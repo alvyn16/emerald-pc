@@ -686,3 +686,31 @@ Pokémon quedaron debilitados y Altaria permaneció con 102 HP. Se agotaron las
 medicinas; equipo 41/28/19/25, dinero 7279. No cuenta como sexta medalla.
 Se inicia un desvío a Lilycove para conseguir una MT de hielo mediante tienda;
 R03 permanece abierto hasta verificar también el uso de Fly tras la medalla.
+
+### Sexta medalla, MT consumibles y Vuelo real
+
+El desvío atravesó Route120 y Route121 a pie. Cruzar (25,7) activó el diálogo
+Aqua y retiró el grupo que bloqueaba el camino; Route121=1. No se alteraron
+flags ni se usó Corte para omitir ese evento. En Lilycove se curó el equipo y
+se derrotó al rival que bloqueaba el centro comercial. Dinero ganado: 18403.
+En 4F se compraron dos TM14 por 11000, se enseñó Blizzard a Swampert y
+Pelipper por mochila, y ambas MT se consumieron. En 2F se compraron seis
+Hyper Potions por 7200; quedaron 203. Los contadores reales y sus cantidades
+se comprueban en `--phase r03-tms`: PASS (`build/t27-natural-tms-replay.log`).
+Continue de r03-winona-supplies también PASS.
+
+Se regresó por Route121/120 a Fortree, se curó y se resolvieron de nuevo las
+puertas del gimnasio. Alana fue derrotada normalmente: r03-winona-ice-result
+(frame 649964), seis medallas, equipo 44/29/19/25, seis Hyper Potions intactas
+y dinero 3503. `--phase r03-winona` repite la victoria desde el guardado de
+entrada al combate: PASS (`build/t27-natural-winona-replay.log`).
+
+La primera confirmación de Vuelo descubrió un callback de icono que usaba
+sFlyMap tras liberarlo. GDB, causa y parche 0043 se describen en
+first-run-report.md. Con el parche, `--phase r03-fly` confirma ida a Rustboro,
+cancela otra selección sin moverse y vuelve a Fortree: PASS. El checkpoint
+r03-fly-roundtrip se recarga por Continue, verificando seis medallas, equipo,
+movimientos, eventos, cantidades y dinero sin reescribir el archivo: PASS.
+Se continúa desde ese guardado, derivado del mismo linaje natural; la ruta
+anterior y el save previo quedan preservados en build/natural-campaign.
+R03 queda cubierto; R04–R15 y T27/Checkpoint E continúan abiertos.

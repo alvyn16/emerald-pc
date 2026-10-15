@@ -460,6 +460,55 @@ def fortree_gates():
         observer.delete()
 
 
+def ice_tm_supplies():
+    """Buy two consumable TMs and medicine using the earned campaign money."""
+    assert d.state()['map'] == 'LilycoveCity_DepartmentStore_4F'
+    assert d.value('(int)CountTotalItemQuantityInBag(302)') == 0
+    d.buy_item(302,2,(7,4),'DOWN')
+    assert d.value('(int)CountTotalItemQuantityInBag(302)') == 2
+    d.save_checkpoint('r03-blizzard-purchased')
+    d.teach_tm(302,0); d.teach_tm(302,1)
+    assert d.value('(int)CountTotalItemQuantityInBag(302)') == 0
+    for slot in (0,1):
+        moves=[d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{slot*100}),{13+i},0)') for i in range(4)]
+        assert 59 in moves and 57 in moves
+    d.go(16,2); d.cross('UP','LilycoveCity_DepartmentStore_3F')
+    d.go(13,2); d.cross('UP','LilycoveCity_DepartmentStore_2F')
+    d.buy_item(21,6,(10,4),'DOWN')
+    return d.save_checkpoint('r03-winona-supplies')
+
+
+def winona_battle():
+    assert d.state()['map'] == 'FortreeCity_Gym'
+    assert (d.state()['x'],d.state()['y']) == (15,3)
+    assert d.value('(int)FlagGet(0x86c)') == 0
+    d.HEAL_ITEMS=(21,22,13)
+    d.talk(15,3,'UP',80000)
+    assert d.memory('gBattleOutcome',1)[0] == 1
+    assert d.value('(int)FlagGet(0x86c)') == 1
+    return d.save_checkpoint('r03-winona')
+
+
+def fly_roundtrip():
+    """Confirm two real flights and cancel one map after the sixth badge."""
+    assert d.state()['map'] == 'FortreeCity'
+    d.RUN_WILD=True
+    d.fly_to('RustboroCity')
+    d.save_checkpoint('r03-fly-rustboro')
+    before=d.state()
+    d.choose_field_move(1,5); d.advance('NONE',600)
+    assert d.state()['callback'] == 'CB2_FlyMap'
+    d.advance('B',600,1)
+    assert d.value('*(unsigned int *)&sFlyMap') == 0
+    assert d.state()['callback'] == 'CB2_UpdatePartyMenu'
+    d.advance('B',180,1); d.advance('B',48,1)
+    assert d.field_ready(d.state())
+    assert all(d.state()[key] == before[key] for key in ('map','x','y'))
+    print('NATURAL FLY CANCEL PASS',d.state())
+    d.fly_to('FortreeCity')
+    return d.save_checkpoint('r03-fly-roundtrip')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'

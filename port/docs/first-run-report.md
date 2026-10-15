@@ -1007,3 +1007,31 @@ Build normal/diagnóstico, 21 suites y verify-normal PASS
 El clon también compila normal/diagnóstico y pasa las 21 suites y
 verify-normal (`build/t27-naming-clean-build.log`). Se reabre por Continue
 el último guardado real de Ruta 110 para repetir la captura en la campaña.
+
+## T27 natural: callbacks de Vuelo tras liberar la pantalla
+
+La primera confirmación de Vuelo, después de ganar la sexta medalla, produjo
+SIGSEGV en SpriteCB_FlyDestIcon+8 (EIP 0x102bf070), frame 658172.
+`movzwl 0x8(%eax),%eax` recibió EAX=0: sFlyMap ya era NULL.
+Backtrace: SpriteCB_FlyDestIcon -> AnimateSprites -> CB2_FlyMap ->
+CallCallbacks -> UpdateLinkAndCallCallbacks -> AgbMain. CB_ExitFlyMap había
+seleccionado CB2_ReturnToField, pero la iteración actual de CB2_FlyMap todavía
+animaba los iconos que dependían del bloque liberado.
+
+El parche 0043 retira los sprites con ResetSpriteData antes de liberar
+sFlyMap, solo bajo PORT_PC. La ruta de GBA conserva su comportamiento.
+La regresión natural `--phase r03-fly` parte del guardado real con seis
+medallas: confirma Fortree -> Rustboro, cancela otra selección y comprueba
+el retorno al menú/equipo/campo en las mismas coordenadas, luego confirma
+Rustboro -> Fortree y guarda: PASS, sin señales y salida normal
+(`build/t27-natural-fly-replay.log`). Continue de r03-fly-roundtrip conserva
+mapa, equipo, movimientos, seis medallas, eventos, inventario y dinero;
+el archivo de guardado no cambia (`build/t27-fly-roundtrip-reload.log`).
+
+Normal/diagnóstico, 21 suites y verify-normal: PASS
+(`build/t27-fly-build.log`). Compare GBA: pokeemerald.gba: OK
+(`build/t27-fly-gba.log`). La copia limpia con los 43 parches produce el árbol
+cd4312af599d1212c62ae2a72dca15631fec46c3, idéntico al upstream local, y compila
+normal/diagnóstico con las 21 suites y verify-normal: PASS
+(`build/t27-fly-clean-build.log`). R04–R15 siguen pendientes; no se ha
+verificado todavía el resto de la campaña ni se declara otro fallo observado.

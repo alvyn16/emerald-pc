@@ -21,7 +21,7 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   `r02-maxie-meteorite`, gating del museo/teleférico y regresiones naturales
   de Rock Smash, Meteor Falls, Jagged Pass y el puzzle/combate de Flannery.
   Detalle y límites de los intentos: `campaign-progress.md`. R03–R15 abiertos.
-- [ ] R03: Norman/Surf, Weather Institute/Castform, rival/Fly y Fortree/Devon
+- [x] R03: Norman/Surf, Weather Institute/Castform, rival/Fly y Fortree/Devon
   Scope. Cruzar los obstáculos con input y los movimientos/herramientas reales.
   Norman/quinta medalla y entrega/enseñanza/cruce de Surf naturales: PASS;
   Fuerza obtenida en Rusturf y puertas del gimnasio antes/después: PASS.
@@ -29,8 +29,9 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   documentadas en `campaign-progress.md`. Instituto/Castform, cama, puente
   bloqueado/abierto y recarga: PASS (`r03-weather` y sus checkpoints).
   Rival/entrega y enseñanza de Fly, bloqueo previo a sexta medalla, Devon Scope
-  y puzzle de puertas giratorias: PASS con repeticiones y recargas. Falta ganar
-  a Alana y verificar Fly en campo tras la medalla; el primer combate se perdió.
+  y puzzle de puertas giratorias: PASS con repeticiones y recargas. Alana fue
+  derrotada tras comprar/enseñar Blizzard por UI; Fly confirma ida/vuelta y
+  cancelación con el parche 0043. Continue de r03-fly-roundtrip: PASS.
 - [ ] R04: Mt. Pyre, escondites Aqua/Magma, Mossdeep/Space Center, Dive,
   Seafloor Cavern, Sky Pillar/Rayquaza, Sootopolis y octava medalla. Eventos y
   desbloqueos deben proceder de scripts; verificar sus condiciones previas.
