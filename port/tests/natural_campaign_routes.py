@@ -1,5 +1,38 @@
 """Measured route actions after the real intro; keys and read-only checkpoints."""
 import campaign_driver as d
+import gdb
+
+
+def rest_old_lady():
+    """Accept one real heal and decline the repeated rest question via keys."""
+    assert d.state()['map'] == 'Route111_OldLadysRestStop'
+
+    class HealObservation(gdb.Breakpoint):
+        def stop(self):
+            self.calls += 1
+            return False  # Observe execution; never skip the game's function.
+
+    observer=HealObservation('HealPlayerParty',internal=True)
+    observer.calls=0; observer.silent=True
+    try:
+        d.go(6,4); d.advance('UP',24,4); d.advance('A',24,4)
+        start=d.value('sDiagnosticFrame')
+        while not d.field_ready(d.state()):
+            assert d.value('sDiagnosticFrame')-start < 8000, 'Rest dialogue deadline'
+            d.advance('B' if observer.calls else 'A',96,1)
+        assert observer.calls == 1, 'Expected exactly one script-triggered heal'
+        for slot in range(d.state()['party']):
+            mon=f'(void *)((char *)&gPlayerParty+{slot*100})'
+            assert d.value(f'(int)GetMonData3({mon},57,0)') == d.value(f'(int)GetMonData3({mon},58,0)')
+            assert d.value(f'(unsigned int)GetMonData3({mon},55,0)') == 0
+            bonuses=d.value(f'(int)GetMonData3({mon},21,0)')
+            for index in range(4):
+                move=d.value(f'(int)GetMonData3({mon},{13+index},0)')
+                assert d.value(f'(int)GetMonData3({mon},{17+index},0)') == d.value(f'(int)CalculatePPWithBonus({move},{bonuses},{index})')
+        print('NATURAL REST ONCE PASS',d.state())
+        return d.state()
+    finally:
+        observer.delete()
 
 
 def meet_may():

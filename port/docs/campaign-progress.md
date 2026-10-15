@@ -377,3 +377,27 @@ comprueba esos campos y conserva el save sin cambios: PASS
 (`build/t27-road-blackout-reload.log`). Tras repetir el camino y Fiery Path,
 `r02-route111-north` guarda el acceso norte (0,30), frame 209464, dinero 4047.
 No se acredita todavía Ruta 113, Meteor Falls, Flannery ni el cierre de R02.
+
+### Descanso real y acceso a Ruta 113
+
+Se reabrió `r02-route111-north` con Continue en un séptimo proceso. El archivo
+de trabajo coincide con el checkpoint (SHA-256
+`405f39c0dac76cbba1704d53e6e5a919e75ef053c050b71cf0654d1883bb5469`).
+Se caminó hasta la casa de descanso de Ruta 111 y se habló con la anciana
+desde (6,4). El driver confirma el primer descanso y rechaza la pregunta
+repetida mediante A/B. Un breakpoint de observación cuenta la ejecución real
+de `HealPlayerParty`; nunca omite ni llama la función por su cuenta.
+
+`natural_campaign_smoke.py --phase r02-rest` repite desde una copia del save:
+Continue, paseo, entrada, diálogo y guardado. Comprueba exactamente una cura,
+HP/PP completos y estados curados para todo el equipo. PASS, sin señales y
+salida normal (`build/t27-natural-rest-replay.log`). La casilla (5,3) de la
+casa resultó no transitable; se corrigió el punto de interacción del harness,
+sin modificar el mapa.
+
+La campaña principal guardó `r02-rested-north` (frame 15140) y continuó por
+Ruta 111. Se ganó el combate pendiente y se cruzó a Ruta 113 por la conexión
+oeste. `r02-route113` (frame 31652 del séptimo proceso) conserva Marshtomp 30,
+Wingull 20/Oddish 18, tres medallas y dinero 4863. El registro permanece en
+`build/natural-campaign/gdb-north-resume.log`; el tramo anterior se conserva
+en `route-before-north-resume.jsonl`. R02 y T27 continúan abiertos.
