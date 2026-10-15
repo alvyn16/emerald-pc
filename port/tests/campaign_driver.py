@@ -613,7 +613,8 @@ def path_to(x,y):
         if cell&0xc00 or tile == 0x3ff:
             return False
         behavior=attributes[tile]&0xff
-        return (surfing or not traits[behavior]&2) and not 0x30 <= behavior <= 0x37
+        # Bumpy slopes require Acro Bike hopping; walking must go around them.
+        return (surfing or not traits[behavior]&2) and not 0x30 <= behavior <= 0x3f and behavior != 0xd1
     objects = memory("gObjectEvents",16*36); player=memory("gPlayerAvatar",6)[5]
     start=(current['x']+7,current['y']+7,objects[player*36+11]&15)
     blocked = {struct.unpack_from("<hh",objects,i*36+16) for i in range(16)
@@ -631,14 +632,26 @@ def path_to(x,y):
             if not (0 <= point[0] < width and 0 <= point[1] < height) or point in blocked:
                 continue
             cell=cells[point[1]*width+point[0]]
+            behavior=attributes[cell&0x3ff]&0xff
+            # A pool en route would switch floors before reaching the waypoint.
+            if behavior in (0x29,0x68) and point != goal:
+                continue
+            ledges={'RIGHT':(0x38,0x3c,0x3e),'LEFT':(0x39,0x3d,0x3f),
+                    'UP':(0x3a,0x3c,0x3d),'DOWN':(0x3b,0x3e,0x3f)}
+            jump=behavior in ledges[button]
+            if jump:
+                point=(point[0]+dx,point[1]+dy)
+                if not (0 <= point[0] < width and 0 <= point[1] < height) or point in blocked:
+                    continue
+                cell=cells[point[1]*width+point[0]]
             elevation=cell>>12
             # Match IsElevationMismatchAt/ObjectEventUpdateElevation: 0 is
             # a transition tile; 15 preserves the object's current elevation.
-            if node[2] != 0 and elevation not in (0,15,node[2]):
+            if not jump and node[2] != 0 and elevation not in (0,15,node[2]):
                 continue
             nxt=(*point,node[2] if elevation == 15 else elevation)
             if nxt not in previous and passable(cell):
-                previous[nxt]=(node,button); queue.append(nxt)
+                previous[nxt]=(node,'JUMP_'+button if jump else button); queue.append(nxt)
     raise RuntimeError("No walkable path to "+str(goal)+" from "+str(current))
 
 
@@ -649,6 +662,11 @@ def walk(x,y,limit=200):
         if current["map"] != origin or (current["x"],current["y"]) == (x,y):
             return current
         route=path_to(x,y)
+        if route[0].startswith('JUMP_'):
+            advance(route[0][5:],80,4)
+            if not field_ready(state()):
+                return state()
+            continue
         straight=1
         while straight < min(4,len(route)) and route[straight] == route[0]:
             straight += 1

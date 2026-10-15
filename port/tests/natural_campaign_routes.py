@@ -221,6 +221,45 @@ def meteor_falls_scene():
     return d.save_checkpoint('r02-meteor-falls')
 
 
+def jagged_pass_to_lavaridge():
+    """Descend by foot and ledge jumps, then heal in Lavaridge."""
+    assert d.state()['map'] == 'MtChimney'
+    assert d.value('(int)FlagGet(0x8b)') == 1
+    d.RUN_WILD=True; d.HEAL_ITEMS=(22,13)
+    before=d.value('(unsigned int)GetGameStat(43)')
+    d.go(20,40); d.cross('DOWN','JaggedPass')
+    d.go(14,39)
+    assert d.value('(unsigned int)GetGameStat(43)') > before
+    print('NATURAL LEDGE DESCENT PASS',d.state())
+    d.cross('DOWN','Route112'); d.connect('LavaridgeTown')
+    d.go(9,7); d.cross('UP','LavaridgeTown_PokemonCenter_1F'); d.nurse()
+    d.go(7,8); d.cross('DOWN','LavaridgeTown')
+    return d.save_checkpoint('r02-lavaridge')
+
+
+def flannery_gym():
+    """Traverse the actual two-floor pool puzzle and earn the fourth badge."""
+    assert d.state()['map'] == 'LavaridgeTown'
+    assert [d.value(f'(int)FlagGet({0x867+i})') for i in range(4)] == [1,1,1,0]
+    d.HEAL_ITEMS=(22,13)
+    d.go(5,16); d.cross('UP','LavaridgeTown_Gym_1F')
+    before=d.value('(unsigned int)GetGameStat(43)')
+    pools=((8,9),(0,17),(0,10),(0,6),(2,3),(7,2),(10,6),(12,12))
+    for index,(x,y) in enumerate(pools):
+        origin=d.state()['map']
+        d.go(x,y); d.advance('NONE',300); d.settle(30000)
+        expected='LavaridgeTown_Gym_B1F' if index%2 == 0 else 'LavaridgeTown_Gym_1F'
+        assert d.state()['map'] != origin and d.state()['map'] == expected
+        print('NATURAL GYM POOL PASS',index,x,y,d.state())
+    assert d.value('(unsigned int)GetGameStat(43)') > before
+    d.go(13,10); d.save_checkpoint('r02-flannery-ready')
+    d.talk(13,10,'UP',60000)
+    assert d.state()['map'] == 'LavaridgeTown_Gym_1F'
+    assert d.memory('gBattleOutcome',1)[0] == 1
+    assert d.value('(int)FlagGet(0x86a)') == 1
+    return d.save_checkpoint('r02-flannery')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'

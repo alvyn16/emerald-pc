@@ -457,3 +457,46 @@ dinero 5495→1295. `r02-maxie-supplies` (190872) guarda el equipo 32/21/18 y
 esas medicinas. El siguiente intento conserva las reglas de HP/experiencia
 reales y utiliza el controlador de medicina ya verificado. No se concede
 ningún objeto ni dinero por GDB.
+
+### R02 completo: Maxie, Jagged Pass y cuarta medalla
+
+El segundo intento contra Maxie terminó en victoria (frame 239344 del séptimo
+proceso). Se recogió el meteorito por diálogo: flags 0x8B y 0x73 activos.
+`r02-maxie-meteorite` (241792) guarda Marshtomp 33/Wingull 21/Oddish 18,
+cinco Super Potions y dinero 3871. La recarga de equipo, eventos, cantidades
+y dinero conserva el save: PASS (`build/t27-maxie-reload.log`).
+
+El planner intentaba entrar a una pendiente de Acro Bike (comportamiento
+0xD1) en Jagged Pass. El juego rechazaba el paso; no era una espera de IRQ.
+Ahora se evita esa pendiente y se modelan los saltos de dos casillas solo
+en la dirección permitida del desnivel. Se valida la casilla de aterrizaje
+y se espera que termine la animación. `--phase r02-jagged` repite desde la
+copia de Maxie, comprueba el incremento real de GAME_STAT_JUMPED_DOWN_LEDGES,
+llega a Lavaridge y cura/guarda: PASS (`build/t27-natural-jagged-replay.log`).
+`r02-lavaridge` principal: frame 272140, equipo 33/21/18 y cuatro Super Potions.
+
+El puzzle de Flannery requiere también un desnivel en B1F. El planner evita
+pisar piscinas intermedias: la selección de (8,9) cruzaba antes la de
+(10,18), cambiando de piso antes de alcanzar el waypoint. Ruta medida desde
+la entrada, alternando 1F/B1F: (8,9), (0,17), (0,10), (0,6), (2,3), (7,2),
+(10,6), (12,12). Llegada a la sala de la líder en (13,12); interacción desde
+(13,10). Los entrenadores enterrados encontrados se combatieron normalmente.
+
+La campaña ganó a Flannery: `r02-flannery`, frame 332328, equipo 34/21/18,
+cuatro medallas, Norman=6, dinero 10627 y las cuatro Super Potions consumidas.
+Continue conserva los campos registrados y el archivo sin cambios: PASS
+(`build/t27-flannery-reload.log`). Tras salir, May entregó Go-Goggles (0xDD=1)
+y se visitó la enfermera: `r02-four-badges`, frame 341348.
+
+La primera repetición independiente del puzzle llegó a la líder y perdió
+el combate por agotamiento de curación; se conserva como fallo de la prueba
+en `build/t27-flannery-initial-loss-gdb.log`. La repetición con compra real
+de seis Super Potions adicionales usa dinero de la copia de Lavaridge,
+verifica los ocho cambios de piso y el salto y obtiene la cuarta medalla.
+PASS, sin señales y salida normal (`build/t27-natural-flannery-replay.log`;
+checkpoint de la copia en 71860). No se fuerza RNG ni se conceden recursos.
+
+R02 queda verificado junto con sus etapas anteriores: cuatro gimnasios,
+Devon/Peeko/Briney, Aqua/Slateport, meteorito/Magma y gating antes/después.
+R03–R15 y T27/Checkpoint E siguen abiertos. El runtime del juego no necesitó
+parches nuevos en este tramo; los cambios son del controlador y sus pruebas.
