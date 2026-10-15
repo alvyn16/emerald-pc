@@ -516,8 +516,8 @@ def mt_pyre():
     assert d.value('(int)CountTotalItemQuantityInBag(375)') == 0
     assert d.value('(int)FlagGet(0x34f)') == 0
     d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
-    d.go(3,6); d.cross('DOWN','MtPyre_Exterior')
-    d.go(19,11); d.cross('UP','MtPyre_Summit')
+    d.warp_to(3,6,'MtPyre_Exterior')
+    d.warp_to(19,10,'MtPyre_Summit')
     d.go(23,7,dialogue_limit=80000)
     assert d.state()['map'] == 'MtPyre_Summit'
     assert d.value('(int)VarGet(0x40b9)') == 1
@@ -525,6 +525,35 @@ def mt_pyre():
     assert d.value('(int)FlagGet(0xd4)') == 1
     assert d.value('(int)FlagGet(0x34f)') == 1
     return d.save_checkpoint('r04-magma-emblem')
+
+
+def magma_entry():
+    """Open the hideout with the earned emblem and push its entrance boulders."""
+    assert d.state()['map'] == 'JaggedPass'
+    assert d.value('(int)VarGet(0x40c8)') == 1
+    assert d.value('(int)CountTotalItemQuantityInBag(375)') == 1
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.go(14,15)
+    assert d.value('(int)VarGet(0x40c8)') == 2
+    d.warp_to(16,18,'MagmaHideout_1F')
+    d.talk(7,23,'LEFT')
+    assert d.value('(int)FlagGet(0x889)') == 1
+    d.advance('LEFT',180,32); d.settle()
+    d.go(6,22)
+    for attempt in range(8):
+        # An encounter can consume the push input. Retry only if the live
+        # boulder is still blocking the corridor after returning to the field.
+        objects=d.memory('gObjectEvents',576)
+        boulder=next(objects[i:i+36] for i in range(0,576,36)
+                     if objects[i]&1 and objects[i+8] == 4)
+        if int.from_bytes(boulder[16:18],'little',signed=True)-7 == 4:
+            break
+        d.advance('LEFT',180,32); d.settle()
+    else:
+        raise RuntimeError('Strength push deadline: '+str(d.state()))
+    print('NATURAL STRENGTH PUSH PASS',d.state())
+    d.warp_to(25,34,'MagmaHideout_2F_1R',dialogue_limit=80000)
+    return d.save_checkpoint('r04-magma-2f')
 
 
 def museum_delivery():

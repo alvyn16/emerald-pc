@@ -747,3 +747,36 @@ archivo: PASS (`build/t27-magma-emblem-reload.log`). El registro del checkpoint
 y su recarga incorporan ahora esas variables, flags y cantidad del Emblema.
 La comprobación de sintaxis Python pasa. No cambia el código nativo desde las
 21 suites/builds/compare verificados para 0043.
+
+### Entrada Magma, Fuerza y plantas inferiores
+
+Desde Lavaridge se recorrió Route112, se usó el teleférico por diálogo y se
+bajó desde MtChimney. r04-jagged-emblem (77072) conserva Jagged state=1:
+la comprobación de posesión del Emblema la hizo el script del mapa.
+Cruzar (14,15) produjo la apertura real, state=2, y permitió entrar por
+(16,18). r04-magma-arrival (79904) está en la entrada del escondite.
+
+Al avanzar, las rocas se incorporan a gObjectEvents y cierran el corredor
+que parecía transitable cuando estaban fuera de pantalla. Se activó Fuerza
+desde (7,23), mirando a la izquierda; se empujó la roca central y, desde
+(6,22), la de (5,22) hacia (4,22). Son pulsaciones y animaciones normales.
+La primera repetición vio un encuentro salvaje consumir la pulsación del
+segundo empuje. La prueba ahora lee la posición de la roca y reintenta con
+un límite; no escribe coordenadas ni da por realizado un empuje omitido.
+`--phase r04-magma-entry`: PASS, comprobando el script de apertura,
+FLAG_SYS_USE_STRENGTH y la roca desplazada, luego la entrada a 2F_1R,
+sin señales y con salida normal (`build/t27-natural-magma-entry-replay.log`).
+
+r04-magma-2f (94780) conserva seis medallas, equipo 44/30/19/25, cinco Hyper
+Potions y dinero 6563. Se recorrieron 2F_1R y 3F_1R con sus combates. La salida
+(7,21) de 3F_1R también es una flecha al sur, no una escalera que se active
+al pisarla. r04-magma-4f (134640) llega a 4F con Swampert 45, resto 30/19/25,
+cinco Hyper Potions y dinero 10003. Groudon flag 0x6F y las variables de
+Slateport/Harbor seguían en cero. Tatiano fue derrotado después;
+HasTrainerBeenFought(732)=1, checkpoint r04-tabitha (163536), dinero 13063.
+Maxie y el evento de Groudon aún no se acreditan en este incremento.
+
+El helper warp_to consulta el comportamiento real de la casilla y pulsa
+la dirección indicada por la flecha; cualquier destino inesperado falla.
+Se verifica con las transiciones de Monte Pírico y entrada Magma, evitando
+que una dirección asumida se confunda con un fallo del runtime.

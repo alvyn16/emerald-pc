@@ -327,6 +327,19 @@ def cross(button,destination,limit=4):
     raise RuntimeError("Expected transition to "+destination+": "+str(state()))
 
 
+def warp_to(x,y,destination,dialogue_limit=30000):
+    """Reach a warp and follow its actual arrow when it requires another step."""
+    origin=state()['map']
+    go(x,y,dialogue_limit=dialogue_limit)
+    if state()['map'] == destination:
+        return settle()
+    assert state()['map'] == origin, ('Unexpected intermediate warp',state())
+    behavior=value(f'(int)MapGridGetMetatileBehaviorAt({x+7},{y+7})')
+    direction={0x62:'RIGHT',0x63:'LEFT',0x64:'UP',0x65:'DOWN',0x6d:'DOWN'}.get(behavior)
+    assert direction, ('Warp did not activate on entry',hex(behavior),state())
+    return cross(direction,destination)
+
+
 def connect(destination):
     """Walk to a reachable edge within the actual map connection's span."""
     origin=state()['map']; maps=ROOT/'pokeemerald/data/maps'
