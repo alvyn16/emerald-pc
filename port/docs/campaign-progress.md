@@ -838,3 +838,31 @@ entrevista, el robo, salida/vuelo/Surf y el cruce abierto: PASS, sin señales y
 con salida normal (`build/t27-natural-harbor-replay.log`). No se alteran flags
 ni coordenadas por GDB. Quedan pendientes el interior Aqua/Matt y los tramos
 posteriores de R04; se continúa desde esa entrada abierta.
+
+### Paneles Aqua y Master Ball por recogida real
+
+r04-aqua-b1f (237344) está en (29,2), después de la escalera de 1F. Los paneles
+con MB 0x67 pueden mover al jugador dentro del mismo mapa; el recorrido de
+casillas ahora los evita salvo cuando son el objetivo. aqua_warp_driver lee
+los destinos de los JSON ignorados, se aproxima por una casilla vecina y pisa
+el panel mediante input. Comprueba mapa y coordenadas exactas del destino.
+Para volver por el panel actual sale primero a una casilla libre y vuelve a
+entrar; no escribe posiciones ni llama al warp del juego.
+
+Se verificó el ramal 4 -> 7 y el retorno por 7 -> 4, luego el panel 5 hasta
+(3,15). Desde allí: 9,13,17,19,22 llevan por el puzzle a (23,10), comprobando
+cada destino. Las dos bolas de objetos de la columna izquierda se recogieron
+desde (15,11) y (15,10), mirando arriba: primero Nugget y luego Master Ball.
+Las dos de la derecha son Electrode y no se activaron. La cantidad de Master
+Ball pasó de cero a uno y su bandera 0x464 a uno. r04-master-ball (246564),
+y r04-master-ball-verified (247596), conservan seis medallas, equipo
+46/30/19/25, cinco Hyper Potions y dinero 16183.
+
+`--phase r04-master-ball` repite desde la entrada B1F el ramal de ida/vuelta,
+el puzzle y las recogidas: PASS, sin señales y salida normal
+(`build/t27-natural-master-ball-replay.log`). Continue de la versión verificada
+comprueba cantidad y bandera, además del manifiesto completo, sin reescribir
+el archivo: PASS (`build/t27-master-ball-reload.log`). Python compila los
+helpers de prueba. El camino de vuelta por 11,24,20,18,14,12,10 y sus combates
+llevó a (20,4); la campaña continúa hacia Matías, aún sin acreditar el cierre
+del escondite ni el resto de R04.

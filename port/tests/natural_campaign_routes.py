@@ -617,6 +617,23 @@ def harbor_submarine():
     return d.save_checkpoint('r04-aqua-opened')
 
 
+def aqua_master_ball():
+    """Solve the real pad puzzle and collect the two left-hand item balls."""
+    import aqua_warp_driver as pads
+    assert d.state()['map'] == 'AquaHideout_B1F'
+    assert d.value('(int)CountTotalItemQuantityInBag(1)') == 0
+    assert d.value('(int)FlagGet(0x464)') == 0
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    for index in (4,7,5,9,13,17,19,22):
+        pads.activate(index)
+    assert (d.state()['x'],d.state()['y']) == (23,10)
+    # The Nugget below the Master Ball blocks the approach from below.
+    d.talk(15,11,'UP'); d.talk(15,10,'UP')
+    assert d.value('(int)CountTotalItemQuantityInBag(1)') == 1
+    assert d.value('(int)FlagGet(0x464)') == 1
+    return d.save_checkpoint('r04-master-ball')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'

@@ -22,7 +22,8 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "fortree_kecleon_fled":0x127,"lilycove_rival_cleared":0x3cb,
                "magma_emblem_received":0xd4,"jagged_guard_removed":0x34f,
                "groudon_awakened_magma":0x6f,"aqua_harbor":0x61,
-               "aqua_gate1_removed":0x335,"aqua_gate2_removed":0x336}
+               "aqua_gate1_removed":0x335,"aqua_gate2_removed":0x336,
+               "master_ball_collected":0x464}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -671,7 +672,7 @@ def save_checkpoint(name):
     facts['slateport_city']=value('(int)VarGet(0x4058)')
     facts['slateport_harbor']=value('(int)VarGet(0x40a0)')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
-                        for item in (13,21,22,288,302,375,*range(339,347))}
+                        for item in (1,13,21,22,288,302,375,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
     facts['money']=value(f'(int)GetMoney((void *)({save}+0x490))')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")
@@ -724,8 +725,8 @@ def path_to(x,y):
                 continue
             cell=cells[point[1]*width+point[0]]
             behavior=attributes[cell&0x3ff]&0xff
-            # A pool en route would switch floors before reaching the waypoint.
-            if behavior in (0x29,0x68) and point != goal:
+            # Pools and Aqua pads would relocate the player en route.
+            if behavior in (0x29,0x67,0x68) and point != goal:
                 continue
             ledges={'RIGHT':(0x38,0x3c,0x3e),'LEFT':(0x39,0x3d,0x3f),
                     'UP':(0x3a,0x3c,0x3d),'DOWN':(0x3b,0x3e,0x3f)}
