@@ -592,6 +592,8 @@ def save_checkpoint(name):
     facts["briney"]=value("(int)VarGet(0x4090)")
     facts['route110']=value('(int)VarGet(0x4069)')
     facts['meteor_falls']=value('(int)VarGet(0x40bf)')
+    facts['weather_institute']=value('(int)VarGet(0x40b3)')
+    facts['route119']=value('(int)VarGet(0x4072)')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
                         for item in (13,22,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
@@ -626,8 +628,8 @@ def path_to(x,y):
         if cell&0xc00 or tile == 0x3ff:
             return False
         behavior=attributes[tile]&0xff
-        # Bumpy slopes require Acro Bike hopping; walking must go around them.
-        return (surf_mode or not traits[behavior]&2) and not 0x30 <= behavior <= 0x3f and behavior != 0xd1
+        # Muddy/bumpy slopes need bike movement; walking must go around them.
+        return (surf_mode or not traits[behavior]&2) and not 0x30 <= behavior <= 0x3f and behavior not in (0xd0,0xd1)
     objects = memory("gObjectEvents",16*36); player=memory("gPlayerAvatar",6)[5]
     start=(current['x']+7,current['y']+7,objects[player*36+11]&15,surfing)
     blocked = {struct.unpack_from("<hh",objects,i*36+16) for i in range(16)

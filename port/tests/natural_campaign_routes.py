@@ -336,6 +336,41 @@ def surf_crossing():
     return d.save_checkpoint('r03-surf')
 
 
+def weather_bed():
+    assert d.state()['map'] == 'Route119_WeatherInstitute_1F'
+    d.talk(2,3,'LEFT')
+    for slot in range(d.state()['party']):
+        mon=f'(void *)((char *)&gPlayerParty+{slot*100})'
+        assert d.value(f'(int)GetMonData3({mon},57,0)') == d.value(f'(int)GetMonData3({mon},58,0)')
+        assert d.value(f'(unsigned int)GetMonData3({mon},55,0)') == 0
+    print('NATURAL WEATHER BED PASS',d.state())
+
+
+def weather_institute():
+    """Defeat Aqua, receive the actual gift and cross the cleared bridge."""
+    assert d.state()['map'] == 'Route119_WeatherInstitute_1F'
+    assert d.value('(int)FlagGet(0x97)') == 0
+    assert d.value('(int)VarGet(0x40b3)') == 0
+    count=d.state()['party']
+    d.RUN_WILD=True; d.HEAL_ITEMS=(22,13)
+    d.go(17,2); d.cross('UP','Route119_WeatherInstitute_2F')
+    d.talk(5,6,'LEFT',60000)
+    assert d.value('(int)FlagGet(0x97)') == 1
+    assert d.value('(int)VarGet(0x40b3)') == 1  # Route119 advances this to 2 on exit.
+    assert d.state()['party'] == count+1
+    mon=f'(void *)((char *)&gPlayerParty+{count*100})'
+    assert d.value(f'(int)GetMonData3({mon},11,0)') == 385
+    assert d.value(f'(int)GetMonData3({mon},56,0)') == 25
+    d.save_checkpoint('r03-castform')
+    d.go(17,2); d.cross('UP','Route119_WeatherInstitute_1F')
+    weather_bed()
+    d.go(9,11); d.cross('DOWN','Route119')
+    d.go(14,33)
+    assert (d.state()['x'],d.state()['y']) == (14,33)
+    print('NATURAL WEATHER BRIDGE OPEN PASS',d.state())
+    return d.save_checkpoint('r03-weather-cleared')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'

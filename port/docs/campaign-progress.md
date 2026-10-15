@@ -587,3 +587,45 @@ Route113, Route111 y Route112 con combates reales: PASS, sin señales ni salida
 anormal (`build/t27-natural-connections-shore-regression.log`). El recorrido
 principal llegó después a Mauville, curó y guardó en `r03-mauville` (75624),
 con el mismo equipo 37/22/18, Surf aprendido, tres Super Potions y dinero 9439.
+
+### Instituto Meteorológico y Castform
+
+Desde Mauville se cruzó Route118 por Surf: orilla (17,9), entrada (18,9),
+desembarco (31,9). La aproximación a (17,10) se rechazó por un NPC; se usó
+la casilla contigua. Tras la escena de Steven y combates de entrenadores,
+`r03-route119` (110040 del octavo proceso) guarda Swampert 38/Wingull 22/
+Oddish 18, cinco medallas y dinero 11503.
+
+En Route119 el planner intentó subir la pendiente de barro (6,55), MB 0xD0.
+ForcedMovement_MuddySlope devuelve al jugador hacia el sur si no se dirige
+al norte con PLAYER_SPEED_FASTEST. No era un bloqueo del runtime. Se excluye
+esa pendiente de las rutas a pie, como ya se hacía con la pendiente Acro 0xD1.
+El recorrido rodeó el obstáculo y llegó al instituto. Antes del evento,
+RIGHT desde (12,33) fue rechazado por el recluta Aqua del puente: PASS.
+Se usó la cama desde (2,3), mirando a la izquierda. `r03-weather-arrival`
+(153892) conserva Swampert 38/Wingull 23/Oddish 18 y dos Super Potions.
+
+En el edificio: escalera 1F desde (17,2) hacia arriba y Shelly desde (5,6)
+mirando a la izquierda; los reclutas encontrados se combatieron normalmente.
+El evento dio Castform 25 y activó 0x97. `r03-castform` (192564) guarda equipo
+39/23/18/25, cinco medallas, dos Super Potions y dinero 17931. Swampert aprendió
+Muddy Water al nivel 39, reemplazando Take Down por la UI de movimientos.
+Continue conserva ese equipo, movimientos, regalo, cantidades y dinero sin
+alterar el archivo: PASS (`build/t27-castform-reload.log`).
+
+Tras el regalo, VAR_WEATHER_INSTITUTE_STATE es 1; salir a Route119 mueve los
+trabajadores y la avanza a 2. Después de descansar se cruzó el puente hasta
+(14,33): PASS, `r03-weather-cleared` (196880), Route119 state=0 (rival pendiente).
+`--phase r03-weather` reproduce combates/regalo/cama/cruce desde la copia de
+llegada: PASS, sin señales y salida normal (`build/t27-natural-weather-replay.log`).
+La cama verifica HP completos y estados curados para los cuatro Pokémon.
+Las variables del instituto y Route119 se incluyen ahora en los manifiestos
+y se comprueban al recargar. Capturas inspeccionadas de regalo y puente en
+`build/natural-campaign/r03-{castform,weather-cleared}.png`.
+Continue de `r03-weather-cleared` comprueba también ambas variables y conserva
+el archivo sin cambios: PASS (`build/t27-weather-cleared-reload.log`).
+
+Se inicia entrenamiento real de Wingull antes del rival: cambio de líder
+por menú, combates en hierba (11–13,38) y descansos en la cama. No se concede
+experiencia ni se altera el equipo por GDB. R03 sigue abierto por Fly/Devon Scope;
+R04–R15 y T27/Checkpoint E continúan abiertos.

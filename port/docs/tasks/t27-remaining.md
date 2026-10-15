@@ -26,7 +26,9 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Norman/quinta medalla y entrega/enseñanza/cruce de Surf naturales: PASS;
   Fuerza obtenida en Rusturf y puertas del gimnasio antes/después: PASS.
   Recarga de Norman y repeticiones `r03-strength`, `r03-norman`, `r03-surf`
-  documentadas en `campaign-progress.md`. Instituto/Fly/Devon Scope pendientes.
+  documentadas en `campaign-progress.md`. Instituto/Castform, cama, puente
+  bloqueado/abierto y recarga: PASS (`r03-weather` y sus checkpoints).
+  Fly/Devon Scope pendientes.
 - [ ] R04: Mt. Pyre, escondites Aqua/Magma, Mossdeep/Space Center, Dive,
   Seafloor Cavern, Sky Pillar/Rayquaza, Sootopolis y octava medalla. Eventos y
   desbloqueos deben proceder de scripts; verificar sus condiciones previas.
