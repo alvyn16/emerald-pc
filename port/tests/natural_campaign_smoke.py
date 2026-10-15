@@ -10,7 +10,7 @@ from process_watchdog import run_logged
 def main():
     project=Path(__file__).resolve().parents[2]
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum","r02-rocksmash","r02-rest","r02-meteor","r02-connections"),default="r01")
+    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum","r02-rocksmash","r02-rest","r02-meteor","r02-connections","r02-shop"),default="r01")
     phase=parser.parse_args().phase
     scratch=project/("build/natural-campaign-replay" if phase == "r01" else "build/natural-campaign-replay-"+phase)
     for directory in ("build","roms","saves"):
@@ -26,7 +26,8 @@ def main():
     checkpoint={'r02-devon':'r02-roxanne','r02-steven':'r02-brawly',
                 'r02-catch':'r02-route110','r02-museum':'r02-steven',
                 'r02-rocksmash':'r02-wattson','r02-rest':'r02-route111-north',
-                'r02-meteor':'r02-fallarbor','r02-connections':'r02-fallarbor'}
+                'r02-meteor':'r02-fallarbor','r02-connections':'r02-fallarbor',
+                'r02-shop':'r02-fallarbor'}
     save.write_bytes(b"\xff"*131072 if phase == "r01" else
                      (project/('build/natural-campaign/'+checkpoint[phase]+'.sav')).read_bytes())
     inputs=scratch/"input.txt"
@@ -73,6 +74,10 @@ for target in ('Route113','Route111','Route112','Route111','Route113','Fallarbor
     assert d.state()['map'] == target
     print('NATURAL CONNECTION PASS',target,d.state())
 d.save_checkpoint('r02-connections')''',
+        'r02-shop':'''d.go(15,16); d.cross('UP','FallarborTown_Mart')
+d.buy_item(22,3)
+d.go(3,7); d.cross('DOWN','FallarborTown')
+d.save_checkpoint('r02-shop-supplies')''',
     }[phase]
     script.write_text(f'''set pagination off
 set confirm off

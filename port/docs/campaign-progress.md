@@ -436,3 +436,24 @@ medida en frame 152976, viaje por diálogo completado en 154416.
 tres medallas y dinero 9311. El bloqueo previo al evento y el acceso posterior
 están comprobados; Maxie, meteorito y Flannery aún requieren verificación.
 ROM original y save del usuario conservan los hashes registrados.
+
+### Primer intento contra Maxie y abastecimiento
+
+Se ganaron los combates de acceso de Magma, pero el primer intento contra
+Maxie terminó en outcome 2: regreso normal a Fallarbor. No hubo excepción
+del port. El equipo había llegado a la cima con HP 36/95, 24/54 y 45/45.
+`r02-maxie-loss` (frame 187340) conserva esa derrota y los entrenadores de
+acceso ya vencidos, con Maxie aún pendiente.
+
+Se añadió selección de artículos/cantidad, confirmación y salida de la tienda
+al driver. Lee la lista y cursores reales, usa direcciones/A/B, y comprueba
+el incremento exacto en la bolsa y el cargo total mostrado por el juego.
+`--phase r02-shop` repite desde una copia anterior de Fallarbor y compra
+tres Super Potions; salida normal, sin señales: PASS
+(`build/t27-natural-shop-replay.log`).
+
+En la campaña se compraron seis Super Potions: cantidad 0→6, coste 4200,
+dinero 5495→1295. `r02-maxie-supplies` (190872) guarda el equipo 32/21/18 y
+esas medicinas. El siguiente intento conserva las reglas de HP/experiencia
+reales y utiliza el controlador de medicina ya verificado. No se concede
+ningún objeto ni dinero por GDB.

@@ -485,6 +485,60 @@ def teach_tm(item,slot):
     raise RuntimeError('TM/HM teaching deadline: '+str(state()))
 
 
+def buy_item(item,quantity):
+    """Buy from the standard mart counter at (3,3), using real shop menus."""
+    assert field_ready(state()) and 1 <= quantity <= 99
+    def wait_task(function,button='NONE'):
+        for step in range(80):
+            if value(f'(int)FuncIsActiveTask((void *){function})'):
+                return
+            advance(button,96,1)
+        raise RuntimeError('Shop task deadline: '+function)
+    before=value(f'(int)CountTotalItemQuantityInBag({item})')
+    save=value('*(unsigned int *)&gSaveBlock1Ptr')
+    money=value(f'(int)GetMoney((void *)({save}+0x490))')
+    go(3,3); advance('LEFT',24,4); advance('A',24,1)
+    wait_task('Task_ShopMenu','A'); advance('A',24,1)
+    wait_task('Task_BuyMenu')
+    info=memory('sMartInfo',16)
+    address,count=struct.unpack_from('<IH',info,8)
+    offered=struct.unpack('<%dH'%count,bytes(gdb.selected_inferior().read_memory(address,count*2)))
+    target=offered.index(item)
+    for step in range(count+1):
+        shop=value('*(unsigned int *)&sShopData')
+        row,scroll=struct.unpack('<2H',bytes(gdb.selected_inferior().read_memory(shop+0x2006,4)))
+        if row+scroll == target:
+            advance('A',24,1)
+            break
+        advance('DOWN' if row+scroll < target else 'UP',24,1)
+    else:
+        raise RuntimeError('Shop item selection deadline')
+    wait_task('Task_BuyHowManyDialogueHandleInput','A')
+    task=value('(int)FindTaskIdByFunc((void *)Task_BuyHowManyDialogueHandleInput)')
+    assert task < 16
+    for step in range(100):
+        selected=struct.unpack_from('<h',memory('gTasks',640),task*40+10)[0]
+        if selected == quantity:
+            break
+        advance('UP' if selected < quantity else 'DOWN',24,1)
+    else:
+        raise RuntimeError('Shop quantity unavailable')
+    shop=value('*(unsigned int *)&sShopData')
+    cost=int.from_bytes(bytes(gdb.selected_inferior().read_memory(shop+0x2000,4)),'little')
+    advance('A',24,1); wait_task('Task_BuyMenu','A')
+    assert value(f'(int)CountTotalItemQuantityInBag({item})') == before+quantity
+    save=value('*(unsigned int *)&gSaveBlock1Ptr')
+    assert value(f'(int)GetMoney((void *)({save}+0x490))') == money-cost
+    # The field callback first prints "anything else?" before restoring Buy/Sell.
+    for step in range(100):
+        if field_ready(state()):
+            print('NATURAL PURCHASE PASS',item,quantity,cost,money-cost)
+            return state()
+        menu=value('(int)FuncIsActiveTask((void *)Task_BuyMenu)') or value('(int)FuncIsActiveTask((void *)Task_ShopMenu)')
+        advance('B' if menu else 'A',96,1)
+    raise RuntimeError('Shop exit deadline')
+
+
 def go(x,y,limit=50,dialogue_limit=30000):
     """Resume a path after dialogues/battles; never continue across a map warp."""
     origin=state()["map"]
