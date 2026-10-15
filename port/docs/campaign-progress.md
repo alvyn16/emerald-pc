@@ -866,3 +866,34 @@ el archivo: PASS (`build/t27-master-ball-reload.log`). Python compila los
 helpers de prueba. El camino de vuelta por 11,24,20,18,14,12,10 y sus combates
 llevÃ³ a (20,4); la campaÃ±a continÃºa hacia MatÃ­as, aÃºn sin acreditar el cierre
 del escondite ni el resto de R04.
+
+
+### Matías y salida al mar
+
+Desde la sala de la Master Ball se volvió por los paneles 11,24,20,18,14,12,10.
+En B1F (20,4), escalera (18,1) a B2F; panel 3 a (5,8), escalera (3,3) a B1F,
+escalera (12,1) a B2F y panel 4 a (31,17). Los encuentros de entrenadores se
+resolvieron mediante sus combates. `--phase r04-aqua-route` repite ese trayecto
+completo desde el guardado de la Master Ball: PASS, sin señales y salida
+normal (`build/t27-natural-aqua-route-replay.log`).
+
+Matías se aborda desde (24,19), mirando LEFT; las otras tres casillas vecinas
+no son transitables. r04-matt-ready (281144) está dos casillas a su derecha,
+(25,19), para que las pulsaciones de Continue no abran su diálogo. Trainer 30,
+flag 0x70 y flag 0x354 seguían a cero. Victoria y salida del submarino reales:
+r04-matt-result (290600), outcome=1, trainer 30 vencido, ambos flags a uno,
+equipo 47/30/19/25, seis medallas, cinco Hyper Potions, Master Ball=1 y dinero
+20703. `--phase r04-matt`: PASS (`build/t27-natural-matt-replay.log`). Continue
+verifica los nuevos flags y el manifiesto completo sin modificar el archivo:
+PASS (`build/t27-matt-result-reload.log`).
+
+La barrera Wailmer se comprobó con una copia del guardado anterior al robo:
+`--phase r04-wailmer-gate` sale por Surf y mantiene RIGHT desde (75,12), sin
+poder entrar en (76,12), con 0x70=0: PASS, sin señales y salida normal
+(`build/t27-natural-wailmer-gate-replay.log`). En la campaña tras Matías:
+salida B2F (32,20) a B1F, escalera (29,1) a 1F, Surf desde (13,12) hacia DOWN,
+y salida acuática (13,27). Con 0x70=1 se cruzó de (75,12) a (76,12) en Lilycove.
+r04-wailmer-opened (294420) conserva ese desbloqueo y todo el equipo.
+Aqua queda cubierto; Mossdeep/Space Center y los demás tramos de R04 continúan
+pendientes. La campaña hace una visita real a Devon por el Exp. Share todavía
+no recogido tras entregar la carta, antes de seguir por Route124.

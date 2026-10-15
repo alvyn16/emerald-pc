@@ -634,6 +634,54 @@ def aqua_master_ball():
     return d.save_checkpoint('r04-master-ball')
 
 
+def wailmer_gate_closed():
+    """Use the earlier natural save to measure the sea barrier before Matt."""
+    assert d.state()['map'] == 'AquaHideout_1F'
+    assert d.value('(int)FlagGet(0x70)') == 0
+    d.RUN_WILD=True
+    d.warp_to(13,27,'LilycoveCity')
+    d.go(75,12); d.advance('RIGHT',96,32); d.settle()
+    assert d.state()['map'] == 'LilycoveCity'
+    assert (d.state()['x'],d.state()['y']) == (75,12)
+    assert d.value('(int)FlagGet(0x70)') == 0
+    print('NATURAL WAILMER GATE CLOSED PASS',d.state())
+    return d.save_checkpoint('r04-wailmer-blocked')
+
+
+def aqua_to_matt():
+    import aqua_warp_driver as pads
+    assert d.state()['map'] == 'AquaHideout_B1F'
+    assert d.value('(int)CountTotalItemQuantityInBag(1)') == 1
+    assert d.value('(int)FlagGet(0x70)') == 0
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    for index in (11,24,20,18,14,12,10):
+        pads.activate(index)
+    d.warp_to(18,1,'AquaHideout_B2F')
+    pads.activate(3)
+    d.warp_to(3,3,'AquaHideout_B1F')
+    d.warp_to(12,1,'AquaHideout_B2F')
+    pads.activate(4)
+    d.go(25,19,dialogue_limit=80000)
+    assert d.value('(int)HasTrainerBeenFought(30)') == 0
+    assert d.value('(int)FlagGet(0x70)') == 0
+    return d.save_checkpoint('r04-matt-ready')
+
+
+def matt_battle():
+    assert d.field_ready(d.state()) and d.state()['map'] == 'AquaHideout_B2F'
+    assert d.value('(int)HasTrainerBeenFought(30)') == 0
+    assert d.value('(int)FlagGet(0x70)') == 0
+    assert d.value('(int)FlagGet(0x354)') == 0
+    d.HEAL_ITEMS=(21,22,13)
+    d.talk(24,19,'LEFT',100000)
+    assert d.state()['map'] == 'AquaHideout_B2F'
+    assert d.memory('gBattleOutcome',1)[0] == 1
+    assert d.value('(int)HasTrainerBeenFought(30)') == 1
+    assert d.value('(int)FlagGet(0x70)') == 1
+    assert d.value('(int)FlagGet(0x354)') == 1
+    return d.save_checkpoint('r04-matt')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'
