@@ -24,7 +24,7 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "groudon_awakened_magma":0x6f,"aqua_harbor":0x61,
                "aqua_gate1_removed":0x335,"aqua_gate2_removed":0x336,
                "master_ball_collected":0x464,"aqua_escaped":0x70,
-               "lilycove_aqua_removed":0x354}
+               "lilycove_aqua_removed":0x354,"exp_share_received":0x110}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -521,6 +521,46 @@ def fly_to(destination,slot=1):
     return state()
 
 
+def give_item(item,slot):
+    """Give an owned Items-pocket object to an empty held-item slot via bag UI."""
+    assert field_ready(state()) and 0 <= slot < state()['party']
+    mon=f'(void *)((char *)&gPlayerParty+{slot*100})'
+    assert value(f'(int)GetMonData3({mon},12,0)') == 0
+    assert value(f'(int)GetItemPocket({item})') == 1
+    quantity=value(f'(int)CountTotalItemQuantityInBag({item})')
+    assert quantity > 0
+    open_start_action(2)
+    for step in range(160):
+        if value('(int)FuncIsActiveTask((void *)Task_ItemContext_MultipleRows)'):
+            break
+        advance(item_bag_button(item) if value('(int)FuncIsActiveTask((void *)Task_BagMenu_HandleInput)') else 'NONE',24,1)
+    else:
+        raise RuntimeError('Held-item bag selection deadline')
+    for step in range(8):
+        cursor=value('(int)Menu_GetCursorPos()')
+        if cursor == 1:  # Give, the upper-right Items-pocket context action.
+            break
+        advance(cursor_button(cursor,1),24,1)
+    else:
+        raise RuntimeError('Expected Give in the item context menu')
+    advance('A',300,1)
+    start=value('sDiagnosticFrame')
+    while value('sDiagnosticFrame')-start < 12000:
+        if state()['callback'] == 'CB2_UpdatePartyMenu' and value('(int)FuncIsActiveTask((void *)Task_HandleChooseMonInput)'):
+            select_party_slot(slot); advance('A',24,1)
+        else:
+            advance('A',96,1)
+        if (value(f'(int)GetMonData3({mon},12,0)') == item
+                and state()['callback'] == 'CB2_BagMenuRun'
+                and value('(int)FuncIsActiveTask((void *)Task_BagMenu_HandleInput)')):
+            assert value(f'(int)CountTotalItemQuantityInBag({item})') == quantity-1
+            advance('B',300,1); advance('B',120,1); settle()
+            assert field_ready(state())
+            print('NATURAL HELD ITEM PASS',item,slot)
+            return state()
+    raise RuntimeError('Held-item giving deadline: '+str(state()))
+
+
 def teach_tm(item,slot):
     """Use an owned TM/HM via bag, party and move-summary menus."""
     assert field_ready(state())
@@ -652,6 +692,7 @@ def save_checkpoint(name):
     facts=state()
     facts["team"]=[dict(species=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),11,0)"),
                         level=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),56,0)"),
+                        held_item=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),12,0)"),
                         moves=[value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),{13+j},0)") for j in range(4)])
                    for i in range(facts["party"])]
     facts["dex"]=value("(int)FlagGet(0x861)")
@@ -673,7 +714,7 @@ def save_checkpoint(name):
     facts['slateport_city']=value('(int)VarGet(0x4058)')
     facts['slateport_harbor']=value('(int)VarGet(0x40a0)')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
-                        for item in (1,13,21,22,288,302,375,*range(339,347))}
+                        for item in (1,13,21,22,182,288,302,375,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
     facts['money']=value(f'(int)GetMoney((void *)({save}+0x490))')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")

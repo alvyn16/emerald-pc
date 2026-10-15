@@ -682,6 +682,21 @@ def matt_battle():
     return d.save_checkpoint('r04-matt')
 
 
+def devon_exp_share():
+    """Receive the pending letter reward and equip it through the item menu."""
+    assert d.state()['map'] == 'RustboroCity_DevonCorp_3F'
+    assert d.value('(int)FlagGet(0xbd)') == 1
+    assert d.value('(int)FlagGet(0x110)') == 0
+    assert d.value('(int)CountTotalItemQuantityInBag(182)') == 0
+    d.talk(14,5,'RIGHT')
+    assert d.value('(int)FlagGet(0x110)') == 1
+    assert d.value('(int)CountTotalItemQuantityInBag(182)') == 1
+    d.give_item(182,1)
+    assert d.value('(int)GetMonData3((void *)((char *)&gPlayerParty+100),12,0)') == 182
+    assert d.value('(int)CountTotalItemQuantityInBag(182)') == 0
+    return d.save_checkpoint('r04-exp-share-equipped')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'

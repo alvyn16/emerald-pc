@@ -897,3 +897,29 @@ r04-wailmer-opened (294420) conserva ese desbloqueo y todo el equipo.
 Aqua queda cubierto; Mossdeep/Space Center y los demás tramos de R04 continúan
 pendientes. La campaña hace una visita real a Devon por el Exp. Share todavía
 no recogido tras entregar la carta, antes de seguir por Route124.
+
+
+### Repartir Exp. y objetos equipados conservados
+
+Antes de cruzar Route124 se voló a Rustboro y se volvió a Devon por sus
+escaleras. r04-devon-exp-share-ready (299904) conserva la carta entregada
+(0xBD=1), recompensa pendiente (0x110=0) y cantidad de Exp. Share=0.
+Hablar desde (14,5), RIGHT, interactúa con el proxy del presidente tras la mesa;
+el NPC entregó el objeto 182 y activó 0x110. r04-exp-share (303392).
+
+La mochila permitió elegir Give y Pelipper: cantidad 182 pasó de 1 a 0 y su
+objeto equipado pasó de 0 a 182. r04-exp-share-equipped (306188) conserva
+ese estado, equipo 47/30/19/25, seis medallas, Master Ball=1, cinco Hyper
+Potions y dinero 20703. El Mystic Water que traía Castform sigue equipado
+(objeto 209); los demás no llevan objetos. El manifiesto y Continue verifican
+ahora también held_item por Pokémon y el inventario de Exp. Share.
+`--phase r04-exp-share` repite entrega y equipamiento por UI: PASS, sin señales
+y salida normal (`build/t27-natural-exp-share-replay.log`). Continue conserva
+objetos, recompensa y resto del manifiesto sin reescribir el archivo: PASS
+(`build/t27-exp-share-reload.log`).
+
+El helper give_item solo admite Items-pocket y un destino sin objeto equipado;
+comprueba consumo y resultado, y falla con un límite si no vuelve al campo.
+La campaña salió por las escaleras, voló a Lilycove, curó en su Centro y usó
+Surf. r04-route124 (316512) está en Route124 (1,22); se continúa hacia Mossdeep
+con el objeto equipado para los combates normales.

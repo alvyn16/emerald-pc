@@ -49,6 +49,8 @@ for index,mon in enumerate(expected['team']):
         assert d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{{index*100}}),{{field}},0)') == mon[key]
     if 'moves' in mon:
         assert [d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{{index*100}}),{{13+j}},0)') for j in range(4)] == mon['moves']
+    if 'held_item' in mon:
+        assert d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{{index*100}}),12,0)') == mon['held_item']
 assert d.value('(int)FlagGet(0x861)') == expected['dex']
 assert d.value('(int)FlagGet(0x82)') == expected['rival']
 assert d.value('(int)CountTotalItemQuantityInBag(4)') == expected['balls']
