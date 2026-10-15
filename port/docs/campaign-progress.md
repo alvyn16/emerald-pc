@@ -629,3 +629,60 @@ Se inicia entrenamiento real de Wingull antes del rival: cambio de líder
 por menú, combates en hierba (11–13,38) y descansos en la cama. No se concede
 experiencia ni se altera el equipo por GDB. R03 sigue abierto por Fly/Devon Scope;
 R04–R15 y T27/Checkpoint E continúan abiertos.
+
+### Rival 119, Vuelo y Detector Devon
+
+El entrenamiento de Wingull 23 terminó en evolución real a Pelipper 25:
+`r03-wingull-training` (251548), con Protect aprendido durante la evolución.
+Solo se usaron pasos, combates y la cama. Continue conserva la evolución y
+los movimientos: PASS (`build/t27-pelipper-reload.log`). Con Pelipper de líder
+se enseñó Surf (reemplaza Protect), se cruzó el puente y se activó el rival
+en (25,31). Victoria y HM Fly por diálogo: `r03-fly` (278004), equipo
+25/39/18/25, Route119=1, 0x6E=1, HM02=1, una Super Potion y dinero 19791.
+Repetición `--phase r03-rival`: PASS (`build/t27-natural-rival119-replay.log`).
+Continue de ese checkpoint también PASS (`build/t27-fly-reload.log`).
+
+Se volvió a curar en el instituto y se puso a Swampert de líder por el menú.
+En Fortree se usó el Centro y se probó el obstáculo invisible desde (25,7),
+mirando hacia abajo: permanecía bloqueado sin el Scope (291448). Las casillas
+(24,8)/(26,8) son paredes; no sirven como aproximación. Se compraron seis
+Hyper Potions y cuatro Super Potions por 10000 de dinero real. En Route120,
+Steven se aborda desde (14,15), mirando a la izquierda; tras el combate real
+contra Kecleon entrega Devon Scope. `r03-devon-scope` (318996); luego se cruza
+el puente hasta (11,15), se vuelve a Fortree y se usa el objeto desde (25,7).
+0x127 pasa a 1 y se puede pisar (25,8). `r03-fortree-cleared` (326384) tiene
+equipo 40/25/18/25, seis Hyper Potions, cinco Super Potions y Devon Scope=1.
+Continue verifica esos nuevos campos y el resto del manifiesto: PASS
+(`build/t27-fortree-cleared-reload.log`).
+
+`--phase r03-scope` repite obstáculo cerrado, entrega tras combate, puente,
+desaparición de Kecleon y entrada al gimnasio: PASS, sin señales y salida
+normal (`build/t27-natural-scope-replay.log`). Pelipper aprendió Fly por
+mochila en `r03-fly-learned` (334128). El uso de Fly por el menú Pokémon
+presentó el rechazo de nueva medalla con FLAG_BADGE06_GET=0; se cerró el menú
+sin cambiar mapa/coordenadas. `--phase r03-fly-gate`: PASS
+(`build/t27-natural-fly-gate-replay.log`), captura privada del mensaje en
+`build/natural-campaign-replay-r03-fly-gate/r03-fly-denied.png`.
+
+### Puertas giratorias de Fortree y primer intento de Alana
+
+La ruta ordinaria de casillas se detuvo en una puerta que no podía girar en
+la dirección propuesta. `rotating_gate_driver.py` busca en posición más las
+ocho orientaciones; lee configuración/tablas del proceso local, sin copiarlas
+al repo ni escribirlas en el juego. Compara la predicción con consultas
+nativas de CanRotate y verifica las orientaciones cuando el paso se completa.
+Una pulsación ignorada durante una transición se resuelve esperando y
+replanificando; no se altera la animación ni la colisión.
+
+El recorrido real llegó al líder en (15,3), `r03-winona-ready` (396924), equipo
+41/27/19/25, dos Hyper Potions y cinco Super Potions. La repetición independiente
+`--phase r03-gates` parte de la entrada, resuelve el puzzle y observa 14 llamadas
+reales de RotatingGate_RotateInDirection mediante un breakpoint que nunca
+detiene ni omite la función: PASS (`build/t27-natural-gates-replay.log`).
+
+El primer combate con Alana se perdió normalmente: `r03-winona-result`
+(451212), regreso a Fortree, sin señales del debugger. Sus cuatro primeros
+Pokémon quedaron debilitados y Altaria permaneció con 102 HP. Se agotaron las
+medicinas; equipo 41/28/19/25, dinero 7279. No cuenta como sexta medalla.
+Se inicia un desvío a Lilycove para conseguir una MT de hielo mediante tienda;
+R03 permanece abierto hasta verificar también el uso de Fly tras la medalla.

@@ -28,7 +28,9 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Recarga de Norman y repeticiones `r03-strength`, `r03-norman`, `r03-surf`
   documentadas en `campaign-progress.md`. Instituto/Castform, cama, puente
   bloqueado/abierto y recarga: PASS (`r03-weather` y sus checkpoints).
-  Fly/Devon Scope pendientes.
+  Rival/entrega y enseñanza de Fly, bloqueo previo a sexta medalla, Devon Scope
+  y puzzle de puertas giratorias: PASS con repeticiones y recargas. Falta ganar
+  a Alana y verificar Fly en campo tras la medalla; el primer combate se perdió.
 - [ ] R04: Mt. Pyre, escondites Aqua/Magma, Mossdeep/Space Center, Dive,
   Seafloor Cavern, Sky Pillar/Rayquaza, Sootopolis y octava medalla. Eventos y
   desbloqueos deben proceder de scripts; verificar sus condiciones previas.

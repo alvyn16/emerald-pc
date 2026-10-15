@@ -10,7 +10,7 @@ from process_watchdog import run_logged
 def main():
     project=Path(__file__).resolve().parents[2]
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum","r02-rocksmash","r02-rest","r02-meteor","r02-connections","r02-shop","r02-jagged","r02-flannery","r03-petalburg","r03-norman","r03-strength","r03-surf","r03-weather"),default="r01")
+    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum","r02-rocksmash","r02-rest","r02-meteor","r02-connections","r02-shop","r02-jagged","r02-flannery","r03-petalburg","r03-norman","r03-strength","r03-surf","r03-weather","r03-rival","r03-scope","r03-fly-gate","r03-gates"),default="r01")
     phase=parser.parse_args().phase
     scratch=project/("build/natural-campaign-replay" if phase == "r01" else "build/natural-campaign-replay-"+phase)
     for directory in ("build","roms","saves"):
@@ -29,7 +29,7 @@ def main():
                 'r02-meteor':'r02-fallarbor','r02-connections':'r02-fallarbor',
                 'r02-shop':'r02-fallarbor','r02-jagged':'r02-maxie-meteorite',
                 'r02-flannery':'r02-lavaridge','r03-petalburg':'r03-strength',
-                'r03-norman':'r03-petalburg','r03-strength':'r03-verdanturf','r03-surf':'r03-norman','r03-weather':'r03-weather-arrival'}
+                'r03-norman':'r03-petalburg','r03-strength':'r03-verdanturf','r03-surf':'r03-norman','r03-weather':'r03-weather-arrival','r03-rival':'r03-wingull-training','r03-scope':'r03-scope-supplies','r03-fly-gate':'r03-fly-learned','r03-gates':'r03-gym-entry'}
     save.write_bytes(b"\xff"*131072 if phase == "r01" else
                      (project/('build/natural-campaign/'+checkpoint[phase]+'.sav')).read_bytes())
     inputs=scratch/"input.txt"
@@ -81,6 +81,10 @@ d.buy_item(22,3)
 d.go(3,7); d.cross('DOWN','FallarborTown')
 d.save_checkpoint('r02-shop-supplies')''',
         'r02-jagged':'''route.jagged_pass_to_lavaridge()''',
+        'r03-gates':'''route.fortree_gates()''',
+        'r03-fly-gate':'''route.fly_badge_gate()''',
+        'r03-scope':'''route.devon_scope()''',
+        'r03-rival':'''route.route119_rival()''',
         'r03-weather':'''route.weather_institute()''',
         'r03-surf':'''route.surf_crossing()''',
         'r03-strength':'''route.rusturf_strength()''',

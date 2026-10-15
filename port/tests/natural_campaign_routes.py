@@ -371,6 +371,95 @@ def weather_institute():
     return d.save_checkpoint('r03-weather-cleared')
 
 
+def route119_rival():
+    """Use the trained Pelipper and win the real rival encounter for Fly."""
+    assert d.state()['map'] == 'Route119_WeatherInstitute_1F'
+    assert d.value('(int)FlagGet(0x6e)') == 0
+    assert d.value('(int)VarGet(0x4072)') == 0
+    assert d.value('(int)GetMonData3((void *)&gPlayerParty,11,0)') == 310
+    d.RUN_WILD=True; d.HEAL_ITEMS=(22,13)
+    d.teach_tm(341,0)
+    d.go(9,11); d.cross('DOWN','Route119')
+    d.go(25,31); d.settle(70000)
+    assert d.value('(int)FlagGet(0x6e)') == 1
+    assert d.value('(int)VarGet(0x4072)') == 1
+    assert d.value('(int)CountTotalItemQuantityInBag(340)') == 1
+    assert d.memory('gBattleOutcome',1)[0] == 1
+    return d.save_checkpoint('r03-fly')
+
+
+def devon_scope():
+    """Observe the hidden obstacle, earn the Scope and clear gym access."""
+    assert d.state()['map'] == 'FortreeCity'
+    assert d.value('(int)FlagGet(0x11d)') == 0
+    assert d.value('(int)FlagGet(0x127)') == 0
+    assert d.value('(int)CountTotalItemQuantityInBag(288)') == 0
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.talk(25,7,'DOWN')
+    assert (d.state()['x'],d.state()['y']) == (25,7)
+    assert d.value('(int)FlagGet(0x127)') == 0
+    print('NATURAL INVISIBLE GATE CLOSED PASS',d.state())
+    d.connect('Route120'); d.go(14,15)
+    d.RUN_WILD=False
+    d.talk(14,15,'LEFT',50000)
+    assert d.memory('gBattleOutcome',1)[0] == 1
+    assert d.value('(int)FlagGet(0x11d)') == 1
+    assert d.value('(int)CountTotalItemQuantityInBag(288)') == 1
+    d.save_checkpoint('r03-devon-scope')
+    d.go(11,15)
+    assert (d.state()['x'],d.state()['y']) == (11,15)
+    d.RUN_WILD=True; d.connect('FortreeCity')
+    d.talk(25,7,'DOWN')
+    assert d.value('(int)FlagGet(0x127)') == 1
+    d.go(25,8)
+    assert (d.state()['x'],d.state()['y']) == (25,8)
+    print('NATURAL INVISIBLE GATE OPEN PASS',d.state())
+    d.go(22,12); d.cross('UP','FortreeCity_Gym')
+    return d.save_checkpoint('r03-gym-access')
+
+
+def fly_badge_gate():
+    """An owned, learned Fly must still reject use before Winona's badge."""
+    before=d.state()
+    assert d.field_ready(before) and before['map'] == 'FortreeCity'
+    assert d.value('(int)FlagGet(0x86c)') == 0
+    assert d.value('(int)CountTotalItemQuantityInBag(340)') == 1
+    d.choose_field_move(1,5)
+    assert d.value('(int)FuncIsActiveTask((void *)Task_ReturnToChooseMonAfterText)')
+    gdb.execute(f'dump binary memory {d.SCRATCH.as_posix()}/r03-fly-denied.raw &sPixels ((char *)&sPixels)+153600')
+    for step in range(20):
+        if d.value('(int)FuncIsActiveTask((void *)Task_HandleChooseMonInput)'):
+            break
+        d.advance('B',96,1)
+    assert d.value('(int)FuncIsActiveTask((void *)Task_HandleChooseMonInput)')
+    d.advance('B',180,1); d.advance('B',48,1)
+    assert d.field_ready(d.state())
+    assert all(d.state()[key] == before[key] for key in ('map','x','y'))
+    print('NATURAL FLY BADGE GATE CLOSED PASS',d.state())
+    return d.save_checkpoint('r03-fly-gate')
+
+
+def fortree_gates():
+    """Traverse the puzzle from its entrance with native rotations observed."""
+    import rotating_gate_driver as gates
+    assert d.state()['map'] == 'FortreeCity_Gym'
+    assert (d.state()['x'],d.state()['y']) == (15,24)
+    class RotationObservation(gdb.Breakpoint):
+        def stop(self):
+            self.calls += 1
+            return False
+    observer=RotationObservation('RotatingGate_RotateInDirection',internal=True)
+    observer.calls=0; observer.silent=True
+    d.HEAL_ITEMS=(21,22,13)
+    try:
+        gates.walk_to(15,3)
+        assert observer.calls > 0, 'Expected real gate rotations, not a bypass'
+        print('NATURAL NATIVE GATE ROTATIONS PASS',observer.calls)
+        return d.save_checkpoint('r03-winona-ready')
+    finally:
+        observer.delete()
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'

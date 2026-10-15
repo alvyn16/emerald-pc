@@ -18,7 +18,8 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "match_call":0x12f,"pokenav":0x862,"letter":0xbd,"delivered_goods":0x95,
                "wally_mauville":0xbe,"rock_smash":0x6b,
                "cable_car_clear":0x333,"chimney_defeated":0x8b,"meteorite":0x73,
-               "surf":0x7a,"fly":0x6e,"castform":0x97,"devon_scope":0x11d}
+               "surf":0x7a,"fly":0x6e,"castform":0x97,"devon_scope":0x11d,
+               "fortree_kecleon_fled":0x127}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -448,6 +449,23 @@ def set_lead(slot):
     return state()
 
 
+def choose_field_move(slot,field_move):
+    """Select a field move through its real party context menu (Cut=0)."""
+    open_start_action(1)
+    assert state()['callback'] == 'CB2_UpdatePartyMenu'
+    select_party_slot(slot); advance('A',48,1)
+    internal=value('*(unsigned int *)&sPartyMenuInternal')
+    context=bytes(gdb.selected_inferior().read_memory(internal+15,9))
+    target=context[:context[8]].index(19+field_move)  # MENU_FIELD_MOVES.
+    for step in range(12):
+        cursor=value('(int)Menu_GetCursorPos()')
+        if cursor == target:
+            advance('A',120,1)
+            return state()
+        advance('DOWN' if cursor < target else 'UP',24,1)
+    raise RuntimeError('Party menu did not reach requested field move')
+
+
 def teach_tm(item,slot):
     """Use an owned TM/HM via bag, party and move-summary menus."""
     assert field_ready(state())
@@ -595,7 +613,7 @@ def save_checkpoint(name):
     facts['weather_institute']=value('(int)VarGet(0x40b3)')
     facts['route119']=value('(int)VarGet(0x4072)')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
-                        for item in (13,22,*range(339,347))}
+                        for item in (13,21,22,288,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
     facts['money']=value(f'(int)GetMoney((void *)({save}+0x490))')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")
