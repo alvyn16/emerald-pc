@@ -923,3 +923,29 @@ comprueba consumo y resultado, y falla con un límite si no vuelve al campo.
 La campaña salió por las escaleras, voló a Lilycove, curó en su Centro y usó
 Surf. r04-route124 (316512) está en Route124 (1,22); se continúa hacia Mossdeep
 con el objeto equipado para los combates normales.
+
+
+### Velocidad medida de Surf y llegada a Mossdeep
+
+El primer recorrido Route124 terminó en un islote, (71,44), al intentar llegar
+a una conexión prevista desde el agua. No fue una excepción del juego:
+el avatar había desembarcado. El controlador de teclas agrupaba Surf como si
+fuera marcha normal, usando 16 frames por casilla. PlayerNotOnBikeMoving usa
+PlayerWalkFast durante Surf (8), frente a PlayerWalkNormal (16) a pie.
+Se corrigió únicamente el cálculo de las pulsaciones del harness.
+
+La prueba `--phase r03-surf-speed` parte del guardado natural de Petalburg.
+Una pulsación anterior de 36 frames para tres casillas movió de (6,20) a (2,20):
+cuatro casillas, manteniendo Surf. Con el controlador corregido el recorrido
+llega exactamente a (3,20), vuelve a (6,20), mantiene Surf en ambos puntos y
+sale a tierra en (7,20): PASS, sin señales y con salida normal
+(`build/t27-natural-surf-speed-replay.log`). No se cambian movimiento ni
+velocidad del juego; los datos son posiciones medidas por el proceso.
+
+En la campaña se reanudó Surf mirando UP desde el islote; la misma conexión
+con pulsaciones corregidas llegó a Mossdeep. Se curó en el Centro y se guardó
+r04-mossdeep (348248), exterior (28,17), seis medallas, equipo 47/31/19/25,
+Pelipper con Exp. Share, cuatro Hyper Potions, Master Ball=1 y dinero 21247.
+El nivel de Pelipper aumentó durante los combates reales de Route124.
+ROM y save originales conservan sus hashes previos. Sigue pendiente el
+puzzle/líder de Mossdeep y el resto de R04–R15.

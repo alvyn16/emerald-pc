@@ -809,7 +809,11 @@ def walk(x,y,limit=200):
         straight=1
         while straight < min(4,len(route)) and route[straight] == route[0]:
             straight += 1
-        hold=16*(straight-1)+4
+        # Surf uses PlayerWalkFast (8 frames/tile), walking uses 16.
+        # Longer walking pulses overshoot the planned water segment and can
+        # land on an island before the intended bank is reached.
+        frames_per_tile=8 if memory('gPlayerAvatar',1)[0]&8 else 16
+        hold=frames_per_tile*(straight-1)+4
         advance(route[0],hold+20,hold)
         if not field_ready(state()):
             return state()

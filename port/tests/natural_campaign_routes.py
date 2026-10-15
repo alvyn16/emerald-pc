@@ -697,6 +697,30 @@ def devon_exp_share():
     return d.save_checkpoint('r04-exp-share-equipped')
 
 
+def surf_speed_regression():
+    """Measure the old overlong pulse, then keep the corrected batch on water."""
+    assert d.state()['map'] == 'PetalburgCity'
+    d.go(7,20); d.talk(7,20,'LEFT')
+    assert (d.state()['x'],d.state()['y']) == (6,20)
+    assert d.memory('gPlayerAvatar',1)[0]&8
+    d.advance('LEFT',56,36); d.settle()
+    old=d.state()
+    print('OLD WALKING PULSE ON SURF',old,d.memory('gPlayerAvatar',1)[0])
+    assert (old['x'],old['y']) != (3,20), 'Expected the old three-tile pulse to overshoot'
+    d.go(7,20); d.talk(7,20,'LEFT')
+    assert (d.state()['x'],d.state()['y']) == (6,20)
+    d.go(3,20)
+    assert (d.state()['x'],d.state()['y']) == (3,20)
+    assert d.memory('gPlayerAvatar',1)[0]&8
+    d.go(6,20)
+    assert (d.state()['x'],d.state()['y']) == (6,20)
+    assert d.memory('gPlayerAvatar',1)[0]&8
+    d.go(7,20)
+    assert not d.memory('gPlayerAvatar',1)[0]&8
+    print('NATURAL SURF BATCH COORDINATES PASS',d.state())
+    return d.save_checkpoint('r03-surf-speed')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'
