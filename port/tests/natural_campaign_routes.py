@@ -509,6 +509,24 @@ def fly_roundtrip():
     return d.save_checkpoint('r03-fly-roundtrip')
 
 
+def mt_pyre():
+    """Climb from the real entrance and receive the emblem through the event."""
+    assert d.state()['map'] == 'MtPyre_1F'
+    assert d.value('(int)VarGet(0x40b9)') == 0
+    assert d.value('(int)CountTotalItemQuantityInBag(375)') == 0
+    assert d.value('(int)FlagGet(0x34f)') == 0
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.go(3,6); d.cross('DOWN','MtPyre_Exterior')
+    d.go(19,11); d.cross('UP','MtPyre_Summit')
+    d.go(23,7,dialogue_limit=80000)
+    assert d.state()['map'] == 'MtPyre_Summit'
+    assert d.value('(int)VarGet(0x40b9)') == 1
+    assert d.value('(int)CountTotalItemQuantityInBag(375)') == 1
+    assert d.value('(int)FlagGet(0xd4)') == 1
+    assert d.value('(int)FlagGet(0x34f)') == 1
+    return d.save_checkpoint('r04-magma-emblem')
+
+
 def museum_delivery():
     """Check the blocked museum, talk to Dock, pay, then finish Stern's scene."""
     assert d.state()['map'] == 'SlateportCity'

@@ -714,3 +714,36 @@ movimientos, eventos, cantidades y dinero sin reescribir el archivo: PASS.
 Se continúa desde ese guardado, derivado del mismo linaje natural; la ruta
 anterior y el save previo quedan preservados en build/natural-campaign.
 R03 queda cubierto; R04–R15 y T27/Checkpoint E continúan abiertos.
+
+### R04: Monte Pírico y Emblema Magma
+
+Desde r03-fly-roundtrip se continuó por Continue en un nuevo proceso con el
+binario corregido: vuelo real a Lilycove, Route121 a pie y Surf desde el muelle
+(30,18), mirando al sur. La conexión lleva a Route122 (10,0); se rodea la isla
+por agua y se entra por (22,29). r04-mtpyre-arrival, frame 28536, conserva el
+mismo equipo y seis medallas. Se consumió una Hyper Potion en el trayecto.
+
+La salida exterior en 1F usa MB_SOUTH_ARROW_WARP (0x65) en (3,6): se pisa la
+flecha y se pulsa DOWN. Intentar llegar a (3,7), una pared, o salir mirando
+LEFT/UP no funciona; fueron errores del recorrido, sin excepción del juego.
+Desde el exterior se subió hasta (19,11), UP a la cima. Antes del evento:
+MtPyre state=0, Emblema Magma=0, flags 0xD4/0x34F=0. El checkpoint
+r04-pyre-summit-arrival (39084) conserva ese estado.
+
+Se avanzó hasta (23,7), ganando los combates Aqua interceptados por sus
+scripts. La secuencia de Archie y los ancianos dio el Emblema por diálogo:
+r04-magma-emblem (64428), MtPyre state=1, objeto 375=1, flags 0xD4/0x34F=1,
+equipo 44/30/19/25, seis medallas, cinco Hyper Potions y dinero 5983.
+La captura privada r04-magma-emblem.png muestra a los ancianos y al jugador
+en la cima con niebla; el grupo Aqua se ha retirado. Después se voló a
+Lavaridge y se curó en el Centro: r04-lavaridge-emblem (70164).
+Los siguientes escondites y el resto de R04 todavía no se consideran cubiertos.
+
+`--phase r04-pyre` reproduce entrada, salida por flecha, subida exterior,
+combates y entrega desde r04-mtpyre-arrival: PASS, sin señales y salida normal
+(`build/t27-natural-pyre-replay.log`). Continue de r04-magma-emblem verifica
+MtPyre/Jagged state, objeto, flags y el manifiesto completo sin reescribir el
+archivo: PASS (`build/t27-magma-emblem-reload.log`). El registro del checkpoint
+y su recarga incorporan ahora esas variables, flags y cantidad del Emblema.
+La comprobación de sintaxis Python pasa. No cambia el código nativo desde las
+21 suites/builds/compare verificados para 0043.

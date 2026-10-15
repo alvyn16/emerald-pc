@@ -54,7 +54,7 @@ assert d.value('(int)FlagGet(0x82)') == expected['rival']
 assert d.value('(int)CountTotalItemQuantityInBag(4)') == expected['balls']
 if 'badges' in expected:
     assert [d.value(f'(int)FlagGet({{0x867+i}})') for i in range(8)] == expected['badges']
-for key,var in (('norman',0x4085),('woods',0x4098),('rustboro',0x405a),('briney',0x4090),('route110',0x4069),('meteor_falls',0x40bf),('weather_institute',0x40b3),('route119',0x4072),('route121',0x4074)):
+for key,var in (('norman',0x4085),('woods',0x4098),('rustboro',0x405a),('briney',0x4090),('route110',0x4069),('meteor_falls',0x40bf),('weather_institute',0x40b3),('route119',0x4072),('route121',0x4074),('mt_pyre',0x40b9),('jagged_pass',0x40c8)):
     if key in expected:
         assert d.value(f'(int)VarGet({{var}})') == expected[key]
 for key,expected_value in expected.get('events',{{}}).items():
