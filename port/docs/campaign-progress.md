@@ -1275,3 +1275,49 @@ La campana llega a Juan (8,3), r04-juan-ready (139908).
 guardado por menu y salida normal (t27-sootopolis-ice-replay.log).
 Captura privada r04-juan-ready.png muestra a Juan y el acceso despejado.
 El combate y la octava medalla aun no se declaran verificados.
+
+### R04: Juan, dos derrotas reales y victoria tras preparacion por UI
+
+El primer intento solo con HMs pierde contra Kingdra: outcome2, regreso original
+al Centro de Sootopolis (43,32), siete medallas, sin trainer272 ni recompensas.
+r04-juan-loss (235332), Continue PASS sin modificar archivo (t27-juan-loss-reload.log).
+Se conserva la entrada anterior como r04-juan-hms-ready; no se acredita victoria
+al replay de ese equipo. GDB interrumpio voluntariamente la batalla para leer
+el turno27/PP/estadisticas; se continuo desde el mismo checkpoint host, sin
+saltar funciones nativas ni cambiar la partida. No era un bloqueo.
+
+Se volo a Lilycove y se uso el Quita-Movimientos real para borrar Dive del slot1
+de Swampert. Movimientos 249/291/70/57 -> 249/70/57/0; la MT26 de Seafloor (314)
+se consumio 1->0 y enseno Earthquake89. r04-earthquake-learned (243392).
+--phase r04-earthquake-prep PASS desde el guardado de derrota, incluida la
+seleccion de Pokemon/movimiento, confirmacion, bolsa, aprendizaje y guardado.
+Tras comprar siete Hyper Potions, curar y repetir el hielo, r04-juan-earthquake-ready.
+Ese segundo intento tambien pierde; tampoco se acredita victoria al replay.
+r04-juan-earthquake-loss (352336): equipo 50/39/21/25, siete medallas, ciudad5,
+sin trainer/recompensas de Juan; dinero7442 y Hyper Potions0. Se conservan los
+logs de ambos intentos (t27-juan-replay.log y t27-juan-earthquake-replay.log).
+Son derrotas normales, no excepciones del port.
+
+La tienda original de Lilycove vende cuatro Hyper Potions, dos X Attack75,
+un X Speed77 y un X Accuracy78 por 7100 en total; quedan342. --phase r04-tactical-shop
+PASS comprueba todas las compras por menus y guardado (t27-tactical-shop-replay.log).
+Se vuelve por Fly, cura y tres tableros de hielo hasta r04-juan-tactical-ready.
+La estrategia nueva acepta el cambio opcional tras Luvdisc, saca a Pelipper y
+vuelve a Swampert desde el menu Pokemon: se observan sus ocho etapas en6,
+restablecidas por el motor. Usa dos X Attack y un X Speed desde la bolsa real.
+No escribe etapas, PS, PP ni resultados. La primera version del guion pulsaba
+UP mientras aun estaba el anuncio anterior al cursor Yes/No; se corrigio para
+cerrar el anuncio con A. Se reinicio desde el MISMO archivo de guardado previo,
+cuya igualdad se comprobo byte a byte. No fue un bloqueo del juego.
+
+Con esa secuencia, campana y --phase r04-juan-tactical ganan: outcome1,
+trainer272=1, ocho medallas, flag4F7/AC=1, ciudad6 y Water Pulse291=1.
+R04-juan-win (35464, nuevo proceso): equipo 50/40/21/25, dinero4942, cuatro
+Hyper Potions intactas; XAttack/XSpeed pasan2/1->0/0 y XAccuracy sigue1.
+El replay exige esas postcondiciones y sale normalmente (t27-juan-tactical-replay.log).
+Las fases publicas de victoria usan esta estrategia comprobada; las dos pruebas
+anteriores fallidas se conservan como evidencia privada de intentos perdidos.
+Continue de r04-juan-win PASS, con equipo/movimientos, ocho medallas,
+recompensas, flags, variables, consumibles y dinero intactos; el archivo no
+se reescribe (t27-juan-win-reload.log). R04 queda cubierto. T27/Checkpoint E
+siguen abiertos para R05-R15, incluida la Liga y las actividades posteriores.

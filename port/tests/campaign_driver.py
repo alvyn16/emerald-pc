@@ -30,7 +30,8 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "dive_received":0x7b,"kyogre_escaped":0x81,
                "legendaries_sootopolis":0x53,"steven_cave_guide":0x133,
                "wallace_sky_pillar":0x137,"waterfall_received":0x138,
-               "sootopolis_archie_maxie_left":0x9e}
+               "sootopolis_archie_maxie_left":0x9e,"sootopolis_gym_defeated":0x4f7,
+               "water_pulse_received":0xac}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -727,7 +728,7 @@ def save_checkpoint(name):
     facts['sootopolis_city']=value('(int)VarGet(0x405e)')
     facts['sky_pillar']=value('(int)VarGet(0x40ca)')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
-                        for item in (1,13,21,22,182,288,302,314,375,*range(339,347))}
+                        for item in (1,13,21,22,75,77,78,182,288,291,302,314,375,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
     facts['money']=value(f'(int)GetMoney((void *)({save}+0x490))')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")

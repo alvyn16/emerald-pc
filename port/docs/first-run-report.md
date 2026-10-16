@@ -1216,3 +1216,23 @@ t27-sky-open-replay.log, t27-sky-climb-replay.log,
 t27-rayquaza-awaken-replay.log y t27-rayquaza-peace-replay.log.
 No aparecio otra excepcion nativa en este tramo. La octava medalla y R05-R15
 siguen pendientes; T27 permanece abierto.
+
+## T27: octava medalla por juego real, sin nueva excepcion
+
+Juan produjo dos derrotas normales contra Kingdra con la politica de ataques
+simple. Se guardaron ambas, con el blackout original, perdida de dinero y
+recompensas aun ausentes. No se modifico la dificultad ni el entrenador.
+Quita-Movimientos, MT26 recogida anteriormente, tiendas y una estrategia de
+cambio/objetos real permitieron ganar con el mismo equipo natural.
+--phase r04-juan-tactical PASS: ocho medallas, trainer272, flags4F7/AC,
+Sootopolis6 y MT03/WaterPulse291 verificados. Dos X Attack y un X Speed se
+consumieron por la bolsa, tras retirar y devolver a Swampert para reiniciar
+las bajadas de estadisticas. El guion conserva/restaura su propia funcion de
+seleccion de botones; no modifica memoria de progreso del juego.
+
+Se corrigio una espera del guion (UP antes del cursor Yes/No), reiniciando
+desde el mismo guardado nativo previo y preservando el log anterior. La prueba
+corregida sale normalmente; no se cuenta ese fallo de automatizacion como
+crash del port. Continue de r04-juan-win valida todo el manifiesto y conserva
+el archivo (t27-juan-win-reload.log). Captura privada r04-juan-win.png.
+R04 esta cubierto; T27 sigue abierto para R05-R15. No hay push.

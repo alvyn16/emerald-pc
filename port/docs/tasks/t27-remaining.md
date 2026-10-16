@@ -32,7 +32,7 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   y puzzle de puertas giratorias: PASS con repeticiones y recargas. Alana fue
   derrotada tras comprar/enseñar Blizzard por UI; Fly confirma ida/vuelta y
   cancelación con el parche 0043. Continue de r03-fly-roundtrip: PASS.
-- [ ] R04: Mt. Pyre, escondites Aqua/Magma, Mossdeep/Space Center, Dive,
+- [x] R04: Mt. Pyre, escondites Aqua/Magma, Mossdeep/Space Center, Dive,
   Seafloor Cavern, Sky Pillar/Rayquaza, Sootopolis y octava medalla. Eventos y
   desbloqueos deben proceder de scripts; verificar sus condiciones previas.
   Monte Pírico/Emblema Magma por evento, repetición y Continue: PASS; el resto
@@ -47,7 +47,8 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   y dialogo Steven/Wallace por UI y replay PASS (0046/0047). Sky Pillar,
   caida/subida, despertar y cinco segmentos de Rayquaza por replay PASS;
   paz y Continue PASS. Waterfall por regalo/UI/replay y tres tableros de hielo
-  por teclado/replay PASS. Combate Juan y octava medalla pendientes.
+  por teclado/replay PASS. Juan gana con cambio/objetos comprados por UI;
+  ocho medallas, recompensas, replay y Continue PASS. R05-R15 pendientes.
 - [ ] R05: Waterfall, Victory Road, acceso a Liga, ocho medallas y créditos
   desde esa misma partida; sin warps del harness ni equipo preparado. Recarga
   final: game-clear, equipo y Hall of Fame válidos. Capturas privadas.
