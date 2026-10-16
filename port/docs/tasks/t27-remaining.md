@@ -43,7 +43,9 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   de derrota normal documentada. Centro Espacial y entrega/ensenanza de Dive
   por UI, replays y Continue PASS. Buceo/emerger y Continue submarino PASS tras
   0044/0045. Seafloor: Fuerza, corrientes, Shelly, Archie y salida de Kyogre
-  por scripts/replays/Continue PASS. Sky Pillar, Sootopolis y octava pendientes.
+  por scripts/replays/Continue PASS. Llegada Sootopolis/camaras/escena abreviada
+  y dialogo Steven/Wallace por UI y replay PASS (0046/0047). Sky Pillar,
+  escena completa y octava medalla pendientes.
 - [ ] R05: Waterfall, Victory Road, acceso a Liga, ocho medallas y créditos
   desde esa misma partida; sin warps del harness ni equipo preparado. Recarga
   final: game-clear, equipo y Hall of Fame válidos. Capturas privadas.

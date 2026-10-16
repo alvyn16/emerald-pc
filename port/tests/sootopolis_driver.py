@@ -32,3 +32,35 @@ def arrive():
         return d.save_checkpoint('r04-sootopolis-arrival')
     finally:
         observer.delete()
+
+
+def wallace():
+    """Follow Steven, then choose Sky Pillar through Wallace's actual menu."""
+    assert d.state()['map'] == 'SootopolisCity'
+    assert d.value('(int)VarGet(0x405e)') == 2
+    assert d.value('(int)FlagGet(0x137)') == 0
+    d.RUN_WILD=True
+    d.talk(20,37,'UP',60000)
+    assert d.state()['map'] == 'CaveOfOrigin_Entrance'
+    assert d.value('(int)FlagGet(0x133)') == 1
+    d.warp_to(9,5,'CaveOfOrigin_1F')
+    d.warp_to(14,5,'CaveOfOrigin_B1F')
+    # The tile north of Wallace is a wall: approach from his west.
+    d.go(8,13); d.advance('RIGHT',24,4); d.advance('A',24,1)
+    for _ in range(150):
+        if d.value('(int)FuncIsActiveTask((void *)Task_HandleMultichoiceInput)'):
+            break
+        d.advance('A',96,1)
+    else:
+        raise RuntimeError('Wallace choice deadline: '+str(d.state()))
+    for _ in range(5):
+        cursor=d.value('(int)Menu_GetCursorPos()')
+        if cursor == 2:
+            break
+        d.advance('DOWN' if cursor < 2 else 'UP',24,1)
+    assert d.value('(int)Menu_GetCursorPos()') == 2
+    d.advance('A',24,1); d.settle(20000)
+    assert d.value('(int)FlagGet(0x137)') == 1
+    assert d.value('(int)VarGet(0x405e)') == 3
+    print('NATURAL WALLACE SKY PILLAR PASS',d.state())
+    return d.save_checkpoint('r04-wallace-sky-pillar')

@@ -1211,3 +1211,19 @@ Continue de r04-sootopolis-arrival PASS, archivo sin modificar
 una accion involuntaria del harness, no perdida de guardado. El reloader
 permite --continue-until 1181 para cortar pulsos antes del control de campo;
 las demas comprobaciones completas y los 10000 frames siguen iguales.
+
+### R04: Steven y Wallace autorizan Sky Pillar por dialogo real
+
+Desde la llegada se habla con Steven desde (20,37), UP. Su caminata original
+lleva a CaveOfOrigin_Entrance (9,20). Las escaleras (9,5) y (14,5) llevan al
+sotano; (9,12) es una pared, por lo que se rodea hasta (8,13), RIGHT.
+Se elige la opcion 2/Sky Pillar del multichoice nativo de Wallace, sin escribir
+VAR_RESULT. Flag 0x133=1, flag 0x137=1 y Sootopolis=3. Campana principal:
+r04-wallace-sky-pillar (48216). --phase r04-wallace PASS desde el save anterior,
+con guardado real y salida normal (t27-wallace-replay.log).
+El manifiesto incorpora ambos flags y VAR_SKY_PILLAR_STATE para los futuros
+checkpoints. Captura privada muestra la cueva, terreno y niebla horizontal.
+No aparecio excepcion en este tramo. R04 sigue abierto.
+Continue de r04-wallace-sky-pillar PASS, archivo sin modificar
+(t27-wallace-reload.log). setup.ps1 tambien termina idempotente con 47 parches
+(t27-setup-47-idempotent.log). ROM y save originales conservan sus hashes.

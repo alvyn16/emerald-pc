@@ -28,7 +28,8 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "mossdeep_gym_defeated":0x4f6,"calm_mind_received":0xab,
                "space_center_defeated":0x75,"steven_space_interacted":0xcd,
                "dive_received":0x7b,"kyogre_escaped":0x81,
-               "legendaries_sootopolis":0x53}
+               "legendaries_sootopolis":0x53,"steven_cave_guide":0x133,
+               "wallace_sky_pillar":0x137}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -723,6 +724,7 @@ def save_checkpoint(name):
     facts['route128']=value('(int)VarGet(0x407b)')
     facts['seafloor']=value('(int)VarGet(0x40a2)')
     facts['sootopolis_city']=value('(int)VarGet(0x405e)')
+    facts['sky_pillar']=value('(int)VarGet(0x40ca)')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
                         for item in (1,13,21,22,182,288,302,314,375,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
