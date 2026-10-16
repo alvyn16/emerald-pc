@@ -1,0 +1,28 @@
+From 9556659ee1daf2663ef64aba8c08472a5bfff332 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Thu, 15 Oct 2026 22:31:07 -0400
+Subject: [PATCH] Guard absent host map connections before fixed Dive warps
+
+---
+ src/overworld.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/overworld.c b/src/overworld.c
+index 9a27803..244e022 100644
+--- a/src/overworld.c
++++ b/src/overworld.c
+@@ -742,6 +742,11 @@ void SetContinueGameWarpToDynamicWarp(int unused)
+ 
+ const struct MapConnection *GetMapConnection(u8 dir)
+ {
++#ifdef PORT_PC
++    // Fixed Dive warps can use maps without a connection list.
++    if (gMapHeader.connections == NULL)
++        return NULL;
++#endif
+     s32 i;
+     s32 count = gMapHeader.connections->count;
+     const struct MapConnection *connection = gMapHeader.connections->connections;
+-- 
+2.50.0.windows.1
+

@@ -1056,3 +1056,37 @@ r04-dive-verified conserva los eventos y el movimiento aprendido.
 La incompatibilidad de Pelipper con Dive es un dato original de learnset,
 no una excepcion; se enseno a Swampert. No hubo nuevo fallo nativo en este
 tramo. El uso submarino y el resto de R04 todavia no quedan acreditados.
+
+## T27 natural: emerger en una cueva sin conexiones (0044)
+
+Al elegir Dive para emerger desde Underwater_SeafloorCavern (6,7), SIGSEGV en
+GetMapConnection+11, EIP 0x1022E8AB, instruccion mov (%eax),%eax, EAX=0.
+gMapHeader.connections es NULL: ese mapa declara connections=null y usa un
+warp fijo que su script OnResume establece hacia SeafloorCavern_Entrance (10,17).
+La funcion leia connections->count antes de devolver NULL para permitir
+la alternativa SetDiveWarp -> RunOnDiveWarpMapScript / sFixedDiveWarp.
+Backtrace: GetMapConnection -> SetDiveWarp -> SetDiveWarpEmerge -> TrySetDiveWarp
+-> SetUpFieldMove_Dive -> CursorCb_FieldMove -> Task_HandleSelectionMenuInput
+-> RunTasks -> CB2_UpdatePartyMenu -> CallCallbacks -> AgbMain.
+
+Parche 0044: comprobar connections==NULL antes de leer sus campos, solo bajo
+PORT_PC. No fabrica un destino: devuelve NULL y la logica original usa el warp
+fijo. Cinco lineas, src/overworld.c; commit upstream privado 9556659ee1daf2663ef64aba8c08472a5bfff332.
+La prueba --phase r04-seafloor-dive parte del guardado natural Route128, baja
+en (38,27), entra por UP a la cueva submarina y usa el menu Dive para emerger.
+El binario anterior reproduce la misma senal (t27-seafloor-dive-before-fix-gdb.log).
+Con el parche llega a Entrance (10,17), mantiene Surf y guarda por UI: PASS,
+sin senales, salida normal (t27-seafloor-dive-after-fix.log).
+
+Normal/diagnostico, 21 suites y verify-normal: PASS (t27-dive-host-build.log).
+GBA: pokeemerald.gba: OK (t27-dive-gba-compare.log). El checkout de reproduccion,
+limpio con los 43 parches anteriores, aplica 0044 con git am y genera el mismo
+arbol 386a8afd3ba959f7852cd2e2ca28d15daa22818d; sus dos builds, 21 suites y
+verify-normal pasan (t27-dive-clean-build.log).
+
+Siguiente fallo observado al reabrir el guardado submarino previo: SIGSEGV en
+LoadSaveblockObjEventScripts+78, EIP 0x1022DEB0, mov 0x10(%ecx),%eax, ECX=0.
+Su bucle restaura 64 scripts desde un array de objetos NULL y count=0 en
+Underwater_Route128. Es un fallo distinto de Continue, pendiente del parche
+0045; el recorrido corregido por 0044 parte de un guardado de superficie y
+no acredita aun Continue submarino. Logs privados gdb-post-dive-fix.log.

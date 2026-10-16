@@ -1084,3 +1084,22 @@ y la variable de la casa. Continue conserva esos eventos, siete medallas,
 HM08, movimientos, objetos equipados y dinero, sin modificar el archivo:
 PASS (`build/t27-dive-verified-reload.log`). R04 sigue abierto: falta usar
 Buceo, Seafloor, Sky Pillar/Rayquaza, Sootopolis y la octava medalla.
+
+### Buceo real y siguiente cierre diagnosticado
+
+Desde la casa se salio por el warp real (3,7), se camino a (25,30), DOWN,
+y se acepto Surf. Las conexiones llevaron a Route127 y Route128; guardado
+r04-route128-dive (583712), (25,0). En Route128 (38,27), el menu de Swampert
+DIVE lleva a Underwater_Route128 (38,27); r04-underwater128 (586660).
+La puerta submarina se entra con UP desde ahi; su casilla de warp tiene
+colision y no debe tratarse como una escalera caminable.
+
+Emerger revelo un puntero NULL a conexiones del mapa. El parche 0044 permite
+el warp fijo original; --phase r04-seafloor-dive da PASS hasta la superficie
+en SeafloorCavern_Entrance (10,17), con guardado por UI y sin senales.
+Builds host, 21 suites, GBA compare y reproduccion del parche: PASS.
+Detalle del fallo, registros y logs en first-run-report.md.
+
+Al reiniciar la campana desde el save submarino se encontro otra lectura
+NULL en LoadSaveblockObjEventScripts. Sigue pendiente corregir/verificar
+Continue submarino (0045); no se salta la funcion ni se altera la partida.
