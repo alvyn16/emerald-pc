@@ -11,7 +11,11 @@ def main():
     project=Path(__file__).resolve().parents[2]
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("checkpoint",nargs="?",default="r01-birch-dex")
-    name=parser.parse_args().checkpoint
+    parser.add_argument("--continue-until",type=int,default=8000,
+                        help="Stop Continue key pulses before field actions can respond")
+    args=parser.parse_args()
+    name=args.checkpoint
+    assert 1000 < args.continue_until <= 8000
     assert re.fullmatch(r"[a-z0-9-]+",name), "Checkpoint must be a private fixture name"
     source=project/"build/natural-campaign"
     scratch=project/("build/natural-campaign-reload-"+name)
@@ -25,7 +29,7 @@ def main():
     saved=(source/(name+".sav")).read_bytes()
     save.write_bytes(saved)
     inputs=scratch/"input.txt"
-    inputs.write_text("".join(f"{frame} {frame+1} A\n" for frame in range(1000,8000,45)))
+    inputs.write_text("".join(f"{frame} {frame+1} A\n" for frame in range(1000,args.continue_until,45)))
     script=scratch/"reload.gdb"
     script.write_text(f'''set pagination off
 set confirm off

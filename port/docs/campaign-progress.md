@@ -1204,3 +1204,10 @@ El manifiesto space_center_defeated=0 tras el viaje no indica perdida de
 progreso: RivalRayquazaCall, SpaceCenter_2F/scripts.inc, consume el flag 0x75
 al terminar la llamada Pokenav de May/Brendan. Los estados permanentes de
 Mossdeep/Centro Espacial continuan en 3. No se vuelve a establecer el flag.
+
+Continue de r04-sootopolis-arrival PASS, archivo sin modificar
+(t27-sootopolis-arrival-reload-short.log). La prueba anterior pulsaba A hasta
+8000 y activaba Buceo desde el campo ya cargado, terminando submarino: fue
+una accion involuntaria del harness, no perdida de guardado. El reloader
+permite --continue-until 1181 para cortar pulsos antes del control de campo;
+las demas comprobaciones completas y los 10000 frames siguen iguales.
