@@ -406,16 +406,15 @@ static void ResolvePixels(uint32_t *pixels, unsigned y)
         const unsigned i = y * PORT_SCREEN_WIDTH + x;
         const PixelLayer top = sTop[i], second = sSecond[i];
         uint16_t color = top.color;
-        if (sWindowMask[i] & 0x20)
-        {
-            const int secondTarget = second.layer < 6 &&
-                    (blendControl & (1u << (second.layer + 8)));
-            if ((top.semiTransparent || (effect == 1 &&
-                 (blendControl & (1u << top.layer)))) && secondTarget)
-                color = BlendColors(color, second.color, eva, evb);
-            else if ((blendControl & (1u << top.layer)) && effect >= 2)
-                color = AdjustBrightness(color, evy, effect == 2);
-        }
+        const int colorEffects = sWindowMask[i] & 0x20;
+        const int secondTarget = second.layer < 6 &&
+                (blendControl & (1u << (second.layer + 8)));
+        // Semi-transparent OBJs force alpha even with window color effects off.
+        if ((top.semiTransparent || (colorEffects && effect == 1 &&
+             (blendControl & (1u << top.layer)))) && secondTarget)
+            color = BlendColors(color, second.color, eva, evb);
+        else if (colorEffects && (blendControl & (1u << top.layer)) && effect >= 2)
+            color = AdjustBrightness(color, evy, effect == 2);
         pixels[x] = ExpandColor(color);
     }
 }

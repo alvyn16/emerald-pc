@@ -1121,3 +1121,15 @@ verify-normal PASS (t27-underwater-clean-build.log). La campana se reinicia
 desde el MISMO archivo submarino previo, conservado antes de ambos cierres.
 No se omite ninguna funcion de juego ni se reescribe progreso para continuar.
 La exploracion de Seafloor sigue abierta.
+
+## T27: niebla submarina opaca, corregida en el PPU propio
+
+La revision visual mostro terreno invisible bajo una capa gris en
+Underwater_Route128. Con los registros del juego sin alterar, WIN0 deshabilita
+efectos normales de color, pero el OBJ de niebla necesita alfa forzado.
+ResolvePixels lo condicionaba tambien a ese bit de ventana. Se separaron ambas
+reglas en port/port_ppu.c y se corrigio la expectativa sintetica anterior.
+La regresion falla antes y las 21 suites pasan despues; captura con los mismos
+registros muestra ahora la entrada, rocas y fondo submarino. Detalles y referencia
+primaria en ppu-model.md. Builds normales/diagnostico, reproduccion y GBA compare:
+PASS. El save original del usuario sigue intacto. No requiere parche upstream.

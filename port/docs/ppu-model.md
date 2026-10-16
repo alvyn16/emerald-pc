@@ -57,3 +57,30 @@ Emerald use los tres modos. Su verificación es sintética. Quedan pendientes
 comparaciones hardware, scanline timing de instrucciones nativas, límite de
 tiempo de dibujo OBJ, open bus y modos prohibidos 6/7. El calendario por línea
 y DMA HBlank visible están implementados, sin emulación de CPU ARM.
+
+## T27: niebla submarina y OBJ semitransparentes dentro de ventanas
+
+La captura real de Underwater_Route128 ocultaba el terreno bajo niebla opaca.
+En frame 10000: DISPCNT=0x7F60, WININ=0x1F1F, WINOUT=0x0101,
+BLDCNT=0x1E40 y BLDALPHA=0x1004. WIN0 cubre la pantalla, pero su bit de efectos
+esta apagado. El resolvedor aplicaba ese bit tambien al alfa forzado de OBJ.
+
+Un OBJ semitransparente conserva su alfa forzado cuando ese bit esta apagado;
+los efectos normales de BG/OBJ siguen dependiendo de la mascara de ventana.
+Referencia de comportamiento: [mGBA, seleccion del primer objetivo OBJ](https://github.com/mgba-emu/mgba/blob/master/src/gba/renderers/software-obj.c#L145).
+Se corrigio la condicion de ResolvePixels en la implementacion propia.
+
+La prueba sintetica ahora exige alfa dentro de WIN0 y fuera con ambos bits
+de efectos apagados. Incluye los registros de la escena submarina y comprueba
+EVA=4/EVB=16 sobre colores conocidos. El binario anterior falla esa asercion
+(t27-fog-before-fix-test.log); con la correccion pasan las 21 suites, builds
+normal/diagnostico y verify-normal (t27-fog-host-build.log).
+
+La recarga privada del mismo save produce capturas de antes/despues en
+build/underwater-before-color-fix.png y build/underwater-after-color-fix.png:
+antes solo se veia la niebla gris; despues se distinguen las rocas, la entrada
+y el fondo azul/violeta. Los 1024 bytes de registros IO coinciden entre ambas
+capturas, y el save permanece sin cambios. Logs t27-underwater-visual*.log.
+El checkout de reproduccion con los 45 parches y las fuentes propias actualizadas
+pasa ambos builds y 21 suites (t27-fog-clean-build.log). GBA sigue dando
+pokeemerald.gba: OK (t27-fog-gba-compare.log).

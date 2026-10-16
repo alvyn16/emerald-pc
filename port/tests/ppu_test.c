@@ -350,12 +350,25 @@ int main(void)
     assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff7b7b00u);
     REG_DISPCNT |= DISPCNT_WIN0_ON;
     REG_WININ = WININ_WIN0_BG0 | WININ_WIN0_OBJ;
-    REG_WINOUT = WINOUT_WIN01_BG0 | WINOUT_WIN01_OBJ | WINOUT_WIN01_CLR;
+    REG_WINOUT = WINOUT_WIN01_BG0 | WINOUT_WIN01_OBJ;
     PortPpu_Render(sFrame);
-    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff00ff00u);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff7b7b00u); // Semi-transparent OBJ ignores WIN0 color enable.
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 10] == 0xff7b7b00u); // Also outside, with WINOUT color disabled.
     REG_WININ |= WININ_WIN0_CLR;
     PortPpu_Render(sFrame);
     assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff7b7b00u);
+
+    // The original underwater field uses these window/blend registers.
+    REG_DISPCNT = DISPCNT_BG1_ON | DISPCNT_OBJ_ON | DISPCNT_WIN0_ON | DISPCNT_WIN1_ON;
+    REG_WIN0H = REG_WIN0V = 0x00ff;
+    REG_WIN1H = REG_WIN1V = 0xffff;
+    REG_WININ = 0x1f1f;
+    REG_WINOUT = 0x0101;
+    REG_BLDCNT = 0x1e40;
+    REG_BLDALPHA = 0x1004;
+    PortPpu_Render(sFrame);
+    assert(sFrame[5 * PORT_SCREEN_WIDTH + 5] == 0xff0039ffu);
+    REG_BLDALPHA = BLDALPHA_BLEND(8, 8);
 
     oam[0] = 5; // Ordinary OBJ selected as first target.
     REG_DISPCNT = DISPCNT_BG0_ON | DISPCNT_OBJ_ON;
