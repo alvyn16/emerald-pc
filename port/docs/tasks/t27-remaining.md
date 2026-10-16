@@ -39,7 +39,9 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   de R04 sigue pendiente (detalle en campaign-progress.md). Magma/Fuerza,
   Tatiano, despertar de Groudon y Maxie: PASS; replay/Continue de Maxie PASS.
   Aqua: robo, paneles/Master Ball, Matías y salida marítima antes/después PASS;
-  repeticiones y recarga de la victoria PASS. Mossdeep y siguientes pendientes.
+  repeticiones y recarga de la victoria PASS. Mossdeep: circuito completo, victoria original y Continue PASS; repeticion
+  de derrota normal documentada. Centro Espacial y entrega/ensenanza de Dive
+  por UI, replays y Continue PASS. Uso submarino, Seafloor y siguientes pendientes.
 - [ ] R05: Waterfall, Victory Road, acceso a Liga, ocho medallas y crÃ©ditos
   desde esa misma partida; sin warps del harness ni equipo preparado. Recarga
   final: game-clear, equipo y Hall of Fame vÃ¡lidos. Capturas privadas.

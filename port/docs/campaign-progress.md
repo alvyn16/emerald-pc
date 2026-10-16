@@ -1047,3 +1047,40 @@ por UI. PASS, sin senales, salida normal
 victoria permanece separada en --phase r04-mossdeep-leaders y no se acredita
 como PASS. No se alteraron RNG, equipo, dano ni resultado de combate. La
 linea principal continua desde su victoria real; R04 sigue abierto.
+
+### Centro Espacial y entrega real de Buceo
+
+Tras la medalla se uso el transporte de retorno propio del gimnasio (21,6):
+script normal hacia (7,30), salida a ciudad y curacion en el Centro. La marcha
+hacia (42,24) activa los reclutas que bloqueaban el acceso oriental: ciudad
+pasa de 1 a 2. r04-space-center-entry conserva el primer piso y estado de
+Centro Espacial=1. Hablar al guardia desde (13,3), UP, vence al trainer 116,
+lo aparta (0x409E=2) y permite subir por (13,1). Arriba se derrotan los tres
+reclutas consecutivos 588/589/590, estado 0x409F=2.
+`--phase r04-space-upper`: PASS, sin senales y salida normal
+(`build/t27-natural-space-upper-replay.log`).
+
+La primera conversacion con Steven activa 0xCD. r04-steven-ready (535144)
+guarda (3,8), antes de aceptar el combate. En el menu real se eligieron los
+slots 0/1/3: gSelectedOrderFromParty=[1,2,4,0,0,0], seguido de Confirm.
+Se vence junto a Steven: outcome=1, flag 0x75=1, ciudad y Centro=3, casa de
+Steven (0x40C6)=1. El juego restaura el equipo original de cuatro Pokemon,
+retirando el equipo temporal del companero. r04-steven-result (566152),
+equipo 48/35/21/25, once Hyper Potions, Master Ball=1, dinero 38567.
+`--phase r04-steven`: PASS, sin senales, salida normal
+(`build/t27-natural-steven-replay.log`). Captura privada del menu de seleccion:
+`build/natural-campaign/r04-steven-party.png`.
+
+Al salir y entrar a la casa (19,11), UP, el script entrega HM08: 0x7B pasa
+de 0 a 1, cantidad 346 de 0 a 1 y casa de 1 a 2. El learnset original rechaza
+Pelipper; el chequeo previo del harness lo detecto sin abrir la mochila.
+Se uso Swampert, sustituyendo Blizzard por Dive (291) mediante la UI; sus
+movimientos ahora son Rock Smash, Dive, Strength y Surf. HM08 conserva cantidad 1.
+`--phase r04-dive-gift`: PASS, sin senales y salida normal
+(`build/t27-natural-dive-gift-replay.log`).
+
+r04-dive-verified (579212), casa (3,7), registra tambien los flags 0x75/0xCD/0x7B
+y la variable de la casa. Continue conserva esos eventos, siete medallas,
+HM08, movimientos, objetos equipados y dinero, sin modificar el archivo:
+PASS (`build/t27-dive-verified-reload.log`). R04 sigue abierto: falta usar
+Buceo, Seafloor, Sky Pillar/Rayquaza, Sootopolis y la octava medalla.

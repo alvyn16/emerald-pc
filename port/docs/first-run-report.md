@@ -1046,3 +1046,13 @@ sin senal: el juego retorna al exterior del Centro y cura al equipo. Se
 registra como derrota, no como cierre ni como repeticion de victoria.
 No hay nuevo fallo nativo que justifique un parche tras 0043 en este tramo.
 Detalles y limites de cobertura: campaign-progress.md; R04/T27 abiertos.
+
+## T27 natural: Centro Espacial y Buceo recibido
+
+La ruta por las dos plantas, los tres reclutas seguidos, seleccion de tres
+Pokemon y combate junto a Steven terminan normalmente. Las repeticiones
+r04-space-upper, r04-steven y r04-dive-gift dan PASS; Continue de
+r04-dive-verified conserva los eventos y el movimiento aprendido.
+La incompatibilidad de Pelipper con Dive es un dato original de learnset,
+no una excepcion; se enseno a Swampert. No hubo nuevo fallo nativo en este
+tramo. El uso submarino y el resto de R04 todavia no quedan acreditados.
