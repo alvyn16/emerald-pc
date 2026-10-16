@@ -1144,3 +1144,27 @@ r04-kyogre-verified valida su persistencia, sin cambiar el save.
 No aparecio otra excepcion nativa en ese tramo. La niebla se corrigio en el
 PPU propio, descrito arriba. Sky Pillar/Sootopolis y el resto de R04-R15 siguen
 pendientes; no se declara completo T27.
+
+## T27: objeto de camara sin plantilla al llegar a Sootopolis (0046)
+
+La llegada natural por Dive produjo SIGSEGV en
+GetObjectEventFlagIdByLocalIdAndMap+40 (EIP 0x10185BFA, EAX=0): lectura
+movzwl 0x14(%eax),%eax. RemoveCameraObject intenta retirar LOCALID_CAMERA=127
+(mapNum=7, mapGroup=0). Es un objeto creado en runtime por SpawnCameraObject,
+sin plantilla en el mapa. La funcion ya tenia un guard bajo UBFIX, pero el
+build C host no define UBFIX globalmente (0007 solo adapta SAFE_DIV).
+0046 habilita ese mismo guard con PORT_PC: devuelve flag 0, que FlagSet trata
+como no-op, y deja que la retirada original del objeto termine. No altera GBA.
+
+Antes: t27-sootopolis-camera-before-fix-gdb.log reproduce el SIGSEGV.
+Despues de 0046 aparecio ademas la espera DMA descrita en 0047 mas abajo;
+no se declara que 0046 por si solo resuelva toda la escena. Con ambos parches,
+--phase r04-sootopolis-entry PASS: dos creaciones de camara observadas, ninguna
+camara activa al terminar, campo desbloqueado en (29,53), estado de ciudad 2,
+guardado por menu y salida normal. Registro privado:
+build/natural-campaign-replay-r04-sootopolis-entry/campaign.log.
+Build host, 21 suites y verify-normal PASS (t27-camera-host-build.log).
+GBA compare OK (t27-camera-gba-compare.log). Checkout limpio con 0046:
+arbol 975e42ad9efd86b763bced6234a2d109e93dbc90 y ambos builds/21 suites PASS
+(t27-camera-clean-build.log). La campana y el replay terminaron la llegada
+con 0047 aplicado tambien; Sky Pillar y la octava medalla siguen pendientes.

@@ -1,0 +1,26 @@
+From 5df2f7a23618fc9c6ce6d69c4ff5dda4c2fa55c1 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Thu, 15 Oct 2026 23:09:28 -0400
+Subject: [PATCH] Enable host null template guard for runtime camera object
+ flags
+
+---
+ src/event_object_movement.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/event_object_movement.c b/src/event_object_movement.c
+index 02e1fce..6b9ae87 100644
+--- a/src/event_object_movement.c
++++ b/src/event_object_movement.c
+@@ -2379,7 +2379,7 @@ const u8 *GetObjectEventScriptPointerByObjectEventId(u8 objectEventId)
+ static u16 GetObjectEventFlagIdByLocalIdAndMap(u8 localId, u8 mapNum, u8 mapGroup)
+ {
+     const struct ObjectEventTemplate *obj = GetObjectEventTemplateByLocalIdAndMap(localId, mapNum, mapGroup);
+-#ifdef UBFIX
++#if defined(UBFIX) || defined(PORT_PC)
+     // BUG: The function may return NULL, and attempting to read from NULL may freeze the game using modern compilers.
+     if (obj == NULL)
+         return 0;
+-- 
+2.50.0.windows.1
+
