@@ -1021,3 +1021,29 @@ Se repitio el circuito tras volver a entrar; el guardado r04-mossdeep-battle-rea
 `build/natural-campaign/r04-mossdeep-battle-ready.png`, sala y lideres visibles.
 ROM/save originales mantienen sus hashes. No hay cambios al juego en este
 incremento; R04 y las coberturas siguientes siguen abiertos.
+
+### Septima medalla: victoria original, persistencia y derrota de repeticion
+
+La campana principal vencio a Tate/Liza en su primer intento: outcome=1,
+trainer 271=1 y badge 0x86D=1 en frame 493092. La recompensa activo tambien
+FLAG_DEFEATED_MOSSDEEP_GYM (0x4F6), Calm Mind (0xAB), ciudad 0x405D=1 y
+Centro Espacial 0x409F=1; antes del combate todos estaban a cero.
+r04-mossdeep-win (495252) guarda (23,9), siete medallas, equipo 48/34/21/25,
+doce Hyper Potions, Master Ball=1 y dinero 29647. Continue valida ahora estos
+campos nuevos ademas del manifiesto anterior: PASS, archivo sin cambios
+(`build/t27-mossdeep-win-reload.log`).
+
+La repeticion independiente NO repitio la victoria: outcome=2, retorno normal
+al exterior del Centro de Mossdeep (28,17), sin senal. Se conserva el fallo
+de la expectativa de victoria en `build/t27-natural-mossdeep-leaders-replay.log`
+y su campaign.log. Una primera comprobacion de derrota esperaba por error el
+interior del Centro; el ultimo route.jsonl mostro el exterior y se corrigio
+solo la asercion del harness. Su log queda como loss-incorrect-map-expectation.log.
+
+`--phase r04-mossdeep-leaders-loss` verifica explicitamente ESA derrota:
+ninguna medalla/recompensa/trainer/evento concedido, equipo curado y guardado
+por UI. PASS, sin senales, salida normal
+(`build/t27-natural-mossdeep-leaders-loss-replay.log`). La expectativa de
+victoria permanece separada en --phase r04-mossdeep-leaders y no se acredita
+como PASS. No se alteraron RNG, equipo, dano ni resultado de combate. La
+linea principal continua desde su victoria real; R04 sigue abierto.

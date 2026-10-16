@@ -71,3 +71,36 @@ def circuit():
     pads.activate(5)
     pads.activate(6)
     return purple_room(None)
+
+
+def leaders(expected_outcome=1):
+    assert d.field_ready(d.state()) and d.state()['map'] == 'MossdeepCity_Gym'
+    assert (d.state()['x'],d.state()['y']) == (23,9)
+    assert d.value('(int)HasTrainerBeenFought(271)') == 0
+    for flag in (0x86d,0x4f6,0xab):
+        assert d.value(f'(int)FlagGet({flag})') == 0
+    for var in (0x405d,0x409f):
+        assert d.value(f'(int)VarGet({var})') == 0
+    d.talk(23,8,'UP',120000)
+    assert d.memory('gBattleOutcome',1)[0] == expected_outcome, d.state()
+    if expected_outcome == 2:
+        assert d.state()['map'] == 'MossdeepCity', d.state()
+        assert (d.state()['x'],d.state()['y']) == (28,17)
+        for slot in range(d.state()['party']):
+            mon=f'(void *)((char *)&gPlayerParty+{slot*100})'
+            assert d.value(f'(int)GetMonData3({mon},57,0)') == d.value(f'(int)GetMonData3({mon},58,0)')
+        assert d.value('(int)HasTrainerBeenFought(271)') == 0
+        for flag in (0x86d,0x4f6,0xab):
+            assert d.value(f'(int)FlagGet({flag})') == 0
+        for var in (0x405d,0x409f):
+            assert d.value(f'(int)VarGet({var})') == 0
+        return d.save_checkpoint('r04-mossdeep-defeat')
+    assert expected_outcome == 1
+    assert d.state()['map'] == 'MossdeepCity_Gym'
+    assert d.value('(int)HasTrainerBeenFought(271)') == 1
+    for flag in (0x86d,0x4f6,0xab):
+        assert d.value(f'(int)FlagGet({flag})') == 1
+    for var in (0x405d,0x409f):
+        assert d.value(f'(int)VarGet({var})') == 1
+    d.go(23,9)
+    return d.save_checkpoint('r04-mossdeep-win')

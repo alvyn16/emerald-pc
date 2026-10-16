@@ -1035,3 +1035,14 @@ cd4312af599d1212c62ae2a72dca15631fec46c3, idéntico al upstream local, y compila
 normal/diagnóstico con las 21 suites y verify-normal: PASS
 (`build/t27-fly-clean-build.log`). R04–R15 siguen pendientes; no se ha
 verificado todavía el resto de la campaña ni se declara otro fallo observado.
+
+## T27 natural: Mossdeep sin nueva excepcion
+
+El puzzle completo de suelo/transportes llega a los lideres mediante teclas;
+la repeticion desde la entrada termina normalmente (t27-natural-mossdeep-circuit-replay.log).
+La campana original vence a Tate/Liza, recibe la septima medalla y conserva
+recompensas y eventos al usar Continue. Una repeticion pierde con outcome=2
+sin senal: el juego retorna al exterior del Centro y cura al equipo. Se
+registra como derrota, no como cierre ni como repeticion de victoria.
+No hay nuevo fallo nativo que justifique un parche tras 0043 en este tramo.
+Detalles y limites de cobertura: campaign-progress.md; R04/T27 abiertos.
