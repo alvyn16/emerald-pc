@@ -1115,3 +1115,31 @@ con objetos de mapa, tambien conserva su manifiesto: PASS.
 Host, 21 suites, GBA compare y reproduccion de 0045 en checkout limpio: PASS.
 La linea principal reanuda ese mismo save submarino con el nuevo binario;
 los dos procesos detenidos por las excepciones quedan documentados en sus logs.
+
+### Seafloor: primeras dos salas y empujes observados
+
+Tras Continue con 0045, la campana vuelve a emerger y guarda
+r04-seafloor-entry (12652), Entrance (10,17), y r04-seafloor-room1 (15552),
+(5,18). Estos frames pertenecen al nuevo proceso iniciado en 10000.
+
+La primera maniobra exploratoria empujo el bloque izquierdo hacia el este,
+cerrando el corredor. Se salio normalmente a Entrance y se volvio a entrar
+para reiniciar el puzzle. La ruta correcta rompe la roca desde (4,10), RIGHT;
+activa Fuerza desde (5,12), UP; empuja el bloque 1 una vez UP a (5,10), y el
+bloque 2 una vez RIGHT desde (11,11) a (13,11). El paso norte lleva a Room2
+(10,7): r04-seafloor-room2 (24960). --phase r04-seafloor-first-room: PASS,
+sin senales y salida normal (t27-seafloor-first-room-replay.log).
+
+Room2: Golpe Roca desde (9,7), LEFT; Fuerza desde (4,6), UP; tres empujes del
+bloque 4 hasta (4,2). El paso (6,1) lleva a Room6 (11,21), guardado
+r04-seafloor-currents-entry (30516). --phase r04-seafloor-second-room: PASS,
+sin senales y salida normal (t27-seafloor-second-room-replay.log).
+Un intento exploratorio de seguir empujando el bloque 5 hacia (7,2) fue
+rechazado por una pared; el helper termino con un limite explicito. La ruta
+repetida no necesita tocar ese bloque. No fue un bloqueo del juego.
+
+El helper propio push comprueba la casilla del jugador, el ID y las coordenadas
+del bloque antes/despues de cada pulsacion; solo reintenta una tecla ignorada,
+con un limite de cuatro. No llama rutinas de movimiento ni escribe objetos.
+Estos recorridos tambien ejercitan los scripts restaurados por Continue en
+mapas con objetos despues de 0045. R04 y las salas posteriores siguen abiertos.
