@@ -619,7 +619,7 @@ def harbor_submarine():
 
 def aqua_master_ball():
     """Solve the real pad puzzle and collect the two left-hand item balls."""
-    import aqua_warp_driver as pads
+    import map_warp_driver as pads
     assert d.state()['map'] == 'AquaHideout_B1F'
     assert d.value('(int)CountTotalItemQuantityInBag(1)') == 0
     assert d.value('(int)FlagGet(0x464)') == 0
@@ -649,7 +649,7 @@ def wailmer_gate_closed():
 
 
 def aqua_to_matt():
-    import aqua_warp_driver as pads
+    import map_warp_driver as pads
     assert d.state()['map'] == 'AquaHideout_B1F'
     assert d.value('(int)CountTotalItemQuantityInBag(1)') == 1
     assert d.value('(int)FlagGet(0x70)') == 0

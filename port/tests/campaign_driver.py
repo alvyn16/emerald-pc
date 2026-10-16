@@ -725,6 +725,11 @@ def save_checkpoint(name):
 
 def path_to(x,y):
     current = state(); goal=(x+7,y+7)
+    switches=set()
+    if current['map'] == 'MossdeepCity_Gym':
+        events=json.loads((ROOT/'pokeemerald/data/maps/MossdeepCity_Gym/map.json').read_text())['coord_events']
+        switches={(event['x']+7,event['y']+7) for event in events
+                  if event.get('script','').endswith('FloorSwitch')}
     width,height,address = struct.unpack("<III",memory("gBackupMapLayout",12))
     cells = struct.unpack("<%dH" % (width*height),bytes(gdb.selected_inferior().read_memory(address,width*height*2)))
     read=gdb.selected_inferior().read_memory
@@ -767,8 +772,8 @@ def path_to(x,y):
                 continue
             cell=cells[point[1]*width+point[0]]
             behavior=attributes[cell&0x3ff]&0xff
-            # Pools and Aqua pads would relocate the player en route.
-            if behavior in (0x29,0x67,0x68) and point != goal:
+            # Pools/pads relocate the player; gym switches move obstacles.
+            if (behavior in (0x0e,0x29,0x67,0x68) or point in switches) and point != goal:
                 continue
             ledges={'RIGHT':(0x38,0x3c,0x3e),'LEFT':(0x39,0x3d,0x3f),
                     'UP':(0x3a,0x3c,0x3d),'DOWN':(0x3b,0x3e,0x3f)}

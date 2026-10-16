@@ -949,3 +949,22 @@ Pelipper con Exp. Share, cuatro Hyper Potions, Master Ball=1 y dinero 21247.
 El nivel de Pelipper aumentó durante los combates reales de Route124.
 ROM y save originales conservan sus hashes previos. Sigue pendiente el
 puzzle/líder de Mossdeep y el resto de R04–R15.
+
+### Transporte compartido y primera sala de Mossdeep
+
+El helper propio de pads se renombra de aqua_warp_driver.py a
+map_warp_driver.py: conserva Aqua (comportamiento 0x67) y admite los pads
+0x0E de Mossdeep. Lee origen/destino de los JSON locales, entra por teclas y
+exige el destino exacto; no llama a funciones de warp ni escribe coordenadas.
+La repeticion completa de la Master Ball con el nuevo modulo da PASS, sin
+senales y con salida normal (`build/t27-natural-map-pad-regression.log`).
+
+El buscador evita pads intermedios y, en Mossdeep, interruptores intermedios:
+los giros se solicitan como destinos explicitos. Desde r04-mossdeep-gym-entry
+(350076), las pulsaciones sobre (3,30) y (2,21) ejecutaron dos llamadas reales
+a MoveRotatingTileObjects, observadas sin detener ni omitir la funcion. El
+pad 2 llevo a (1,23) y el pad 4 a (8,12), ambos en el mismo mapa y con los
+destinos previstos. Los combates dobles de las salas se resolvieron normalmente.
+Se guardo r04-mossdeep-blue-room (369384), seis medallas y equipo 47/32/19/25,
+Pelipper aun con Exp. Share. El puzzle y los lideres siguen pendientes; estas
+comprobaciones no cierran Mossdeep ni R04.
