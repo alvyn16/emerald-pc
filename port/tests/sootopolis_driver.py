@@ -64,3 +64,104 @@ def wallace():
     assert d.value('(int)VarGet(0x405e)') == 3
     print('NATURAL WALLACE SKY PILLAR PASS',d.state())
     return d.save_checkpoint('r04-wallace-sky-pillar')
+
+
+def pillar_open():
+    """Enter from Route131 and let Wallace open the tower by script."""
+    assert d.state()['map'] == 'Route131'
+    assert d.value('(int)VarGet(0x405e)') == 3
+    assert d.value('(int)FlagGet(0x137)') == 1
+    d.RUN_WILD=True
+    d.go(36,7); d.cross('UP','SkyPillar_Entrance')
+    d.warp_to(14,4,'SkyPillar_Outside',100000)
+    d.settle(100000)
+    assert d.value('(int)VarGet(0x405e)') == 4
+    assert d.field_ready(d.state())
+    print('NATURAL SKY PILLAR OPEN',d.state())
+    return d.save_checkpoint('r04-sky-pillar-open')
+
+
+def pillar_climb():
+    """Climb the early-story layouts, including the intended cracked-floor fall."""
+    assert d.state()['map'] == 'SkyPillar_Outside'
+    assert d.value('(int)VarGet(0x405e)') == 4
+    assert d.value('(int)VarGet(0x40ca)') == 0
+    d.RUN_WILD=True
+    d.go(14,6); d.cross('UP','SkyPillar_1F')
+    for x,y,target in ((10,1,'SkyPillar_2F'),(3,1,'SkyPillar_3F'),
+                       (11,1,'SkyPillar_4F')):
+        d.warp_to(x,y,target,80000)
+    # The western stairs are isolated. Walking onto the cracked tiles drops
+    # through the actual hole into 3F's central compartment.
+    d.go(7,4); d.settle(30000)
+    assert d.state()['map'] == 'SkyPillar_3F'
+    assert (d.state()['x'],d.state()['y']) == (6,4)
+    for x,y,target in ((7,1,'SkyPillar_4F'),(3,1,'SkyPillar_5F'),
+                       (10,1,'SkyPillar_Top')):
+        d.warp_to(x,y,target,80000)
+    d.go(14,10)
+    print('NATURAL SKY PILLAR CLIMB PASS',d.state())
+    return d.save_checkpoint('r04-rayquaza-ready')
+
+
+def awaken():
+    assert d.state()['map'] == 'SkyPillar_Top'
+    assert d.value('(int)VarGet(0x405e)') == 4
+    assert d.value('(int)VarGet(0x40ca)') == 0
+    d.go(14,9,dialogue_limit=100000); d.settle(100000)
+    assert d.value('(int)VarGet(0x405e)') == 5
+    assert d.value('(int)VarGet(0x40ca)') == 1
+    assert d.field_ready(d.state())
+    objects=d.memory('gObjectEvents',16*36)
+    assert not any(objects[i*36]&1 and objects[i*36+8] == 127 for i in range(16))
+    print('NATURAL RAYQUAZA AWAKENED',d.state())
+    return d.save_checkpoint('r04-rayquaza-awakened')
+
+
+def peace():
+    """Fly back legally; observe all five loaders and capture their rendered frames."""
+    assert d.state()['map'] == 'SkyPillar_Top'
+    assert d.value('(int)VarGet(0x405e)') == 5
+    assert d.value('(int)VarGet(0x40ca)') == 1
+    loads=[]
+    captured=set()
+
+    class SceneObservation(gdb.Breakpoint):
+        def stop(self):
+            self.calls += 1
+            loads.append((self.label,d.value('sDiagnosticFrame')))
+            return False
+
+    advance=d.advance
+    def capture_advance(*args,**kwargs):
+        current=advance(*args,**kwargs)
+        if loads and current['callback'] == 'CB2_RayquazaScene':
+            label,loaded=loads[-1]
+            if label not in captured and current['frame'] >= loaded+100:
+                path=(d.SCRATCH/('rayquaza-scene-'+label+'.raw')).as_posix()
+                gdb.execute(f'dump binary memory {path} &sPixels ((char *)&sPixels)+153600')
+                captured.add(label)
+        return current
+
+    observers=[]
+    try:
+        for label in ('LoadDuoFightSceneGfx','LoadTakesFlightSceneGfx',
+                      'LoadDescendsSceneGfx','LoadChargesSceneGfx','LoadChasesAwaySceneGfx'):
+            observer=SceneObservation(label,internal=True)
+            observer.label=label; observer.calls=0; observer.silent=True
+            observers.append(observer)
+        d.advance=capture_advance
+        d.fly_to('SootopolisCity'); d.settle(100000)
+        assert all(observer.calls == 1 for observer in observers), loads
+        assert len(captured) == 5, captured
+        assert d.value('(int)VarGet(0x40ca)') == 3
+        assert d.value('(int)FlagGet(0x53)') == 0
+        assert d.field_ready(d.state())
+        objects=d.memory('gObjectEvents',16*36)
+        assert not any(objects[i*36]&1 and objects[i*36+8] == 127 for i in range(16))
+        print('NATURAL RAYQUAZA PEACE PASS',loads,d.state())
+        return d.save_checkpoint('r04-sootopolis-peace')
+    finally:
+        d.advance=advance
+        for observer in observers:
+            observer.delete()

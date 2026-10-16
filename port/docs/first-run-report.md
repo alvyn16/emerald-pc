@@ -1194,3 +1194,25 @@ t27-rayquaza-dma-host-build.log. GBA compare: pokeemerald.gba: OK
 arbol f86fa9af402b714f06e6d7ad8c0a9e89975451f4 y ambos builds/21 suites PASS
 (t27-rayquaza-dma-clean-build.log). El replay nuevo usa solo teclado y lecturas
 de GDB; SpawnCameraObject se observa mediante un breakpoint que no detiene.
+
+## T27: los cinco segmentos de Rayquaza ya ejecutados
+
+Tras subir Sky Pillar y despertar a Rayquaza por el evento original, Fly
+regresa legalmente a Sootopolis y ejecuta la escena completa. Tanto la campana
+como --phase r04-rayquaza-peace observan exactamente una llamada a cada uno de
+los cinco loaders: duo, vuelo, descenso, carga y retirada. Ninguna espera de
+0047 vuelve a bloquear. Se conserva una captura por segmento 100+ frames tras
+su carga, usando solo lectura de sPixels desde el checkpoint del host.
+Capturas privadas: build/natural-campaign-replay-r04-rayquaza-peace/
+rayquaza-scene-Load*SceneGfx.png. Se revisaron visualmente vuelo, descenso,
+carga y retirada: Rayquaza, nubes/niebla, luz y ambos legendarios son visibles.
+Las bandas negras corresponden al recorte original de esta escena.
+
+La escena termina en (43,32), VAR_SKY_PILLAR_STATE=3 y flag 0x53=0; ya no
+quedan camaras activas. Guardado real r04-sootopolis-peace (120352) y Continue
+completo PASS, sin reescribir el archivo (t27-sootopolis-peace-reload.log).
+Los replays de apertura, subida, despertar y paz pasan y salen normalmente:
+t27-sky-open-replay.log, t27-sky-climb-replay.log,
+t27-rayquaza-awaken-replay.log y t27-rayquaza-peace-replay.log.
+No aparecio otra excepcion nativa en este tramo. La octava medalla y R05-R15
+siguen pendientes; T27 permanece abierto.

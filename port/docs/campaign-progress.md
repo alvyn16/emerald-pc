@@ -1227,3 +1227,27 @@ No aparecio excepcion en este tramo. R04 sigue abierto.
 Continue de r04-wallace-sky-pillar PASS, archivo sin modificar
 (t27-wallace-reload.log). setup.ps1 tambien termina idempotente con 47 parches
 (t27-setup-47-idempotent.log). ROM y save originales conservan sus hashes.
+
+### R04: Sky Pillar y Rayquaza completos hasta el regreso de la paz
+
+Viaje natural por Route127 -> 128 -> 129 -> 130 -> 131, con combates originales
+por el camino; r04-route131-entry (95340), equipo 49/38/21/25 y dinero 46571.
+Desde (36,7), UP entra a SkyPillar_Entrance; escalera (14,4) inicia el evento
+original de Wallace/terremotos. Ciudad=4, r04-sky-pillar-open (102020).
+--phase r04-sky-open PASS. Primera subida por los layouts de historia,
+sin Mach Bike ni modificacion de tiles: 1F(10,1), 2F(3,1), 3F(11,1).
+En 4F la escalera occidental esta aislada. Caminar hacia (7,4) pisa el suelo
+agrietado de (6,4) y cae realmente a 3F (6,4). Desde el compartimento central,
+escalera (7,1), 4F(3,1) y 5F(10,1) llevan a la cima. No se fuerza el warp.
+--phase r04-sky-climb PASS, incluido el agujero original.
+
+r04-rayquaza-ready se guarda antes del disparador; caminar a (14,9) despierta
+al legendario y usa las camaras de 0046. Ciudad=5 y SkyPillar=1;
+r04-rayquaza-awakened (113464). --phase r04-rayquaza-awaken PASS.
+Fly por menu a Sootopolis ejecuta los cinco loaders de la escena completa,
+exactamente una vez cada uno; las cinco esperas de 0047 devuelven control.
+--phase r04-rayquaza-peace PASS con cinco capturas de frames visibles.
+r04-sootopolis-peace (120352), (43,32), SkyPillar=3 y flag0x53=0.
+Continue valida todo el manifiesto y deja el archivo igual: PASS.
+No hay nueva excepcion. La entrega de Waterfall y octava medalla siguen
+pendientes. R04-R15 y T27 permanecen abiertos.
