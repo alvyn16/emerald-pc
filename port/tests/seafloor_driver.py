@@ -72,3 +72,30 @@ def second_room():
     d.go(6,2); d.cross('UP','SeafloorCavern_Room6')
     assert (d.state()['x'],d.state()['y']) == (11,21)
     return d.save_checkpoint('r04-seafloor-currents-entry')
+
+
+def currents():
+    assert d.state()['map'] == 'SeafloorCavern_Room6'
+    assert (d.state()['x'],d.state()['y']) == (11,21)
+    d.RUN_WILD=True
+    d.talk(11,20,'UP')
+    assert (d.state()['x'],d.state()['y']) == (11,19)
+    assert d.memory('gPlayerAvatar',1)[0]&8
+    # These are measured endpoints of the original current arrows.
+    for button,target in (('UP',(14,16)),('RIGHT',(19,11)),
+                          ('RIGHT',(8,12)),('LEFT',(4,8))):
+        current=d.state(); origin=current['x'],current['y']
+        for _ in range(4):
+            d.advance(button,600,4); d.settle(30000)
+            current=d.state(); actual=current['x'],current['y']
+            assert current['map'] == 'SeafloorCavern_Room6' and actual in (origin,target), current
+            if actual == target:
+                break
+        else:
+            raise RuntimeError('Current route key deadline')
+        print('NATURAL CURRENT ENDPOINT PASS',button,target,current['frame'])
+    d.go(4,2)
+    assert not d.memory('gPlayerAvatar',1)[0]&8
+    d.cross('UP','SeafloorCavern_Room3')
+    assert (d.state()['x'],d.state()['y']) == (4,15)
+    return d.save_checkpoint('r04-seafloor-shelly-entry')

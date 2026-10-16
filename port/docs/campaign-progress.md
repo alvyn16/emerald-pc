@@ -1143,3 +1143,16 @@ del bloque antes/despues de cada pulsacion; solo reintenta una tecla ignorada,
 con un limite de cuatro. No llama rutinas de movimiento ni escribe objetos.
 Estos recorridos tambien ejercitan los scripts restaurados por Continue en
 mapas con objetos despues de 0045. R04 y las salas posteriores siguen abiertos.
+
+### Corrientes originales hasta la sala de Shelly
+
+En Room6 se acepto Surf desde (11,20), UP. Cuatro pulsaciones medidas siguen
+las flechas originales: UP termina en (14,16), RIGHT en (19,11), RIGHT en
+(8,12), LEFT en (4,8). Se comprueba cada destino y se deja terminar el arrastre;
+solo se repite una tecla si el jugador permanece en su origen, con limite.
+Desde ahi se camina a (4,2), se desembarca y se entra por UP a Room3 (4,15).
+r04-seafloor-shelly-entry (40080). --phase r04-seafloor-currents: PASS,
+sin senales y salida normal (t27-seafloor-currents-replay.log).
+La planificacion leyo los metatiles/flechas; la ejecucion solo envio teclas.
+La ruta repetida reduce los pasos ordinarios finales usando go; conserva
+las cuatro comprobaciones de arrastre. Sigue pendiente el evento final de Seafloor.
