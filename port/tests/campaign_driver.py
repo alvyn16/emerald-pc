@@ -29,7 +29,8 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "space_center_defeated":0x75,"steven_space_interacted":0xcd,
                "dive_received":0x7b,"kyogre_escaped":0x81,
                "legendaries_sootopolis":0x53,"steven_cave_guide":0x133,
-               "wallace_sky_pillar":0x137}
+               "wallace_sky_pillar":0x137,"waterfall_received":0x138,
+               "sootopolis_archie_maxie_left":0x9e}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}

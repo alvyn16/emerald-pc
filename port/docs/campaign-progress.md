@@ -1251,3 +1251,27 @@ r04-sootopolis-peace (120352), (43,32), SkyPillar=3 y flag0x53=0.
 Continue valida todo el manifiesto y deja el archivo igual: PASS.
 No hay nueva excepcion. La entrega de Waterfall y octava medalla siguen
 pendientes. R04-R15 y T27 permanecen abiertos.
+
+### R04/R05: regalo de Waterfall y rompecabezas de hielo por teclas
+
+Tras Fly a Sootopolis se cura realmente en el Centro Pokemon; desde la orilla
+(40,38), LEFT activa Surf y cruza a la isla central. Hablar con Maxie desde
+(33,36), UP, y Archie desde (34,36), UP, activa flag0x9e y el warp silencioso
+original a (31,34). Wallace entrega HM07/Waterfall: item345 pasa 0->1 y flag138
+0->1. r04-waterfall-gift (131008). Entrar por (31,33), UP lleva al gimnasio;
+r04-sootopolis-gym-entry (132436). --phase r04-waterfall-gift PASS, incluida la
+curacion, Surf, despedida de ambos equipos, regalo, entrada y guardados reales.
+No se ha ensenado ni usado Waterfall todavia.
+
+El driver propio lee el hielo fino (behavior26) y colision para calcular un
+camino que visite una vez cada casilla. Los tres tableros tienen 7/19/38
+casillas. Solo se emiten teclas a casillas adyacentes y se verifica su conversion
+a hielo agrietado (27), sin escribir tiles/variables. Una pulsacion corta puede
+solo girar al jugador: se reintenta un maximo de cuatro veces exclusivamente
+si las coordenadas no cambiaron. Los umbrales nativos de VAR_ICE_STEP_COUNT
+(4022) acaban en 9,29,68 al abrir cada escalera por su script original.
+La campana llega a Juan (8,3), r04-juan-ready (139908).
+--phase r04-sootopolis-ice PASS desde la entrada intacta: los tres tableros,
+guardado por menu y salida normal (t27-sootopolis-ice-replay.log).
+Captura privada r04-juan-ready.png muestra a Juan y el acceso despejado.
+El combate y la octava medalla aun no se declaran verificados.

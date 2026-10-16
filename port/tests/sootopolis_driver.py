@@ -165,3 +165,24 @@ def peace():
         d.advance=advance
         for observer in observers:
             observer.delete()
+
+
+def waterfall_gift():
+    assert d.state()['map'] == 'SootopolisCity'
+    assert d.value('(int)VarGet(0x40ca)') == 3
+    assert d.value('(int)FlagGet(0x53)') == 0
+    assert d.value('(int)FlagGet(0x138)') == 0
+    assert d.value('(int)CountTotalItemQuantityInBag(345)') == 0
+    d.go(43,32); d.cross('UP','SootopolisCity_PokemonCenter_1F'); d.nurse()
+    d.go(7,8); d.cross('DOWN','SootopolisCity')
+    d.talk(40,38,'LEFT')  # Surf from the eastern bank to the central island.
+    assert d.memory('gPlayerAvatar',1)[0]&8
+    d.talk(33,36,'UP',60000); d.talk(34,36,'UP',60000)
+    assert d.value('(int)FlagGet(0x9e)') == 1
+    d.talk(31,34,'UP',60000)
+    assert d.value('(int)FlagGet(0x138)') == 1
+    assert d.value('(int)CountTotalItemQuantityInBag(345)') == 1
+    print('NATURAL WATERFALL GIFT PASS',d.state())
+    d.save_checkpoint('r04-waterfall-gift')
+    d.go(31,33); d.cross('UP','SootopolisCity_Gym_1F')
+    return d.save_checkpoint('r04-sootopolis-gym-entry')
