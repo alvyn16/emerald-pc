@@ -10,7 +10,7 @@ from process_watchdog import run_logged
 def main():
     project=Path(__file__).resolve().parents[2]
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum","r02-rocksmash","r02-rest","r02-meteor","r02-connections","r02-shop","r02-jagged","r02-flannery","r03-petalburg","r03-norman","r03-strength","r03-surf","r03-weather","r03-rival","r03-scope","r03-fly-gate","r03-gates","r03-tms","r03-winona","r03-fly","r04-pyre","r04-magma-entry","r04-maxie","r04-aqua-gate","r04-harbor","r04-master-ball","r04-wailmer-gate","r04-aqua-route","r04-matt","r04-exp-share","r03-surf-speed","r04-mossdeep-blue"),default="r01")
+    parser.add_argument("--phase",choices=("r01","r02-devon","r02-steven","r02-catch","r02-museum","r02-rocksmash","r02-rest","r02-meteor","r02-connections","r02-shop","r02-jagged","r02-flannery","r03-petalburg","r03-norman","r03-strength","r03-surf","r03-weather","r03-rival","r03-scope","r03-fly-gate","r03-gates","r03-tms","r03-winona","r03-fly","r04-pyre","r04-magma-entry","r04-maxie","r04-aqua-gate","r04-harbor","r04-master-ball","r04-wailmer-gate","r04-aqua-route","r04-matt","r04-exp-share","r03-surf-speed","r04-mossdeep-blue","r04-mossdeep-purple","r04-mossdeep-circuit"),default="r01")
     phase=parser.parse_args().phase
     scratch=project/("build/natural-campaign-replay" if phase == "r01" else "build/natural-campaign-replay-"+phase)
     for directory in ("build","roms","saves"):
@@ -29,7 +29,7 @@ def main():
                 'r02-meteor':'r02-fallarbor','r02-connections':'r02-fallarbor',
                 'r02-shop':'r02-fallarbor','r02-jagged':'r02-maxie-meteorite',
                 'r02-flannery':'r02-lavaridge','r03-petalburg':'r03-strength',
-                'r03-norman':'r03-petalburg','r03-strength':'r03-verdanturf','r03-surf':'r03-norman','r03-weather':'r03-weather-arrival','r03-rival':'r03-wingull-training','r03-scope':'r03-scope-supplies','r03-fly-gate':'r03-fly-learned','r03-gates':'r03-gym-entry','r03-tms':'r03-tm-counter','r03-winona':'r03-winona-ice-ready','r03-fly':'r03-fly-enabled','r04-pyre':'r04-mtpyre-arrival','r04-magma-entry':'r04-jagged-emblem','r04-maxie':'r04-maxie-ready','r04-aqua-gate':'r04-aqua-gate-ready','r04-harbor':'r04-slateport-harbor-ready','r04-master-ball':'r04-aqua-b1f','r04-wailmer-gate':'r04-aqua-gate-ready','r04-aqua-route':'r04-master-ball-verified','r04-matt':'r04-matt-ready','r04-exp-share':'r04-devon-exp-share-ready','r03-surf-speed':'r03-surf','r04-mossdeep-blue':'r04-mossdeep-blue-room'}
+                'r03-norman':'r03-petalburg','r03-strength':'r03-verdanturf','r03-surf':'r03-norman','r03-weather':'r03-weather-arrival','r03-rival':'r03-wingull-training','r03-scope':'r03-scope-supplies','r03-fly-gate':'r03-fly-learned','r03-gates':'r03-gym-entry','r03-tms':'r03-tm-counter','r03-winona':'r03-winona-ice-ready','r03-fly':'r03-fly-enabled','r04-pyre':'r04-mtpyre-arrival','r04-magma-entry':'r04-jagged-emblem','r04-maxie':'r04-maxie-ready','r04-aqua-gate':'r04-aqua-gate-ready','r04-harbor':'r04-slateport-harbor-ready','r04-master-ball':'r04-aqua-b1f','r04-wailmer-gate':'r04-aqua-gate-ready','r04-aqua-route':'r04-master-ball-verified','r04-matt':'r04-matt-ready','r04-exp-share':'r04-devon-exp-share-ready','r03-surf-speed':'r03-surf','r04-mossdeep-blue':'r04-mossdeep-blue-room','r04-mossdeep-purple':'r04-mossdeep-purple-room','r04-mossdeep-circuit':'r04-mossdeep-gym-entry'}
     save.write_bytes(b"\xff"*131072 if phase == "r01" else
                      (project/('build/natural-campaign/'+checkpoint[phase]+'.sav')).read_bytes())
     inputs=scratch/"input.txt"
@@ -85,6 +85,13 @@ d.go(3,7); d.cross('DOWN','FallarborTown')
 d.save_checkpoint('r02-shop-supplies')''',
         'r02-jagged':'''route.jagged_pass_to_lavaridge()''',
         'r04-aqua-route':'''route.aqua_to_matt()''',
+        'r04-mossdeep-circuit':'''import mossdeep_gym_driver as gym
+d.HEAL_ITEMS=(21,22,13)
+gym.circuit()
+d.save_checkpoint('r04-mossdeep-circuit-ready')''',
+        'r04-mossdeep-purple':'''import mossdeep_gym_driver as gym
+d.HEAL_ITEMS=(21,22,13)
+gym.purple_room()''',
         'r04-mossdeep-blue':'''import mossdeep_gym_driver as gym
 d.HEAL_ITEMS=(21,22,13)
 gym.blue_room()''',

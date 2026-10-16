@@ -990,3 +990,34 @@ El transporte inferior llega a un pasillo bloqueado por el grupo verde. Se
 regreso por el pad 11, se piso (8,10), y se usaron los pads 5 y 6 para entrar
 por la sala morada: r04-mossdeep-purple-room (404356), (23,20). No hubo una
 excepcion nativa en estos recorridos; Mossdeep/R04 siguen abiertos.
+
+### Puzzle completo de Mossdeep por pulsaciones
+
+Desde r04-mossdeep-purple-room: (23,21) una vez, (23,24) dos veces y
+(15,34) dos veces. El interruptor verde mueve tambien las plantillas que
+estan fuera de pantalla: se leyeron sus coordenadas sin escribirlas. Con un
+solo giro aun queda un callejon sin salida; con dos, el retorno inferior
+permite (11,35) -> (12,35) -> (12,34) -> (13,34) -> (13,33) -> (13,32).
+Para volver se pisa (23,21), pads 7 y 4, tres veces (8,10), pad 10 y pad 12.
+Este ultimo llega a (21,10); (23,9) deja una casilla antes de hablar al lider.
+
+La exploracion original tambien comprobo los pads 9/8 (atajo a la entrada),
+y se conserva en route.jsonl. La ruta reducida no necesita ese rodeo.
+`--phase r04-mossdeep-purple` inicial repitio el regreso al pasillo verde:
+PASS (`build/t27-natural-mossdeep-purple-replay.log`). La prueba completa
+actual `--phase r04-mossdeep-circuit` parte de r04-mossdeep-gym-entry,
+recorre amarillo, azul/rojo, morado y verde, y llega a (23,9), frame 72312:
+PASS, sin senales y con salida normal
+(`build/t27-natural-mossdeep-circuit-replay.log`). Mantiene seis medallas;
+no inicia ni acredita aun el combate contra los lideres. Equipo final de
+esa repeticion 47/34/19/25, con combates reales y Exp. Share.
+
+La campana principal llego por primera vez a (23,9) en frame 430864.
+Pelipper estaba debilitado; se salio por los transportes, se curo en el
+Centro (r04-mossdeep-rested, 439232) y se compraron doce Hyper Potions por
+14400. El inventario paso de cuatro a dieciseis y el dinero de 35647 a 21247.
+Se repitio el circuito tras volver a entrar; el guardado r04-mossdeep-battle-ready
+(458548) precede al combate. Captura privada revisada:
+`build/natural-campaign/r04-mossdeep-battle-ready.png`, sala y lideres visibles.
+ROM/save originales mantienen sus hashes. No hay cambios al juego en este
+incremento; R04 y las coberturas siguientes siguen abiertos.
