@@ -99,3 +99,51 @@ def currents():
     d.cross('UP','SeafloorCavern_Room3')
     assert (d.state()['x'],d.state()['y']) == (4,15)
     return d.save_checkpoint('r04-seafloor-shelly-entry')
+
+
+def shelly():
+    assert d.state()['map'] == 'SeafloorCavern_Room3'
+    assert d.value('(int)HasTrainerBeenFought(33)') == 0
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.go(9,4,dialogue_limit=100000); d.talk(9,4,'DOWN',100000)
+    assert d.value('(int)HasTrainerBeenFought(33)') == 1
+    assert d.memory('gBattleOutcome',1)[0] == 1
+    d.go(8,2); d.cross('UP','SeafloorCavern_Room8')
+    assert (d.state()['x'],d.state()['y']) == (5,12)
+    return d.save_checkpoint('r04-seafloor-final-puzzle-entry')
+
+
+def final_puzzle():
+    assert d.state()['map'] == 'SeafloorCavern_Room8'
+    assert (d.state()['x'],d.state()['y']) == (5,12)
+    d.RUN_WILD=True
+    d.talk(4,8,'UP'); push(1,'UP')
+    d.go(6,8); push(3,'UP')
+    d.go(6,7); push(2,'LEFT')
+    d.go(5,6); push(7,'UP')
+    push(6,'LEFT'); push(10,'UP')
+    d.go(5,5); push(8,'RIGHT'); push(11,'UP'); push(7,'LEFT')
+    d.go(5,3); d.cross('UP','SeafloorCavern_Room9')
+    assert (d.state()['x'],d.state()['y']) == (5,4)
+    return d.save_checkpoint('r04-seafloor-archie-entry')
+
+
+def archie():
+    assert d.field_ready(d.state()) and d.state()['map'] == 'SeafloorCavern_Room9'
+    assert (d.state()['x'],d.state()['y']) == (15,42)
+    assert d.value('(int)HasTrainerBeenFought(34)') == 0
+    assert d.value('(int)FlagGet(0x81)') == 0
+    assert d.value('(int)FlagGet(0x53)') == 0
+    for var in (0x407b,0x40a2,0x405e):
+        assert d.value(f'(int)VarGet({var})') == 0
+    assert d.value('(int)CountTotalItemQuantityInBag(314)') == 1
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.go(17,42,dialogue_limit=150000)
+    assert d.state()['map'] == 'Route128'
+    assert d.value('(int)HasTrainerBeenFought(34)') == 1
+    assert d.value('(int)FlagGet(0x81)') == 1
+    assert d.value('(int)FlagGet(0x53)') == 1
+    assert d.value('(int)VarGet(0x40a2)') == 1
+    assert d.value('(int)VarGet(0x405e)') == 1
+    assert d.value('(int)VarGet(0x407b)') == 2
+    return d.save_checkpoint('r04-kyogre-escaped')

@@ -1133,3 +1133,14 @@ La regresion falla antes y las 21 suites pasan despues; captura con los mismos
 registros muestra ahora la entrada, rocas y fondo submarino. Detalles y referencia
 primaria en ppu-model.md. Builds normales/diagnostico, reproduccion y GBA compare:
 PASS. El save original del usuario sigue intacto. No requiere parche upstream.
+
+## T27 natural: Seafloor completado hasta la salida de Kyogre
+
+Tras 0044/0045 se resolvieron por teclado las salas de rocas, corrientes,
+Shelly y los nueve empujes finales. Los replays de Shelly, puzzle y Archie
+terminan sin senales y con salida normal. El script original de la orbe y
+Kyogre retorna a Route128 y activa los eventos de Sootopolis; Continue de
+r04-kyogre-verified valida su persistencia, sin cambiar el save.
+No aparecio otra excepcion nativa en ese tramo. La niebla se corrigio en el
+PPU propio, descrito arriba. Sky Pillar/Sootopolis y el resto de R04-R15 siguen
+pendientes; no se declara completo T27.

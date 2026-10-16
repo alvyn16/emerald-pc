@@ -1156,3 +1156,35 @@ sin senales y salida normal (t27-seafloor-currents-replay.log).
 La planificacion leyo los metatiles/flechas; la ejecucion solo envio teclas.
 La ruta repetida reduce los pasos ordinarios finales usando go; conserva
 las cuatro comprobaciones de arrastre. Sigue pendiente el evento final de Seafloor.
+
+### Shelly, ultimo puzzle de Fuerza y Kyogre
+
+La ruta desde Room3 (4,15) intercepta a Shelly al avanzar hacia (9,4).
+Trainer 33 queda derrotado; el acceso (8,1) lleva a Room8 (5,12).
+r04-seafloor-final-puzzle-entry (60436), equipo 48/36/21/25.
+--phase r04-seafloor-shelly: PASS (t27-seafloor-shelly-replay.log).
+
+Room8 se resuelve con nueve empujes, comprobando ID/posicion en cada paso:
+1 UP desde (4,8), 3 UP desde (6,8), 2 LEFT desde (6,7), 7 UP desde (5,6),
+6 LEFT, 10 UP, luego desde (5,5) 8 RIGHT, 11 UP y 7 LEFT. La salida (5,2)
+lleva a Room9 (5,4), r04-seafloor-archie-entry (67736).
+--phase r04-seafloor-final-puzzle: PASS (t27-seafloor-final-puzzle-replay.log).
+La roca se mueve solo por Fuerza/teclas; no se escriben objetos ni coordenadas.
+
+Se recogio TM26/Earthquake (314), desde (13,5), RIGHT: cantidad 1. La plataforma
+alta (17,40) es inaccesible y no es el disparador; se guardo antes del evento
+en el corredor inferior (15,42), r04-archie-ready (71240). Entrar por teclas
+a (17,42) inicia la escena y combate contra Archie (trainer 34): victoria,
+orb, despertar/salida de Kyogre, dialogo de Maxie y retorno original a Route128.
+Tras el dialogo exterior, Route128=2, Seafloor=1, Sootopolis=1; flags 0x81/0x53=1,
+trainer 34=1. Antes de entrar estaban todos a cero.
+--phase r04-archie: PASS, sin senales y con salida normal (t27-archie-replay.log).
+Las otras dos repeticiones tambien terminan sin senales y normalmente.
+
+r04-kyogre-verified (107400), Route128 (38,22): siete medallas, equipo 49/37/21/25,
+diez Hyper Potions, Master Ball=1, Earthquake=1, HM08=1 y dinero 44187.
+Se añadieron esos eventos/variables y TM26 al manifiesto. Continue conserva
+el estado completo sin modificar el archivo: PASS (t27-kyogre-verified-reload.log).
+La campana principal cerro limpiamente y reabrio el MISMO save con el renderer
+corregido para continuar. R04 sigue abierto para Sky Pillar/Rayquaza, Sootopolis
+y la octava medalla; R05-R15 tampoco estan cerrados.
