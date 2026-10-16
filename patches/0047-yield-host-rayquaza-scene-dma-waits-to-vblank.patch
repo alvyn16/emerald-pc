@@ -1,0 +1,86 @@
+From 9e9ce7797f758c15d3386e5787f336a285bee7b6 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Fri, 16 Oct 2026 16:04:02 -0400
+Subject: [PATCH] Yield host Rayquaza scene DMA waits to cooperative VBlank
+
+---
+ src/rayquaza_scene.c | 35 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 30 insertions(+), 5 deletions(-)
+
+diff --git a/src/rayquaza_scene.c b/src/rayquaza_scene.c
+index d97d463..1ddbcbd 100644
+--- a/src/rayquaza_scene.c
++++ b/src/rayquaza_scene.c
+@@ -1589,7 +1589,12 @@ static void LoadDuoFightSceneGfx(void)
+     ResetTempTileDataBuffers();
+     DecompressAndCopyTileDataToVram(0, gRaySceneDuoFight_Clouds_Gfx, 0, 0, 0);
+     while (FreeTempTileDataBuffersIfPossible())
+-        ;
++    {
++#ifdef PORT_PC
++        // Host IRQs advance only when control yields to the frame loop.
++        VBlankIntrWait();
++#endif
++    }
+     LZDecompressWram(gRaySceneDuoFight_Clouds2_Tilemap, sRayScene->tilemapBuffers[0]);
+     LZDecompressWram(gRaySceneDuoFight_Clouds1_Tilemap, sRayScene->tilemapBuffers[1]);
+     LZDecompressWram(gRaySceneDuoFight_Clouds3_Tilemap, sRayScene->tilemapBuffers[2]);
+@@ -2029,7 +2034,12 @@ static void LoadTakesFlightSceneGfx(void)
+     DecompressAndCopyTileDataToVram(1, gRaySceneTakesFlight_Bg_Gfx, 0, 0, 0);
+     DecompressAndCopyTileDataToVram(2, gRaySceneTakesFlight_Rayquaza_Gfx, 0, 0, 0);
+     while (FreeTempTileDataBuffersIfPossible())
+-        ;
++    {
++#ifdef PORT_PC
++        // Host IRQs advance only when control yields to the frame loop.
++        VBlankIntrWait();
++#endif
++    }
+     LZDecompressWram(gRaySceneDuoFight_Clouds2_Tilemap, sRayScene->tilemapBuffers[0]);
+     LZDecompressWram(gRaySceneTakesFlight_Bg_Tilemap, sRayScene->tilemapBuffers[1]);
+     LZDecompressWram(gRaySceneTakesFlight_Rayquaza_Tilemap, sRayScene->tilemapBuffers[2]);
+@@ -2232,7 +2242,12 @@ static void LoadDescendsSceneGfx(void)
+     DecompressAndCopyTileDataToVram(0, gRaySceneDescends_Light_Gfx, 0, 0, 0);
+     DecompressAndCopyTileDataToVram(1, gRaySceneDescends_Bg_Gfx, 0, 0, 0);
+     while (FreeTempTileDataBuffersIfPossible())
+-        ;
++    {
++#ifdef PORT_PC
++        // Host IRQs advance only when control yields to the frame loop.
++        VBlankIntrWait();
++#endif
++    }
+     LZDecompressWram(gRaySceneDescends_Light_Tilemap, sRayScene->tilemapBuffers[0]);
+     LZDecompressWram(gRaySceneDescends_Bg_Tilemap, sRayScene->tilemapBuffers[3]);
+     CpuFastFill16(0, sRayScene->tilemapBuffers[2], BG_SCREEN_SIZE);
+@@ -2483,7 +2498,12 @@ static void LoadChargesSceneGfx(void)
+     DecompressAndCopyTileDataToVram(2, gRaySceneCharges_Streaks_Gfx, 0, 0, 0);
+     DecompressAndCopyTileDataToVram(3, gRaySceneCharges_Bg_Gfx, 0, 0, 0);
+     while (FreeTempTileDataBuffersIfPossible())
+-        ;
++    {
++#ifdef PORT_PC
++        // Host IRQs advance only when control yields to the frame loop.
++        VBlankIntrWait();
++#endif
++    }
+     LZDecompressWram(gRaySceneCharges_Orbs_Tilemap, sRayScene->tilemapBuffers[0]);
+     LZDecompressWram(gRaySceneCharges_Rayquaza_Tilemap, sRayScene->tilemapBuffers[1]);
+     LZDecompressWram(gRaySceneCharges_Streaks_Tilemap, sRayScene->tilemapBuffers[2]);
+@@ -2668,7 +2688,12 @@ static void LoadChasesAwaySceneGfx(void)
+     DecompressAndCopyTileDataToVram(2, gRaySceneChasesAway_Ring_Gfx, 0, 0, 0);
+     DecompressAndCopyTileDataToVram(0, gRaySceneChasesAway_Light_Gfx, 0, 0, 0);
+     while (FreeTempTileDataBuffersIfPossible())
+-        ;
++    {
++#ifdef PORT_PC
++        // Host IRQs advance only when control yields to the frame loop.
++        VBlankIntrWait();
++#endif
++    }
+     LZDecompressWram(gRaySceneChasesAway_Bg_Tilemap, sRayScene->tilemapBuffers[1]);
+     LZDecompressWram(gRaySceneChasesAway_Light_Tilemap, sRayScene->tilemapBuffers[0]);
+     LZDecompressWram(gRaySceneChasesAway_Ring_Tilemap, sRayScene->tilemapBuffers[2]);
+-- 
+2.50.0.windows.1
+

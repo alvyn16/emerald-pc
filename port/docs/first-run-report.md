@@ -1168,3 +1168,29 @@ GBA compare OK (t27-camera-gba-compare.log). Checkout limpio con 0046:
 arbol 975e42ad9efd86b763bced6234a2d109e93dbc90 y ambos builds/21 suites PASS
 (t27-camera-clean-build.log). La campana y el replay terminaron la llegada
 con 0047 aplicado tambien; Sky Pillar y la octava medalla siguen pendientes.
+
+## T27: espera de DMA sin VBlank en la escena de Rayquaza (0047)
+
+El replay con 0046 se quedo en frame 16824, sin otra llamada al temporizador
+de frames. Interrumpir con GDB muestra IsDma3ManagerBusyWithBgCopy ->
+FreeTempTileDataBuffersIfPossible -> LoadDuoFightSceneGfx -> Task_DuoFightAnim
+-> CB2_RayquazaScene. REG_VCOUNT=0, cola desbloqueada, cursor DMA=116.
+El bucle vacio esperaba que una IRQ real drenara la cola de DMA3, pero el host
+solo entrega IRQ al avanzar PortHost_RunFrame. Evidencia privada conservada:
+t27-rayquaza-dma-before-fix-main.log y t27-rayquaza-dma-before-fix-gdb.log.
+
+0047 llama VBlankIntrWait bajo PORT_PC en las cinco esperas equivalentes de
+rayquaza_scene.c (duo, vuelo, descenso, carga y retirada). El resto del bucle
+y la comprobacion original de fin se conservan; GBA conserva la espera vacia.
+No se vacia la cola desde el harness ni se salta la escena. La llegada real
+y --phase r04-sootopolis-entry terminan con campo desbloqueado en frame 18360
+y guardado nativo en 19488. El replay registra dos camaras y ninguna pendiente.
+Los otros cuatro segmentos se verificaran al invocar la escena completa;
+no se declaran cubiertos por la llegada abreviada.
+
+Normal/diagnostico, 21 suites, verify-normal PASS:
+t27-rayquaza-dma-host-build.log. GBA compare: pokeemerald.gba: OK
+(t27-rayquaza-dma-gba-compare.log). El checkout limpio con 0047 da el mismo
+arbol f86fa9af402b714f06e6d7ad8c0a9e89975451f4 y ambos builds/21 suites PASS
+(t27-rayquaza-dma-clean-build.log). El replay nuevo usa solo teclado y lecturas
+de GDB; SpawnCameraObject se observa mediante un breakpoint que no detiene.

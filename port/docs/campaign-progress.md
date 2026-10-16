@@ -1188,3 +1188,19 @@ el estado completo sin modificar el archivo: PASS (t27-kyogre-verified-reload.lo
 La campana principal cerro limpiamente y reabrio el MISMO save con el renderer
 corregido para continuar. R04 sigue abierto para Sky Pillar/Rayquaza, Sootopolis
 y la octava medalla; R05-R15 tampoco estan cerrados.
+
+### R04: llegada natural a Sootopolis y dos correcciones host
+
+Tras Surf y Dive desde Route126 se alcanza Underwater_SootopolisCity y el
+warp fijo emerge en Sootopolis (29,53). Se corrigieron la camara sin plantilla
+(0046) y la espera DMA de la escena abreviada (0047); causas y registros en
+first-run-report.md. --phase r04-sootopolis-entry PASS, dos camaras observadas,
+ninguna activa al devolver el control, ciudad=2. Campana principal y replay:
+r04-sootopolis-arrival (19488), siete medallas, mismo equipo y dinero 44187.
+El resto de R04 sigue abierto, incluidos los cuatro segmentos restantes de
+la escena completa de Rayquaza. No hay push.
+
+El manifiesto space_center_defeated=0 tras el viaje no indica perdida de
+progreso: RivalRayquazaCall, SpaceCenter_2F/scripts.inc, consume el flag 0x75
+al terminar la llamada Pokenav de May/Brendan. Los estados permanentes de
+Mossdeep/Centro Espacial continuan en 3. No se vuelve a establecer el flag.
