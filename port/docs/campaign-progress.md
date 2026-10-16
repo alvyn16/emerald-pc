@@ -968,3 +968,25 @@ destinos previstos. Los combates dobles de las salas se resolvieron normalmente.
 Se guardo r04-mossdeep-blue-room (369384), seis medallas y equipo 47/32/19/25,
 Pelipper aun con Exp. Share. El puzzle y los lideres siguen pendientes; estas
 comprobaciones no cierran Mossdeep ni R04.
+
+### Sala azul/roja repetida y transporte inferior
+
+La secuencia reducida medida desde (8,12) es: tres pulsaciones sobre (8,10),
+tres sobre (8,6), cuatro sobre (6,7) y una sobre (8,10). Los pasos intermedios
+se hacen fuera del interruptor antes de volver a pisarlo; no se cambian las
+plantillas de objetos. Abre el corredor hacia el pad 10, que lleva a (11,35).
+El recorrido exploratorio original incluyo mas giros, conservados en el log;
+la repeticion usa solo la secuencia reducida y conserva combates reales.
+
+`--phase r04-mossdeep-blue`: PASS, sin senales y con salida normal
+(`build/t27-natural-mossdeep-blue-replay.log`); checkpoint de repeticion en
+frame 31524, equipo 47/33/19/25. La campana principal guarda el mismo destino
+como r04-mossdeep-green-room (401356). Continue conserva mapa, coordenadas,
+equipo, objetos, seis medallas, eventos y dinero sin modificar el archivo:
+PASS (`build/t27-mossdeep-green-reload.log`). Esta recarga no afirma validar
+cada posicion de estatua: eso se comprueba al ejecutar las siguientes rutas.
+
+El transporte inferior llega a un pasillo bloqueado por el grupo verde. Se
+regreso por el pad 11, se piso (8,10), y se usaron los pads 5 y 6 para entrar
+por la sala morada: r04-mossdeep-purple-room (404356), (23,20). No hubo una
+excepcion nativa en estos recorridos; Mossdeep/R04 siguen abiertos.
