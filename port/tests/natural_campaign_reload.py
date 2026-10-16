@@ -37,10 +37,12 @@ set environment EMERALD_PC_STOP_FRAME 10000
 break Port_ExitCleanly
 run
 python
-import sys,json
+import sys,json,gdb
 sys.path.insert(0,'port/tests')
 import campaign_driver as d
+assert gdb.newest_frame().name() == 'Port_ExitCleanly', 'Continue stopped outside the host frame checkpoint'
 actual=d.state()
+assert d.field_ready(actual), actual
 expected={expected!r}
 for key in ('map','x','y','party'):
     assert actual[key] == expected[key], (key,actual,expected)

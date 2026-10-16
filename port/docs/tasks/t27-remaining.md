@@ -41,7 +41,8 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Aqua: robo, paneles/Master Ball, Matías y salida marítima antes/después PASS;
   repeticiones y recarga de la victoria PASS. Mossdeep: circuito completo, victoria original y Continue PASS; repeticion
   de derrota normal documentada. Centro Espacial y entrega/ensenanza de Dive
-  por UI, replays y Continue PASS. Uso submarino, Seafloor y siguientes pendientes.
+  por UI, replays y Continue PASS. Buceo/emerger y Continue submarino PASS tras
+  0044/0045; Seafloor y siguientes pendientes.
 - [ ] R05: Waterfall, Victory Road, acceso a Liga, ocho medallas y crÃ©ditos
   desde esa misma partida; sin warps del harness ni equipo preparado. Recarga
   final: game-clear, equipo y Hall of Fame vÃ¡lidos. Capturas privadas.

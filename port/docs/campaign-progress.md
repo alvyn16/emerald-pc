@@ -1103,3 +1103,15 @@ Detalle del fallo, registros y logs en first-run-report.md.
 Al reiniciar la campana desde el save submarino se encontro otra lectura
 NULL en LoadSaveblockObjEventScripts. Sigue pendiente corregir/verificar
 Continue submarino (0045); no se salta la funcion ni se altera la partida.
+
+### Continue submarino corregido sin sustituir la partida
+
+El parche 0045 corrige la restauracion de scripts de objetos descrita en
+first-run-report.md. El guardado r04-underwater128 original se recarga con
+control de campo en frame 10000, mismas coordenadas (38,27), equipo, medallas,
+movimientos, eventos, inventario y dinero. No se modifica el archivo:
+PASS (t27-underwater-reload-after-fix.log). El guardado de victoria de Mossdeep,
+con objetos de mapa, tambien conserva su manifiesto: PASS.
+Host, 21 suites, GBA compare y reproduccion de 0045 en checkout limpio: PASS.
+La linea principal reanuda ese mismo save submarino con el nuevo binario;
+los dos procesos detenidos por las excepciones quedan documentados en sus logs.

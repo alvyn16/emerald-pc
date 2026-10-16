@@ -1090,3 +1090,34 @@ Su bucle restaura 64 scripts desde un array de objetos NULL y count=0 en
 Underwater_Route128. Es un fallo distinto de Continue, pendiente del parche
 0045; el recorrido corregido por 0044 parte de un guardado de superficie y
 no acredita aun Continue submarino. Logs privados gdb-post-dive-fix.log.
+
+## T27 natural: Continue de mapa sin objetos (0045)
+
+La recarga de r04-underwater128 se detenía en frame 1203, antes de devolver
+control de campo. LoadSaveblockObjEventScripts+78, EIP 0x1022DEB0, ejecutaba
+mov 0x10(%ecx),%eax con ECX=0. Underwater_Route128 declara cero object_events;
+mapHeaderObjTemplates es NULL. El bucle original copia scripts de 64 entradas
+sin limitarse a objectEventCount; tambien puede leer mas alla de arrays cortos.
+Backtrace: LoadSaveblockObjEventScripts -> CB2_ContinueSavedGame -> CallCallbacks
+-> UpdateLinkAndCallCallbacks -> AgbMain -> main.
+
+Parche 0045: bajo PORT_PC, restaurar scripts solo cuando el array existe y
+el indice esta dentro de objectEventCount; dejar el resto de scripts en NULL.
+Se mantienen las 64 entradas de destino y la asignacion original de GBA.
+Commit privado upstream 13816476b2e419be1c06ab4ecdf61c0836486706.
+
+La prueba de Continue exige ahora parar en Port_ExitCleanly y control de
+campo antes de validar el manifiesto, para no leer un estado intermedio tras
+una excepcion. Con el binario anterior reproduce SIGSEGV
+(t27-underwater-reload-before-fix-gdb.log). Con 0045, Continue submarino PASS,
+archivo sin cambios (t27-underwater-reload-after-fix.log). La misma comprobacion
+en Mossdeep Gym, mapa con objetos, tambien PASS (t27-underwater-mossdeep-reload.log).
+Normal/diagnostico, 21 suites y verify-normal: PASS (t27-underwater-host-build.log).
+GBA: pokeemerald.gba: OK (t27-underwater-gba-compare.log).
+
+El checkout de reproduccion limpio con 0044 aplica 0045 y coincide con el
+arbol f6122159ccf96e28ae9cdf8d44a26ce70563e301; ambos builds, 21 suites y
+verify-normal PASS (t27-underwater-clean-build.log). La campana se reinicia
+desde el MISMO archivo submarino previo, conservado antes de ambos cierres.
+No se omite ninguna funcion de juego ni se reescribe progreso para continuar.
+La exploracion de Seafloor sigue abierta.
