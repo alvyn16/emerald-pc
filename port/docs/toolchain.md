@@ -54,8 +54,9 @@ EMERALD_PC_AUDIO_DUMP=build/audio.wav ./build/emerald-pc-diagnostic.exe
 
 El generador del guion requiere Python 3; puede ejecutarse también desde
 PowerShell antes del comando MSYS2. `test` compila con `-Wall -Wextra
--Werror` y ejecuta 13 suites: BIOS, DMA, frame, memoria, flash, entrada por
-guion, PPU, menú de velocidad, temporizadores, reinicio, m4a, PSG y audio.
+-Werror` y ejecuta 21 suites: BIOS, DMA, frame, memoria, flash, entrada por
+guion, PPU, bitmap, prioridad, afines, menú de velocidad, temporizadores,
+reinicio, reinicio de RAM, m4a, PSG, audio, IRQ, RTC, entrada y entrada SDL.
 Los binarios quedan en `build/tests/` y sus archivos temporales en `build/`.
 Las pruebas unitarias no usan la ROM; construir el ejecutable y el motor
 m4a requiere los recursos locales de pokeemerald.

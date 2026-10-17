@@ -1,5 +1,23 @@
 # Primera ejecución de `emerald-pc.exe` i686
 
+## Estado actual: 17 de octubre de 2026
+
+La campaña continua natural tiene R01–R04 completos: ocho medallas y sus
+bloqueos de historia verificados por entrada, replay y Continue. R05 sigue
+parcial: Wally, Calle Victoria, acceso a Liga y victoria sobre Sidney PASS.
+Phoebe derrota al equipo; el blackout y la recarga funcionan. Tras obtener
+Bicicleta Carrera mediante Rydel, la partida volvió a Pilar Celeste 2F;
+el piso agrietado sigue pendiente. No se ha completado el Alto Mando,
+la captura de Rayquaza ni los créditos en esta campaña.
+
+R06–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+de fixtures con equipo preparado son pruebas anteriores independientes.
+Consulta [cobertura pendiente](tasks/t27-remaining.md) y
+[registro de campaña](campaign-progress.md). Los checkpoints, capturas,
+ROM y saves se conservan localmente y no se distribuyen en Git.
+
+## Registro cronológico de ejecución
+
 ## Hito 2: primer acceso fuera del mapa
 
 Entorno: MSYS2 MINGW32, GCC 16.2.0-4, SDL2 2.32.10-1, GDB 18.1-3.

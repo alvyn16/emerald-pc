@@ -425,12 +425,14 @@ fixes. Verificación: datos antes/después y timeout en transiciones.
 Dependencias: T20, T24–T26. Archivos: `port/tests/` y matriz en `port/docs/`.
 Verificación: checkpoints de progreso y regresiones por cada fallo nuevo.
 
-Evidencia T27: gameplay-matrix.md. Mapas/movilidad, Liga, créditos, concurso,
-crianza, Safari y Tower medidos por segmentos. campaign-progress.md añade
-cadena dirigida Wally/ocho medallas/Liga/créditos con estado/save conservado,
-recargas y HOF reales; recepción/captura/salida por pasos de Safari PASS.
-Quedan historia/desplazamientos/gating, eclosión y ampliación del Frontier.
-No se cierra Checkpoint E.
+Evidencia T27: [matriz](../gameplay-matrix.md),
+[campaña](../campaign-progress.md) y [pendientes](t27-remaining.md).
+La campaña continua natural completa R01–R04 y las ocho medallas. R05 es
+parcial: Wally, Calle Victoria, Liga y Sidney PASS; Phoebe derrota al equipo.
+La partida volvió con Bicicleta Carrera a Pilar Celeste 2F; piso agrietado,
+resto del Alto Mando y créditos pendientes. R06–R15 siguen abiertos.
+Los segmentos anteriores de Liga/Hall of Fame con equipo preparado no
+cierran la campaña natural. No se cierra Checkpoint E.
 
 ### Checkpoint E — juego individual
 

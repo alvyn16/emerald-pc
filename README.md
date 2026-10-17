@@ -2,12 +2,31 @@
 
 Port nativo experimental para Windows i686 con SDL2 de Pokémon Emerald,
 basado en la decompilación de [pret/pokeemerald](https://github.com/pret/pokeemerald).
-El recorrido de prueba llega a una partida nueva y al mundo exterior. Incluye
+La campaña de diagnóstico conserva una partida desde el comienzo hasta las
+ocho medallas, Calle Victoria y una victoria sobre Sidney. Incluye
 guardado a disco, audio PCM/PSG, reinicio suave, velocidad ajustable y PPU de
 modos 0–5 con fondos, sprites, ventanas, mezcla de color y mosaico. Todavía
 pueden aparecer fallos fuera del recorrido probado.
 
 Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Este repositorio no distribuye ROMs, saves, assets ni código de pokeemerald. Es un proyecto de fans no afiliado a Nintendo, Game Freak ni The Pokémon Company.
+
+## Estado verificado (17 de octubre de 2026)
+
+- Campaña continua: R01–R04 completos, ocho medallas y eventos de historia
+  comprobados mediante entrada, replays y recarga de guardados.
+- R05 parcial: Wally, Calle Victoria, acceso a la Liga y Sidney comprobados.
+  Phoebe derrota al equipo y el regreso tras perder funciona; no se ha
+  completado la Liga en esta campaña.
+- Punto actual de esa partida de diagnóstico: Pilar Celeste 2F con Bicicleta
+  Carrera. El recorrido del piso agrietado sigue pendiente.
+- R06–R15 y Checkpoint E siguen abiertos. Las pruebas anteriores de Liga,
+  créditos y Hall of Fame con equipo preparado son evidencia separada;
+  no acreditan completar la campaña continua.
+
+Consulta el [registro de campaña](port/docs/campaign-progress.md), la
+[cobertura pendiente de T27](port/docs/tasks/t27-remaining.md) y el
+[informe de ejecución](port/docs/first-run-report.md). Capturas, partidas y
+resultados completos de diagnóstico permanecen en `build/`, fuera de Git.
 
 ## Preparación en Windows
 
@@ -40,9 +59,16 @@ Las pruebas automatizadas no abren ventanas visibles.
 El ejecutable carga solo en memoria el único `.gba` de `roms/`; nunca modifica
 el archivo original. El guardado experimental usa `saves/emerald-pc.sav`,
 ignorado por Git. El estado del arranque y el siguiente bloqueo medido con
-GDB están en `port/docs/first-run-report.md`. Las 13 suites host de `test`
+GDB están en `port/docs/first-run-report.md`. Las 21 suites host de `test`
 usan datos sintéticos y no necesitan una ROM; la compilación sí requiere
 las herramientas y recursos locales generados por el build GBA.
+
+## Comprobación de esta revisión
+
+Ejecutables normal y de diagnóstico compilados; las 21 suites host y
+`make -C port verify-normal` pasan. El build original con ARM Binutils
+2.43.1 conserva `make compare` → `pokeemerald.gba: OK`. Los 47 parches
+reproducen el mismo árbol upstream en un clon limpio local.
 
 ## Controles
 
@@ -79,7 +105,8 @@ Enlace/RFU/multiboot y campaña completa siguen pendientes. No se garantiza
 precisión por ciclo, filtro de sonido analógico ni compatibilidad total con
 accesorios. El soporte actual es Windows de 32 bits; x86-64 queda como
 trabajo futuro. T24–T26 tienen regresiones de combate y almacenamiento;
-T27 tiene segmentos medidos, pero sigue pendiente de campaña continua.
+T27 sigue abierto: la campaña continua todavía no completa el Alto Mando,
+los créditos ni todos los contenidos posteriores.
 El estado completo está en `port/docs/tasks/todo.md`.
 
 Consulta `port/docs/toolchain.md` para reproducir el entorno. ROMs, saves,

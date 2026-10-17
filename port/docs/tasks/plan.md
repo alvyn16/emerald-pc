@@ -1,8 +1,11 @@
 # Plan: integrar, revisar y completar emerald-pc
 
 Fecha: 2026-10-10. Estado: ejecución autorizada por el usuario mediante
-«go and complete everything». La publicación sigue pendiente de solicitud.
-Lista operativa: [todo.md](todo.md).
+«go and complete everything». El estado de publicación descrito abajo
+corresponde a la base inicial.
+Lista operativa: [todo.md](todo.md). Estado vigente: 21 suites host, 47
+parches y campaña natural R01–R04 completa; R05 parcial, T27 y Checkpoint E
+abiertos. Véase [cobertura pendiente](t27-remaining.md).
 
 ## Objetivo
 
@@ -13,7 +16,7 @@ enlace y otras plataformas mediante diseños separados. «Completar» exige
 evidencia por subsistema y por recorrido; no se asignará un porcentaje de
 avance a partir del número de archivos que compilan.
 
-## Base comprobada
+## Base comprobada al iniciar el plan (histórica)
 
 - Rama actual: `codex/milestone-20-wild-battle`, commit `1f83350`.
 - `main` local: `07207e9`; es ancestro de la rama actual y está atrasado.
