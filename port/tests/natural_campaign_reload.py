@@ -47,6 +47,8 @@ import campaign_driver as d
 assert gdb.newest_frame().name() == 'Port_ExitCleanly', 'Continue stopped outside the host frame checkpoint'
 actual=d.state()
 assert d.field_ready(actual), actual
+for bg in (1,2,3):
+    assert d.value(f'*(unsigned int *)&gOverworldTilemapBuffer_Bg{{bg}}') != 0, 'Field ready without allocated background buffers'
 expected={expected!r}
 for key in ('map','x','y','party'):
     assert actual[key] == expected[key], (key,actual,expected)
@@ -67,7 +69,7 @@ assert d.value('(int)FlagGet(0x82)') == expected['rival']
 assert d.value('(int)CountTotalItemQuantityInBag(4)') == expected['balls']
 if 'badges' in expected:
     assert [d.value(f'(int)FlagGet({{0x867+i}})') for i in range(8)] == expected['badges']
-for key,var in (('norman',0x4085),('woods',0x4098),('rustboro',0x405a),('briney',0x4090),('route110',0x4069),('meteor_falls',0x40bf),('weather_institute',0x40b3),('route119',0x4072),('route121',0x4074),('mt_pyre',0x40b9),('jagged_pass',0x40c8),('slateport_city',0x4058),('slateport_harbor',0x40a0),('mossdeep_city',0x405d),('space_center',0x409f),('stevens_house',0x40c6),('route128',0x407b),('seafloor',0x40a2),('sootopolis_city',0x405e),('sky_pillar',0x40ca),('victory_road',0x40c3)):
+for key,var in (('norman',0x4085),('woods',0x4098),('rustboro',0x405a),('briney',0x4090),('route110',0x4069),('meteor_falls',0x40bf),('weather_institute',0x40b3),('route119',0x4072),('route121',0x4074),('mt_pyre',0x40b9),('jagged_pass',0x40c8),('slateport_city',0x4058),('slateport_harbor',0x40a0),('mossdeep_city',0x405d),('space_center',0x409f),('stevens_house',0x40c6),('route128',0x407b),('seafloor',0x40a2),('sootopolis_city',0x405e),('sky_pillar',0x40ca),('victory_road',0x40c3),('new_mauville',0x40ba)):
     if key in expected:
         assert d.value(f'(int)VarGet({{var}})') == expected[key]
 for key,expected_value in expected.get('events',{{}}).items():
@@ -81,6 +83,8 @@ if 'money' in expected:
     save=d.value('*(unsigned int *)&gSaveBlock1Ptr')
     assert d.value(f'(int)GetMoney((void *)({{save}}+0x490))') == expected['money']
 print('NATURAL RELOAD PASS',actual)
+from pathlib import Path
+Path({str(scratch/'reload.raw')!r}).write_bytes(bytes(gdb.selected_inferior().read_memory(d.value('(unsigned int)&sPixels'),153600)))
 end
 continue
 quit

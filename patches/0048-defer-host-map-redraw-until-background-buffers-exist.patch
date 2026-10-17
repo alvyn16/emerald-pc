@@ -1,0 +1,32 @@
+From b78a29d0f20a71fc66c0276806b53834b1d57738 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Sat, 17 Oct 2026 13:11:11 -0400
+Subject: [PATCH] Defer host map redraw until overworld backgrounds are
+ allocated
+
+---
+ src/field_camera.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/field_camera.c b/src/field_camera.c
+index e76ba3d..0983bf4 100644
+--- a/src/field_camera.c
++++ b/src/field_camera.c
+@@ -93,6 +93,14 @@ void GetCameraOffsetWithPan(s16 *x, s16 *y)
+ 
+ void DrawWholeMapView(void)
+ {
++#ifdef PORT_PC
++    // OnLoad scripts may request a redraw before overworld BG allocation.
++    // Their map edits remain in place; normal map loading draws them later.
++    if (gOverworldTilemapBuffer_Bg1 == NULL
++     || gOverworldTilemapBuffer_Bg2 == NULL
++     || gOverworldTilemapBuffer_Bg3 == NULL)
++        return;
++#endif
+     DrawWholeMapViewInternal(gSaveBlock1Ptr->pos.x, gSaveBlock1Ptr->pos.y, gMapHeader.mapLayout);
+     sFieldCameraOffset.copyBGToVRAM = TRUE;
+ }
+-- 
+2.50.0.windows.1
+

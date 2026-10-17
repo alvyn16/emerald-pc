@@ -1581,3 +1581,34 @@ R06-R15, T27 y Checkpoint E permanecen abiertos. Este incremento cambia
 solo helpers y documentacion; el codigo del juego y los parches no cambian.
 
 Continue final de r05-glacia-ground-lead-loss: PASS; save sin reescribir.
+
+
+## T27: New Mauville, recarga antes de asignar fondos (17-10-2026)
+
+La campaña obtuvo la Llave del Sotano de Wattson, cruzo New Mauville con
+Surf y sus interruptores, recogio Escape Rope/Full Heal y apago el generador
+(var 0x40BA=2). Continue desde ese save revelo un fallo real del host:
+`DrawMetatile` escribia con EAX=0 durante `RunOnLoadMapScript`, invocado desde
+`InitMapFromSavedGame`. El script solicita `DrawWholeMapView` antes de
+`InitOverworldBgs`; los tres buffers de fondos seguian siendo NULL.
+
+El parche 0048 agrega una comprobacion solo PORT_PC a DrawWholeMapView.
+Las modificaciones del mapa se conservan; el dibujo normal posterior a la
+asignacion de fondos las presenta. No cambia el comportamiento GBA.
+
+Validacion: normal/diagnostico, 21 suites y verify-normal PASS
+(`build/t27-new-mauville-fixed-host.log`); ARM Binutils 2.43.1,
+`make compare` -> `pokeemerald.gba: OK`
+(`build/t27-new-mauville-fixed-gba.log`). Continue conserva posicion, equipo,
+PS/PP/estados e inventario; los tres buffers estan asignados y la captura
+muestra suelo, jugador y generador (`build/t27-new-mauville-generator-off-verified-reload.log`).
+
+Reproduccion: clon local del commit fijado + 48 parches mediante git am;
+arbol upstream d912ff84e88b58409e8c3eb5d97e24718ca08f33 identico. field_camera.c
+compilado desde ese clon genera objeto identico al del build actual
+(SHA256 f80c66ae887e54fd4039868a11dae6957e6cbd599ea203433f7a9663b886e670).
+Se reenlazo el diagnostico sustituyendo ese objeto y se repitio Continue PASS;
+los demas objetos/assets existentes fueron reutilizados: no fue una
+recompilacion integral desde cero. Evidencia privada:
+`build/t27-new-mauville-clean-relink-reload.log` y directorio
+`build/t27-new-mauville-clean/`. ROM, saves y capturas permanecen ignorados.
