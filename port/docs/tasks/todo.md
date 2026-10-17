@@ -588,3 +588,12 @@ Verificación: review final, compare OK, suites y recorridos seleccionados.
 
 - [ ] Estado final revisable, reproducible y con límites explícitos; cualquier
   tarea no ejecutada sigue abierta en esta lista.
+
+
+### Actualizacion T27 (17-10-2026): New Mauville y Drake
+
+Llave, puzzle del generador y Rayo de Wattson obtenidos por UI; replays PASS.
+Parche0048 corrige Continue en New Mauville antes de asignar buffers BG.
+Sidney/Phoebe/Glacia/Drake ganados en el replay con Rayo; Continue Drake PASS.
+R05 sigue PARCIAL: puerta de Wallace guardada; final y recarga pendientes.
+R06-R15 y Checkpoint E siguen abiertos. Detalle: campaign-progress.md.

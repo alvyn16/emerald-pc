@@ -147,3 +147,12 @@ T28: consultar controller-input.md.
 T27, recursos de campana: cosecha de Leppa del arbol, uso en Mochila, Enfado8->15PP,
 consumo de Hyper Potion/Revive y Continue de PS/estados/PP/inventario: PASS.
 Las derrotas nuevas de Glacia/Drake no amplian la cobertura de victorias.
+
+
+### Actualizacion T27 (17-10-2026): New Mauville y Drake
+
+Llave, puzzle del generador y Rayo de Wattson obtenidos por UI; replays PASS.
+Parche0048 corrige Continue en New Mauville antes de asignar buffers BG.
+Sidney/Phoebe/Glacia/Drake ganados en el replay con Rayo; Continue Drake PASS.
+R05 sigue PARCIAL: puerta de Wallace guardada; final y recarga pendientes.
+R06-R15 y Checkpoint E siguen abiertos. Detalle: campaign-progress.md.
