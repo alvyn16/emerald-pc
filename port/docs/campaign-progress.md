@@ -1500,3 +1500,19 @@ La repeticion arranca de Continue en frame2000, con pulsos solo hasta1800;
 fallos de control, cambio inesperado de mapa y deadline son aserciones.
 Queda resolver 4F, preparar el nuevo intento de Liga y completar R05; T27
 sigue abierto. No hay cambios nativos ni nuevos parches upstream.
+
+## T27 R05: puzzle de 4F, caida central y llegada a 5F
+
+Desde el checkpoint 3F se desmonta por Bag y se sube por (11,1). Bici en
+4F(12,2), recorrido continuo (12,6)->(10,6)->(10,12)->(3,12)->(3,4)->(4,4).
+Al soltar la direccion, la inercia termina rompiendo el suelo en (6,4): el
+script original hace caer a 3F(6,4), plataforma central inaccesible caminando.
+La escalera (7,1) vuelve al centro de 4F y (3,1) lleva a 5F(3,2).
+No se cambia ningun tile, warp, posicion, callback ni velocidad por GDB.
+
+Replay r05-upper-floor PASS y Continue r05-sky-pillar-5f-mach PASS, save
+intacto. Capturas privadas de la caida central y 5F bajo build/natural-campaign/.
+Un intento por la columna13 quedo contra el muro13,3 y fallo por deadline del
+helper; el recorrido correcto usa columna12. No es bloqueo ni excepcion del
+juego y no requiere parche nativo. Captura de Rayquaza/final aun no acreditan
+R05; se verifican en el siguiente incremento. T27 sigue abierto.

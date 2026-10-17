@@ -429,3 +429,29 @@ def broken_floor_crossing():
     assert (d.state()['x'],d.state()['y']) == (3,2)
     print('NATURAL SKY PILLAR SECOND FLOOR BIKE PASS',d.state())
     return d.save_checkpoint('r05-sky-pillar-3f-mach')
+
+
+def upper_broken_floor():
+    assert d.state()['map'] == 'SkyPillar_3F'
+    d.RUN_WILD=True
+    if d.memory('gPlayerAvatar',1)[0]&2:
+        toggle_mach_bike()
+    d.warp_to(11,1,'SkyPillar_4F',50000)
+    d.go(12,2)
+    toggle_mach_bike()
+    for button,x,y in (('DOWN',12,6),('LEFT',10,6),('DOWN',10,12),
+                       ('LEFT',3,12),('UP',3,4),('RIGHT',4,4)):
+        ride_to(button,x,y)
+    # Coasting breaks the floor over the otherwise isolated central platform.
+    d.advance('NONE',300)
+    d.settle(30000)
+    assert d.state()['map'] == 'SkyPillar_3F', d.state()
+    assert (d.state()['x'],d.state()['y']) == (6,4)
+    if d.memory('gPlayerAvatar',1)[0]&2:
+        toggle_mach_bike()
+    d.save_checkpoint('r05-sky-pillar-central-drop')
+    d.warp_to(7,1,'SkyPillar_4F',50000)
+    d.warp_to(3,1,'SkyPillar_5F',50000)
+    assert (d.state()['x'],d.state()['y']) == (3,2)
+    print('NATURAL SKY PILLAR FOURTH FLOOR PUZZLE PASS',d.state())
+    return d.save_checkpoint('r05-sky-pillar-5f-mach')
