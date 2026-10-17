@@ -739,7 +739,7 @@ def save_checkpoint(name):
     facts['victory_road']=value('(int)VarGet(0x40c3)')
     facts['flash_level']=value('(int)GetFlashLevel()')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
-                        for item in (1,2,3,13,21,22,75,77,78,182,288,291,302,314,375,*range(339,347))}
+                        for item in (1,2,3,13,21,22,75,77,78,182,259,288,291,302,314,375,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
     facts['money']=value(f'(int)GetMoney((void *)({save}+0x490))')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")

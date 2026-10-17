@@ -311,3 +311,89 @@ def retry_supplies():
     assert d.value('(int)CountTotalItemQuantityInBag(21)') == 5
     print('NATURAL LEAGUE RETRY SUPPLIES PASS',d.state())
     return d.save_checkpoint('r05-sidney-retry-supplies')
+
+
+def phoebe_loss():
+    """Record the real resource-limited loss, never count it as League coverage."""
+    assert d.state()['map'] == 'EverGrandeCity_PhoebesRoom'
+    d.HEAL_ITEMS=(21,22,13)
+    d.talk(6,6,'UP',220000)
+    assert d.value('*(unsigned char *)&gBattleOutcome') == 2
+    assert d.value('(int)FlagGet(0x4fc)') == 0
+    assert d.state()['map'] == 'EverGrandeCity'
+    assert (d.state()['x'],d.state()['y']) == (18,6)
+    assert [d.value('(int)FlagGet(%d)'%(0x867+i)) for i in range(8)] == [1]*8
+    print('NATURAL PHOEBE BLACKOUT PASS',d.state())
+    return d.save_checkpoint('r05-phoebe-loss')
+
+
+def get_mach_bike():
+    assert d.state()['map'] == 'EverGrandeCity'
+    assert d.value('(int)CountTotalItemQuantityInBag(259)') == 0
+    d.fly_to('MauvilleCity')
+    d.go(35,6); d.cross('UP','MauvilleCity_BikeShop')
+    d.talk(3,5,'LEFT')
+    assert d.value('(int)CountTotalItemQuantityInBag(259)') == 1
+    d.save_checkpoint('r05-mach-bike-received')
+    d.go(3,8); d.cross('DOWN','MauvilleCity')
+    d.go(22,6); d.cross('UP','MauvilleCity_PokemonCenter_1F'); d.nurse()
+    d.go(7,8); d.cross('DOWN','MauvilleCity')
+    print('NATURAL MACH BIKE RECEIVED PASS',d.state())
+    return d.save_checkpoint('r05-mach-bike-rested')
+
+
+def toggle_mach_bike():
+    """Use the owned Key Item through Bag; do not call bike/game functions."""
+    import struct
+    before=d.memory('gPlayerAvatar',1)[0]&2
+    assert d.field_ready(d.state())
+    assert d.value('(int)CountTotalItemQuantityInBag(259)') == 1
+    d.open_start_action(2)
+    for _ in range(180):
+        if d.value('(int)FuncIsActiveTask((void *)Task_ItemContext_MultipleRows)'):
+            break
+        button='NONE'
+        if d.value('(int)FuncIsActiveTask((void *)Task_BagMenu_HandleInput)'):
+            position=d.memory('gBagPosition',28); pocket=position[5]
+            if pocket != 4:
+                button='RIGHT'
+            else:
+                entries=[d.value('(int)BagGetItemIdByPocketPosition(5,%d)'%i) for i in range(30)]
+                target=entries.index(259)
+                cursor=struct.unpack_from('<H',position,16)[0]+struct.unpack_from('<H',position,26)[0]
+                button='A' if cursor == target else 'DOWN' if cursor < target else 'UP'
+        d.advance(button,24,1)
+    else:
+        raise RuntimeError('Mach Bike bag selection deadline')
+    assert d.value('(int)Menu_GetCursorPos()') == 0
+    d.advance('A',120,1); d.settle(10000)
+    assert bool(d.memory('gPlayerAvatar',1)[0]&2) != bool(before)
+    print('NATURAL MACH BIKE TOGGLE PASS',d.memory('gPlayerAvatar',1)[0],d.state())
+
+
+def return_to_pillar():
+    assert d.state()['map'] == 'MauvilleCity'
+    assert d.value('(int)CountTotalItemQuantityInBag(259)') == 1
+    assert d.value('(int)VarGet(0x40ca)') == 3
+    assert not d.memory('gPlayerAvatar',1)[0]&2
+    d.RUN_WILD=True
+    d.fly_to('MossdeepCity')
+    d.talk(25,30,'DOWN')
+    for target in ('Route127','Route128','Route129','Route130','Route131'):
+        d.connect(target)
+    d.go(36,7); d.cross('UP','SkyPillar_Entrance')
+    d.warp_to(14,4,'SkyPillar_Outside',100000)
+    d.go(14,6); d.cross('UP','SkyPillar_1F')
+    print('NATURAL SKY PILLAR RETURN PASS',d.state())
+    return d.save_checkpoint('r05-sky-pillar-return')
+
+
+def broken_floor_entry():
+    assert d.state()['map'] == 'SkyPillar_1F'
+    assert d.value('(int)VarGet(0x40ca)') == 3
+    d.RUN_WILD=True
+    d.warp_to(10,1,'SkyPillar_2F',50000)
+    assert (d.state()['x'],d.state()['y']) == (10,2)
+    assert d.value('(int)MapGridGetMetatileBehaviorAt(20,12)') == 0xd2
+    print('NATURAL SKY PILLAR BROKEN FLOOR PASS',d.state())
+    return d.save_checkpoint('r05-sky-pillar-broken-floor')

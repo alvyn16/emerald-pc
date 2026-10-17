@@ -1325,3 +1325,35 @@ Continue de r05-sidney-win-verified PASS, archivo sin cambios; el manifiesto
 incluye flag107, victorias del Alto Mando y game-clear. Captura privada
 r05-sidney-win-verified.png. Se ha llegado al cuarto de Phoebe por las puertas
 originales; R05 sigue abierto para los otros combates, creditos y Hall of Fame.
+
+## T27 R05: derrota normal ante Phoebe y Bici Carrera por UI
+
+El intento siguiente llega a Phoebe sin Pelipper y sin Hyper Potions. Termina
+con outcome2, flag4FC=0 y regreso normal a EverGrande(18,6), dinero6221->3110.
+No hay senal ni excepcion; se puede guardar. r05-phoebe-loss reproduce el
+blackout y conserva ocho medallas. Las victorias temporales del Alto Mando
+se reinician por el juego; la victoria de Sidney queda probada en su propio
+checkpoint/replay, no se presenta este intento como una Liga completada.
+
+Se vuela a Mauville, se habla con Rydel desde (3,5) mirando izquierda y se
+elige Mach Bike por dialogo. Item259 pasa0->1. Se cura por enfermera real;
+r05-mach-bike PASS. Desde Bag/Key Items se usa la bicicleta, comprobando bit2
+de gPlayerAvatar, se guarda, y se desmonta por el mismo menu. El contexto de
+Key Items tiene dos columnas (MultipleRows): se corrigio la suposicion de
+SingleRow del guion. r05-bike-toggle PASS y Continue r05-mach-bike-tested PASS,
+guardado intacto. El manifiesto ahora incluye la propiedad del item259.
+
+Fly a Mossdeep, Surf y conexiones Route127/128/129/130/131, entrada normal
+al Pilar, puertas/escaleras hasta1F: r05-pillar-return PASS. Escalera10,1 a2F
+(10,2), estadoSkyPillar3 y casilla13,5 con comportamientoD2 (piso agrietado
+real, no layout limpio de la primera visita): r05-broken-floor-entry PASS.
+Continue r05-sky-pillar-broken-floor PASS, archivo intacto. Este es el punto
+actual de continuacion: falta resolver el recorrido con Bici Carrera, preparar
+un nuevo intento de Liga y completar el final; R05 y T27 siguen abiertos.
+
+Capturas privadas: r05-mach-bike-mounted.png, r05-sky-pillar-broken-floor.png.
+El proceso principal termina normalmente al salir del checkpoint del host.
+ROM original SHA1 f3ae088181bf583e55daf962a92bb46f4f1d07b7 y save del usuario
+SHA256 b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260
+conservados. Solo cambios en helpers/documentacion; GBA sin cambios desde0047,
+ultima verificacion pokeemerald.gba: OK. Sin push; planes del usuario intactos.
