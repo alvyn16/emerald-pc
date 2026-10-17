@@ -3,7 +3,7 @@
 Port nativo experimental para Windows i686 con SDL2 de Pokémon Emerald,
 basado en la decompilación de [pret/pokeemerald](https://github.com/pret/pokeemerald).
 La campaña de diagnóstico conserva una partida desde el comienzo hasta las
-ocho medallas, Calle Victoria y una victoria sobre Sidney. Incluye
+ocho medallas, Calle Victoria y victorias sobre Sidney, Phoebe y Glacia. Incluye
 guardado a disco, audio PCM/PSG, reinicio suave, velocidad ajustable y PPU de
 modos 0–5 con fondos, sprites, ventanas, mezcla de color y mosaico. Todavía
 pueden aparecer fallos fuera del recorrido probado.
@@ -14,12 +14,12 @@ Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Es
 
 - Campaña continua: R01–R04 completos, ocho medallas y eventos de historia
   comprobados mediante entrada, replays y recarga de guardados.
-- R05 parcial: Wally, Calle Victoria, acceso a la Liga y Sidney comprobados.
-  Phoebe derrota al equipo y el regreso tras perder funciona; no se ha
-  completado la Liga en esta campaña.
+- R05 parcial: Wally, Calle Victoria, acceso a la Liga y victorias sobre
+  Sidney, Phoebe y Glacia comprobados, con recarga de guardados PASS.
+  Drake, Wallace, créditos y Hall of Fame siguen pendientes.
 - Pilar Celeste: puzzles de 2F/4F cruzados con Bicicleta Carrera y
-  Rayquaza de nivel 70 capturado con la Master Ball obtenida en la campa�a.
-  Replays y recargas PASS; nuevo intento de Liga pendiente.
+  Rayquaza de nivel 70 capturado con la Master Ball obtenida en la campaña.
+  Replays y recargas PASS; regreso a la Liga con Rayquaza verificado.
 - R06–R15 y Checkpoint E siguen abiertos. Las pruebas anteriores de Liga,
   créditos y Hall of Fame con equipo preparado son evidencia separada;
   no acreditan completar la campaña continua.

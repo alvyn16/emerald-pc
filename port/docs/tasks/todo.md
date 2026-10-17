@@ -428,9 +428,11 @@ Verificación: checkpoints de progreso y regresiones por cada fallo nuevo.
 Evidencia T27: [matriz](../gameplay-matrix.md),
 [campaña](../campaign-progress.md) y [pendientes](t27-remaining.md).
 La campaña continua natural completa R01–R04 y las ocho medallas. R05 es
-parcial: Wally, Calle Victoria, Liga y Sidney PASS; Phoebe derrota al equipo.
-La partida volvió con Bicicleta Carrera a Pilar Celeste 2F; piso agrietado,
-resto del Alto Mando y créditos pendientes. R06–R15 siguen abiertos.
+parcial: Wally, Calle Victoria, Liga y victorias sobre Sidney/Phoebe/Glacia PASS.
+Pilar Celeste: puzzles 2F/4F y captura real de Rayquaza70/Master Ball,
+replays y Continue PASS. Derrota previa ante Glacia conservada; Drake, Wallace
+y final siguen pendientes.
+R06–R15 siguen abiertos.
 Los segmentos anteriores de Liga/Hall of Fame con equipo preparado no
 cierran la campaña natural. No se cierra Checkpoint E.
 

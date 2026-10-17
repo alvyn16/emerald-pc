@@ -4,8 +4,9 @@
 
 La campaña continua natural tiene R01–R04 completos: ocho medallas y sus
 bloqueos de historia verificados por entrada, replay y Continue. R05 sigue
-parcial: Wally, Calle Victoria, acceso a Liga y victoria sobre Sidney PASS.
-Phoebe derrota al equipo; el blackout y la recarga funcionan. Tras obtener
+parcial: Wally, Calle Victoria, acceso a Liga y victorias sobre Sidney/Phoebe/Glacia
+PASS. La victoria de Glacia y su Continue estan guardados; tambien se conserva
+la derrota previa y su blackout normal. Tras obtener
 Bicicleta Carrera mediante Rydel, se cruzaron los puzzles de 2F/4F y
 se capturo a Rayquaza nivel70 con la Master Ball obtenida antes. Replays y
 Continue PASS. No se ha completado el Alto Mando ni los creditos de esta campaña.
@@ -1428,3 +1429,54 @@ medallas y cantidades de inventario tras la recarga. Capturas antes/despues
 privadas en build/natural-campaign/. No hubo excepcion nativa.
 La captura habilita una nueva preparacion legal para Liga, pero no acredita
 las victorias pendientes. R05, R06-R15 y Checkpoint E siguen abiertos.
+
+## T27 R05: regreso preparado a Liga, Sidney/Phoebe y derrota ante Glacia
+
+Rayquaza se pone primero mediante Pokemon/Switch. Fly a Mossdeep, Mart real:
+compra de tres Hyper Potions por3600 (dinero4742->1142), enfermera del Centro,
+Fly a EverGrande(18,6) y enfermera de Liga. Entrada por (9,1) al Hall5 y su
+puerta (5,2) al cuarto de Sidney. No se conceden dinero, objetos ni curaciones.
+Replay r05-rayquaza-league-prep PASS y r05-rayquaza-sidney PASS.
+Sidney: outcome1/flag4FB1, dinero6042, tres pociones conservadas, Rayquaza92HP.
+
+Puertas originales de Sidney/Hall1 a Phoebe: outcome1/flag4FC1, tres Hyper
+Potions consumidas y dinero11142. Replay r05-rayquaza-phoebe y Continue de
+r05-rayquaza-phoebe-win PASS, save intacto. El combate no se omite ni se
+alteran movimientos, PP, enemigos o resultados. Se conserva ese checkpoint
+antes de seguir: una derrota posterior no borra la evidencia de esta victoria.
+
+El intento siguiente termina en derrota normal ante Glacia: outcome2, regreso
+a EverGrande(18,6), dinero11142->5571 y flags temporales4FB-4FE todos0.
+Ocho medallas y Rayquaza70 siguen presentes. Ya no habia Hyper Potions al
+iniciar ese tramo; quedan pendientes preparacion y estrategia para ganarlo.
+No es una excepcion ni espera infinita del host. El proceso principal sale
+normalmente desde su checkpoint de frame127732. R05 NO esta completo: Glacia,
+Drake, Wallace, creditos y Hall of Fame naturales siguen pendientes.
+
+Pruebas finales: ejecutables normal/diagnostico, 21 suites host y verify-normal
+PASS; ARM Binutils2.43.1, make compare -> pokeemerald.gba: OK. Sin cambios
+en upstream ni nuevos parches. ROM SHA1 f3ae088181bf583e55daf962a92bb46f4f1d07b7
+y save original SHA256 b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260
+sin cambios. Capturas/checkpoints/replays privados bajo build/. Sin push.
+
+La primera repeticion exploratoria de Glacia produjo outcome1, mientras la
+prueba esperaba2: fallo una asercion del harness, sin guardar esa victoria.
+No se presenta ese intento como checkpoint verificado. El runner ahora
+registra el desenlace real (1 o 2) y valida los flags correspondientes; no
+fuerza RNG ni resultados. Las repeticiones nuevas conservan los logs, guion,
+inputs y save anteriores en history/<timestamp>/ dentro del scratch privado.
+La conservacion de bytes y dos archivos sucesivos se verifico con fixtures
+temporales propios. Ese intento exploratorio quedo sin checkpoint; la repeticion final se verifica abajo.
+
+
+## T27 R05: victoria guardada sobre Glacia y Continue
+
+La repeticion final desde el mismo guardado natural r05-rayquaza-phoebe-win
+gana a Glacia: outcome1, flags Sidney/Phoebe/Glacia=1, Drake=0 y game_clear=0.
+El runner registra el desenlace real; no modifica RNG, enemigos, objetos ni
+progreso. El intento previo perdido permanece como evidencia independiente.
+Replay r05-rayquaza-glacia PASS; checkpoint r05-rayquaza-glacia-win guardado
+en build/natural-campaign/ y Continue --continue-until1181 PASS, save intacto.
+Este es el punto de continuacion actual. Drake, Wallace, creditos y Hall of
+Fame siguen pendientes; R05, R06-R15, T27 y Checkpoint E no se cierran.
+Capturas, saves y logs siguen privados en build/. No hay push de estos cambios.

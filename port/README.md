@@ -20,6 +20,6 @@ El ejecutable para jugar es `build/emerald-pc.exe`; las pruebas usan
 `build/emerald-pc-diagnostic.exe` y guardados separados. Para construir y
 comprobar esa separación: `make -C port diagnostic-exe verify-normal`.
 
-La campaña continua tiene ocho medallas y victoria sobre Sidney; T27 sigue
-abierto. Estado y límites: [campaña](docs/campaign-progress.md) y
+La campaña continua tiene ocho medallas y victorias sobre Sidney/Phoebe/Glacia;
+T27 sigue abierto. Estado y límites: [campaña](docs/campaign-progress.md) y
 [cobertura pendiente](docs/tasks/t27-remaining.md).

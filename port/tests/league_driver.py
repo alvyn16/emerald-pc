@@ -479,3 +479,73 @@ def catch_rayquaza():
         return d.save_checkpoint('r05-rayquaza-caught')
     finally:
         d.CATCH_SPECIES,d.CATCH_BALL=original_species,original_ball
+
+
+def rayquaza_league_preparation():
+    assert d.state()['map'] == 'SkyPillar_Top'
+    assert d.value('(int)GetMonData3((void *)((char *)&gPlayerParty+500),11,0)') == 406
+    d.set_lead(5)
+    d.fly_to('MossdeepCity')
+    d.go(37,19); d.cross('UP','MossdeepCity_Mart')
+    d.buy_item(21,3)
+    d.go(3,7); d.cross('DOWN','MossdeepCity')
+    d.go(28,17); d.cross('UP','MossdeepCity_PokemonCenter_1F')
+    d.nurse()
+    d.go(7,8); d.cross('DOWN','MossdeepCity')
+    d.fly_to('EverGrandeCity')
+    assert (d.state()['x'],d.state()['y']) == (18,6)
+    d.go(18,6); d.cross('UP','EverGrandeCity_PokemonLeague_1F')
+    d.talk(3,4,'UP')
+    assert d.value('(int)CountTotalItemQuantityInBag(21)') == 3
+    d.warp_to(9,1,'EverGrandeCity_Hall5',50000)
+    d.warp_to(5,2,'EverGrandeCity_SidneysRoom',50000)
+    assert d.value('(int)GetMonData3((void *)&gPlayerParty,11,0)') == 406
+    print('NATURAL RAYQUAZA LEAGUE PREPARATION PASS',d.state())
+    return d.save_checkpoint('r05-rayquaza-sidney-ready')
+
+
+def rayquaza_sidney():
+    assert d.state()['map'] == 'EverGrandeCity_SidneysRoom'
+    original=d.HEAL_ITEMS
+    try:
+        d.HEAL_ITEMS=(21,)
+        d.talk(6,6,'UP',220000)
+        assert d.value('*(unsigned char *)&gBattleOutcome') == 1
+        assert d.value('(int)FlagGet(0x4fb)') == 1
+        print('NATURAL RAYQUAZA SIDNEY VICTORY PASS',d.state())
+        return d.save_checkpoint('r05-rayquaza-sidney-win')
+    finally:
+        d.HEAL_ITEMS=original
+
+
+def rayquaza_elite(opponent, expected_outcome=1):
+    """Continue through actual room doors and trainer dialogue after Sidney."""
+    previous,hall,room,flag={
+        'phoebe':('SidneysRoom','Hall1','PhoebesRoom',0x4fc),
+        'glacia':('PhoebesRoom','Hall2','GlaciasRoom',0x4fd),
+    }[opponent]
+    assert d.state()['map'] == 'EverGrandeCity_'+previous
+    assert d.value(f'(int)FlagGet({flag-1})') == 1
+    d.warp_to(6,2,'EverGrandeCity_'+hall,50000)
+    d.warp_to(5,2,'EverGrandeCity_'+room,50000)
+    d.save_checkpoint('r05-rayquaza-'+opponent+'-ready')
+    original=d.HEAL_ITEMS
+    try:
+        d.HEAL_ITEMS=(21,)
+        d.talk(6,6,'UP',220000)
+        outcome=d.value('*(unsigned char *)&gBattleOutcome')
+        assert outcome in (1,2), outcome
+        if expected_outcome is not None:
+            assert outcome == expected_outcome, (outcome,expected_outcome)
+        if outcome == 1:
+            assert d.value(f'(int)FlagGet({flag})') == 1
+            label='win'
+        else:
+            assert d.state()['map'] == 'EverGrandeCity'
+            assert all(d.value(f'(int)FlagGet({n})') == 0 for n in range(0x4fb,0x4ff))
+            assert all(d.value(f'(int)FlagGet({n})') == 1 for n in range(0x867,0x86f))
+            label='loss'
+        print('NATURAL RAYQUAZA ELITE RESULT PASS',opponent,label,d.state())
+        return d.save_checkpoint('r05-rayquaza-'+opponent+'-'+label)
+    finally:
+        d.HEAL_ITEMS=original
