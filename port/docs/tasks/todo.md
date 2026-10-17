@@ -436,6 +436,10 @@ R06–R15 siguen abiertos.
 Los segmentos anteriores de Liga/Hall of Fame con equipo preparado no
 cierran la campaña natural. No se cierra Checkpoint E.
 
+T27: diagnostico de recursos ampliado (PS/estado/PP/Revive/Leppa) y recargas PASS.
+Cosecha real y uso de Leppa8->15PP verificados. Drake y final siguen pendientes;
+proximo tramo: cobertura electrica y mas curacion por medios normales.
+
 ### Checkpoint E — juego individual
 
 - [ ] Matriz de campaña, save, RTC, gráficos y audio completada con evidencia;

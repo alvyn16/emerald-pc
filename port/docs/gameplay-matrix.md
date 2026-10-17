@@ -142,3 +142,8 @@ Primero preparar wild_battle_smoke.py --quick --scenario catch. Logs t27-*.log
 locales. Save/ROM del usuario intactos; ninguna fixture se publica con assets.
 
 T28: consultar controller-input.md.
+
+
+T27, recursos de campana: cosecha de Leppa del arbol, uso en Mochila, Enfado8->15PP,
+consumo de Hyper Potion/Revive y Continue de PS/estados/PP/inventario: PASS.
+Las derrotas nuevas de Glacia/Drake no amplian la cobertura de victorias.

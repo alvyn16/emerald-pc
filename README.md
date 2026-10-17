@@ -20,6 +20,8 @@ Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Es
 - Pilar Celeste: puzzles de 2F/4F cruzados con Bicicleta Carrera y
   Rayquaza de nivel 70 capturado con la Master Ball obtenida en la campaña.
   Replays y recargas PASS; regreso a la Liga con Rayquaza verificado.
+- Los nuevos checkpoints de diagnóstico comprueban también PS, estados, PP
+  y consumibles al recargar.
 - R06–R15 y Checkpoint E siguen abiertos. Las pruebas anteriores de Liga,
   créditos y Hall of Fame con equipo preparado son evidencia separada;
   no acreditan completar la campaña continua.

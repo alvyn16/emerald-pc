@@ -1517,3 +1517,67 @@ consume durante las peleas. Al llegar a Drake quedan Rayquaza47/245PS y
 estan sanos. Quedan dos Revive sin consumir. No es un bloqueo del host:
 la politica automatica solo elige ataques y no aprovecha Rest o Revive.
 Drake, Wallace y el final de R05 continuan pendientes.
+
+
+## T27 R05: recursos verificados, Rest/Revive y cosecha de Leppa
+
+El replay r05-drake-rest selecciona Rest por teclado cuando Rayquaza tiene
+pocos PS y usa los dos Revive comprados al debilitarse. Tambien acaba en
+derrota normal, outcome2; no se cambia el juego para ganar. Los nuevos
+checkpoints incluyen PS/maximos, estado, PP por movimiento y cantidades de
+Revive/Leppa. Continue compara esos valores cuando estan presentes, con
+compatibilidad para checkpoints anteriores sin estos campos.
+
+Desde el blackout, Fly a Rustboro y conexion real a Route104. El dialogo
+del arbol(36,6), abordado desde(36,7), entrega dos Leppa: cantidad0->2.
+Luego compra de tres Hyper Potions y dos Revive por6600, enfermera real y
+regreso hasta Sidney: r05-leppa-prep PASS. Checkpoint r05-league-leppa-ready
+y Continue PASS, incluyendo PS/PP/estado e inventario de ambas medicinas.
+
+El primer recorrido desde esa preparacion gana Sidney/Phoebe/Glacia. Sin
+embargo, la politica gasta ambos Revive contra Glacia y Rayquaza queda
+sin PS; una asercion de recursos detiene el harness antes de Drake. No es
+una excepcion del ejecutable ni una victoria de Liga. Se conserva el log.
+Se retoma r05-leppa-phoebe-win (Continue con recursos PASS), reservando
+Revive para Drake y evitando Rest frente a movimientos de hielo conocidos.
+El primer arranque de esta continuacion reabre dialogo por demasiados
+pulsos A de Continue; el harness lo detecta antes de usar objetos. Se corrige
+ese guion para terminar las pulsaciones en1181, sin modificar el juego.
+Los logs previos quedan archivados en history/ dentro del scratch privado.
+
+
+Prueba aislada r05-leppa-use PASS: Mochila/Berries/Use, Rayquaza y su cuarto
+movimiento seleccionados por teclado. Leppa2->1 y Enfado8->15PP; el limite
+se calcula con los PP maximos del movimiento y sus bonus, no se asume10.
+Checkpoint r05-phoebe-leppa-restored y Continue PASS con PS/estado/PP y
+ambas cantidades de consumibles intactos. La captura privada muestra la
+sala de Phoebe, el jugador y el NPC visibles tras volver del menu.
+El intento r05-leppa-finish corregido pierde ante Glacia normalmente;
+no acredita completar el Alto Mando. Se conserva para reproduccion.
+
+
+## Cierre de este incremento T27: limites y siguiente preparacion
+
+r05-leppa-precharged vuelve a perder ante Glacia; recuperar PP por si solo
+no resuelve la debilidad a hielo. r05-glacia-ground-lead cambia realmente
+Swampert del slot5 al primero mediante Pokemon/Switch, pero tambien acaba
+en outcome2. Sus ataques quedan registrados en battle-choices.jsonl, ahora
+tanto para combates individuales como dobles. No se modifican stats, tipos,
+enemigos, movimientos ni resultados para aprobar el recorrido.
+
+Checkpoint exterior mas reciente: r05-glacia-ground-lead-loss, frame53764,
+EverGrande(18,6), dinero5630, Swampert54 primero, Pelipper49 y Rayquaza71 en
+slot5; Hyper Potions0, Revive2 y Leppa1. El equipo queda curado por el blackout
+y los cuatro flags del Alto Mando vuelven a0. La recarga final comprueba
+mapa, orden del equipo, PS, estados, PP, inventario, dinero y eventos.
+El checkpoint previo r05-phoebe-leppa-restored conserva Enfado15PP y la
+victoria de Phoebe; los checkpoints anteriores de Glacia siguen intactos.
+Ninguno acredita una victoria sobre Drake ni la Liga completa.
+
+Siguiente trabajo: preparar cobertura electrica y mas curacion mediante
+obtencion/compra/ensenanza reales, luego repetir Glacia/Drake/Wallace desde
+la misma partida. No seguir repitiendo la misma estrategia agotada. R05,
+R06-R15, T27 y Checkpoint E permanecen abiertos. Este incremento cambia
+solo helpers y documentacion; el codigo del juego y los parches no cambian.
+
+Continue final de r05-glacia-ground-lead-loss: PASS; save sin reescribir.

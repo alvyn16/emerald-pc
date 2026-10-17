@@ -23,3 +23,7 @@ comprobar esa separación: `make -C port diagnostic-exe verify-normal`.
 La campaña continua tiene ocho medallas y victorias sobre Sidney/Phoebe/Glacia;
 T27 sigue abierto. Estado y límites: [campaña](docs/campaign-progress.md) y
 [cobertura pendiente](docs/tasks/t27-remaining.md).
+
+Los nuevos checkpoints de campaña registran PS, estados, PP y consumibles;
+Continue comprueba esos valores. Los helpers usan medicinas y bayas por
+los menús reales del juego, sobre copias privadas del guardado de diagnóstico.

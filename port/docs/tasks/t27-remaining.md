@@ -62,6 +62,9 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Regreso preparado a Liga y victorias de Sidney/Phoebe/Glacia, replays y Continue PASS.
   Derrota previa ante Glacia conservada; Drake, Wallace y final pendientes.
   Derrota normal ante Drake, Continue y reabastecimiento por tienda/enfermera PASS.
+  Cosecha Leppa, uso por menu (Enfado8->15PP), PS/estado/PP/consumibles
+  persistidos y Continue PASS. Nuevos intentos ante Glacia terminan en derrota
+  normal; preparar cobertura electrica y mas curacion antes de repetir la Liga.
 - [ ] R06: crianza por pasos reales, generación de huevo, recogida por diálogo,
   eclosión mediante desplazamientos y conservación tras save/reload. No marcar
   readiness, contador de huevo ni especie manualmente.
