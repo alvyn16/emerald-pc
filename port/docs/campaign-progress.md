@@ -1321,3 +1321,60 @@ Continue de r04-juan-win PASS, con equipo/movimientos, ocho medallas,
 recompensas, flags, variables, consumibles y dinero intactos; el archivo no
 se reescribe (t27-juan-win-reload.log). R04 queda cubierto. T27/Checkpoint E
 siguen abiertos para R05-R15, incluida la Liga y las actividades posteriores.
+
+### R05: captura real, HM07 aprendido y ascenso original de Waterfall
+
+Tras salir del gimnasio cayendo al sotano por hielo agrietado, se toma la
+escalera (11,22) y se sale al exterior; los entrenadores del gimnasio ya estan
+resueltos por el script de la medalla. Fly a Dewford: r05-dewford-entry (40236).
+En Mossdeep se compran tres Ultra Balls por3600 (la tienda no ofrece Great
+Balls), se cura y se vuelve por Fly. --phase r05-ball-supplies PASS.
+Se anade CATCH_BALL al driver: por defecto Poke Ball4, eleccion explicita del
+stack y rechazo si se agota; nunca cambia a otra Ball automaticamente.
+La regresion de captura R02 Wingull pasa y sale normalmente con esta politica
+(t27-explicit-ball-wingull-regression.log, log GDB completo).
+
+Desde el agua de Dewford (13,9), RIGHT, se patrulla (16/18,8) por teclas para
+un encuentro de Tentacool72. Captura natural con Ultra Ball2: party4->5,
+MasterBall1 y PokeBalls4 intactas. Nivel18, sin construir Pokemon ni cambiar
+sus datos. r05-tentacool-caught (60668). Se ensena Waterfall127 desde HM07/345,
+que permanece en la bolsa; r05-waterfall-learned (63980).
+--phase r05-waterfall-catch PASS y Continue del aprendido PASS, archivo intacto
+(t27-waterfall-catch-replay.log, t27-waterfall-learned-reload.log).
+
+Gloom aprende Flash148 por HM05/343; r05-hm-team-ready (68516). Fly a Mossdeep,
+Surf y conexiones Route127 ->128 -> EverGrandeCity, con combates originales:
+llegada (0,67), r05-ever-grande-waterfall-bottom (90432). El recorrido se
+repite con --phase r05-road-trip. Para llegar al lado norte hay que usar el
+movimiento: el planificador deja de considerar Waterfall13 como Surf normal.
+Pisar esas casillas antes del efecto fuerza el deslizamiento hacia el sur;
+se corrigio la aproximacion del guion, sin modificar el juego.
+
+Se llega mirando al norte desde (18,69) a (18,68), y A/Yes inicia el efecto
+original. FldEff_UseWaterfall se observa exactamente una vez con monId4
+(Tentacool capturado). Termina en (18,59), Surf activo y control desbloqueado;
+r05-waterfall-used (112836). Se cura en el Centro de Ever Grande y entra a
+VictoryRoad_1F (15,40), r05-victory-road-entry (119168).
+--phase r05-waterfall PASS, incluida observacion/ascenso/curacion/entrada/save
+(t27-waterfall-use-replay.log). No aparecio una excepcion nativa nueva.
+R05 sigue abierto para Wally, el resto de Calle Victoria, Liga y Hall of Fame.
+
+## T27 R05: Wally y segundo sotano de Calle Victoria
+
+Wally se derrota por combate original: trainer519, flag7E y Var40C3=2.
+Replay r05-wally y Continue r05-wally-verified PASS. Se entra al primer sotano
+por la escalera (9,14), no por una ruta inaccesible. Flash usa a Gloom desde
+Party: FldEff_UseFlash una vez, flag888=1 y GetFlashLevel()=1 (radio ampliado,
+no luminosidad completa). Replay r05-flash PASS; capturas antes/despues privadas.
+
+Fuerza desplaza realmente las rocas locales3 (4,7)->(3,7) y4 (9,10)->(10,10).
+Golpe Roca elimina el obstaculo10 en (18,12). Los replays r05-upper-boulders
+y r05-smash-corridor pasan, verificando posiciones/ausencia de obstaculos.
+La escalera (30,25) conduce al segundo sotano, con combates originales durante
+el recorrido. r05-second-basement PASS y checkpoint r05-victory-road-b2f-entry.
+Los manifiestos y Continue ahora incluyen Var40C3, FlashLevel y Ultra/Great Balls.
+
+No ha aparecido otro fallo nativo en estos tramos. No se han escrito banderas,
+posiciones, objetos ni equipo: solo teclas y guardados del juego. El build ARM
+continua verificado con 0047 (sin cambios nativos posteriores). R05 sigue abierto:
+faltan el resto de Calle Victoria, Liga, creditos y Hall of Fame. Sin push.

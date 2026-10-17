@@ -9,6 +9,7 @@ ROOT = Path.cwd()
 SCRATCH = ROOT / "build/natural-campaign"
 RUN_WILD = False  # Opt in after starter/rival; preserves HP during travel.
 CATCH_SPECIES = set()  # Optional natural catches; never constructs a Pokemon.
+CATCH_BALL = 4  # Explicit Poke Ball default; never consume an unrelated ball stack.
 RUN_FROM_TYPES = set()  # Training may avoid unfavorable wild matchups.
 SWITCH_FROM_TYPES = set()  # Lead training can share XP with a healthy partner.
 TARGET_CHOICES = {}  # Planned targets, applied exclusively through menu keys.
@@ -31,7 +32,7 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "legendaries_sootopolis":0x53,"steven_cave_guide":0x133,
                "wallace_sky_pillar":0x137,"waterfall_received":0x138,
                "sootopolis_archie_maxie_left":0x9e,"sootopolis_gym_defeated":0x4f7,
-               "water_pulse_received":0xac}
+               "water_pulse_received":0xac,"wally_victory_road":0x7e,"flash_active":0x888}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -258,10 +259,11 @@ def item_bag_button(item=None):
         target=entries.index(item)
         current=cursor+scroll
         return 'A' if current == target else 'DOWN' if current < target else 'UP'
-    # Prefer the first ball stack. Assert it really contains a Poke Ball type.
-    item=value('(int)BagGetItemIdByPocketPosition(2,0)')
-    assert 1 <= item <= 12, 'No available ball stack for natural capture'
-    return 'UP' if cursor+scroll else 'A'
+    assert 1 <= CATCH_BALL <= 12
+    entries=[value('(int)BagGetItemIdByPocketPosition(2,%d)'%i) for i in range(16)]
+    assert CATCH_BALL in entries, 'Requested ball stack exhausted; refusing another type'
+    target=entries.index(CATCH_BALL); current=cursor+scroll
+    return 'A' if current == target else 'DOWN' if current < target else 'UP'
 
 
 def heal_party_button():
@@ -727,8 +729,10 @@ def save_checkpoint(name):
     facts['seafloor']=value('(int)VarGet(0x40a2)')
     facts['sootopolis_city']=value('(int)VarGet(0x405e)')
     facts['sky_pillar']=value('(int)VarGet(0x40ca)')
+    facts['victory_road']=value('(int)VarGet(0x40c3)')
+    facts['flash_level']=value('(int)GetFlashLevel()')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
-                        for item in (1,13,21,22,75,77,78,182,288,291,302,314,375,*range(339,347))}
+                        for item in (1,2,3,13,21,22,75,77,78,182,288,291,302,314,375,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
     facts['money']=value(f'(int)GetMoney((void *)({save}+0x490))')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")
@@ -766,6 +770,8 @@ def path_to(x,y):
         if cell&0xc00 or tile == 0x3ff:
             return False
         behavior=attributes[tile]&0xff
+        if behavior == 0x13:
+            return False  # Waterfalls require their field effect, not ordinary Surf.
         # Muddy/bumpy slopes need bike movement; walking must go around them.
         return (surf_mode or not traits[behavior]&2) and not 0x30 <= behavior <= 0x3f and behavior not in (0xd0,0xd1)
     objects = memory("gObjectEvents",16*36); player=memory("gPlayerAvatar",6)[5]

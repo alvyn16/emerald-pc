@@ -1236,3 +1236,41 @@ corregida sale normalmente; no se cuenta ese fallo de automatizacion como
 crash del port. Continue de r04-juan-win valida todo el manifiesto y conserva
 el archivo (t27-juan-win-reload.log). Captura privada r04-juan-win.png.
 R04 esta cubierto; T27 sigue abierto para R05-R15. No hay push.
+
+## T27 R05: captura y Cascada hasta Calle Victoria
+
+La seleccion de Ball de las pruebas ahora exige un stack concreto (Poke Ball
+por defecto), en lugar de tomar el primero. La captura R02 de Wingull sigue
+pasando. En Dewford se capturo Tentacool18 con Ultra Ball comprada, preservando
+Master Ball y Poke Balls. HM07 se enseno por bolsa; el replay y Continue pasan.
+Gloom aprende Flash por HM05 antes del recorrido maritimo a Ever Grande.
+
+Pisar Waterfall13 sin activar el movimiento devuelve al jugador al sur por
+la tabla original de movimientos forzados; las primeras aproximaciones del
+guion no eran un bloqueo nativo. Se llega mirando al norte desde una casilla
+normal, se pulsa A y se acepta Yes. FldEff_UseWaterfall se ejecuta una vez con
+monId4, y el jugador asciende (18,68)->(18,59). --phase r05-waterfall PASS,
+incluyendo cura y entrada real a VictoryRoad_1F (15,40), sin senales y con
+salida normal. El planificador ya evita usar cascadas como Surf ordinario.
+Capturas privadas r05-waterfall-used.png y r05-victory-road-entry.png.
+No se ha cambiado codigo nativo adicional desde 0047. R05 y T27 siguen abiertos.
+
+## T27 R05: Wally y segundo sotano de Calle Victoria
+
+Wally se derrota por combate original: trainer519, flag7E y Var40C3=2.
+Replay r05-wally y Continue r05-wally-verified PASS. Se entra al primer sotano
+por la escalera (9,14), no por una ruta inaccesible. Flash usa a Gloom desde
+Party: FldEff_UseFlash una vez, flag888=1 y GetFlashLevel()=1 (radio ampliado,
+no luminosidad completa). Replay r05-flash PASS; capturas antes/despues privadas.
+
+Fuerza desplaza realmente las rocas locales3 (4,7)->(3,7) y4 (9,10)->(10,10).
+Golpe Roca elimina el obstaculo10 en (18,12). Los replays r05-upper-boulders
+y r05-smash-corridor pasan, verificando posiciones/ausencia de obstaculos.
+La escalera (30,25) conduce al segundo sotano, con combates originales durante
+el recorrido. r05-second-basement PASS y checkpoint r05-victory-road-b2f-entry.
+Los manifiestos y Continue ahora incluyen Var40C3, FlashLevel y Ultra/Great Balls.
+
+No ha aparecido otro fallo nativo en estos tramos. No se han escrito banderas,
+posiciones, objetos ni equipo: solo teclas y guardados del juego. El build ARM
+continua verificado con 0047 (sin cambios nativos posteriores). R05 sigue abierto:
+faltan el resto de Calle Victoria, Liga, creditos y Hall of Fame. Sin push.
