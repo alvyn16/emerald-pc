@@ -1584,3 +1584,40 @@ en build/natural-campaign/ y Continue --continue-until1181 PASS, save intacto.
 Este es el punto de continuacion actual. Drake, Wallace, creditos y Hall of
 Fame siguen pendientes; R05, R06-R15, T27 y Checkpoint E no se cierran.
 Capturas, saves y logs siguen privados en build/. No hay push de estos cambios.
+
+
+## T27 R05: derrota ante Drake y reabastecimiento natural
+
+Desde r05-rayquaza-glacia-win se cruzan Glacia/Hall3/Drake por las puertas
+(6,2)/(5,2) y se inicia el combate por dialogo. El intento termina en outcome2:
+EverGrande(18,6), dinero16442->8221, ocho medallas conservadas y flags del
+Alto Mando reiniciados. No hay excepcion nativa. Replay r05-rayquaza-drake PASS;
+checkpoint r05-rayquaza-drake-loss y Continue --continue-until1181 PASS.
+La inspeccion de los recursos del guardado anterior muestra Rayquaza0/240PS,
+los otros cuatro companeros debilitados y Swampert73/188PS: el checkpoint
+prueba una victoria sobre Glacia, pero deja un equipo agotado para Drake.
+
+Desde ese blackout se vuela a Mossdeep y se compran cuatro Hyper Potions
+(4800) y dos Revive(3000): dinero8221->421. Enfermera real, Fly de regreso y
+puertas normales hasta Sidney. No se conceden dinero, objetos, PP ni PS por
+el debugger. Replay r05-league-restock PASS y Continue del checkpoint
+r05-league-restocked PASS. Los nuevos intentos usan las medicinas mediante
+Bag/Use/seleccion del Pokemon, con verificaciones de consumo y PS.
+
+Verificacion de esta continuacion: normal/diagnostico, 21 suites host y
+verify-normal PASS; make compare -> pokeemerald.gba: OK. ROM legal SHA1
+f3ae088181bf583e55daf962a92bb46f4f1d07b7 y save del usuario SHA256
+b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260 intactos.
+Upstream no se modifica; evidencias y capturas permanecen privadas en build/.
+
+
+El segundo recorrido desde r05-league-restocked vuelve a ganar Sidney,
+Phoebe y Glacia, pero pierde ante Drake de forma normal. Se conservan todos
+sus checkpoints con prefijo r05-league-retry-; no sustituyen la evidencia
+del primer recorrido. Las Hyper Potions usadas fuera del combate restauran
+Rayquaza158->240 y154->245PS y descuentan una unidad por uso; el resto se
+consume durante las peleas. Al llegar a Drake quedan Rayquaza47/245PS y
+0PP de Outrage, Fly5PP, ExtremeSpeed5PP, Rest10PP; Pelipper47 y Swampert53
+estan sanos. Quedan dos Revive sin consumir. No es un bloqueo del host:
+la politica automatica solo elige ataques y no aprovecha Rest o Revive.
+Drake, Wallace y el final de R05 continuan pendientes.

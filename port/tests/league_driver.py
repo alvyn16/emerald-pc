@@ -523,6 +523,7 @@ def rayquaza_elite(opponent, expected_outcome=1):
     previous,hall,room,flag={
         'phoebe':('SidneysRoom','Hall1','PhoebesRoom',0x4fc),
         'glacia':('PhoebesRoom','Hall2','GlaciasRoom',0x4fd),
+        'drake':('GlaciasRoom','Hall3','DrakesRoom',0x4fe),
     }[opponent]
     assert d.state()['map'] == 'EverGrandeCity_'+previous
     assert d.value(f'(int)FlagGet({flag-1})') == 1
@@ -549,3 +550,84 @@ def rayquaza_elite(opponent, expected_outcome=1):
         return d.save_checkpoint('r05-rayquaza-'+opponent+'-'+label)
     finally:
         d.HEAL_ITEMS=original
+
+
+def league_restock():
+    """Spend the campaign's remaining money, then nurse and re-enter normally."""
+    assert d.state()['map'] == 'EverGrandeCity'
+    assert all(d.value(f'(int)FlagGet({n})') == 0 for n in range(0x4fb,0x4ff))
+    d.fly_to('MossdeepCity')
+    d.go(37,19); d.cross('UP','MossdeepCity_Mart')
+    d.buy_item(21,4)
+    d.buy_item(24,2)
+    d.go(3,7); d.cross('DOWN','MossdeepCity')
+    d.go(28,17); d.cross('UP','MossdeepCity_PokemonCenter_1F')
+    d.nurse()
+    d.go(7,8); d.cross('DOWN','MossdeepCity')
+    d.fly_to('EverGrandeCity')
+    d.go(18,6); d.cross('UP','EverGrandeCity_PokemonLeague_1F')
+    d.warp_to(9,1,'EverGrandeCity_Hall5',50000)
+    d.warp_to(5,2,'EverGrandeCity_SidneysRoom',50000)
+    assert d.value('(int)CountTotalItemQuantityInBag(21)') == 4
+    assert d.value('(int)CountTotalItemQuantityInBag(24)') == 2
+    print('NATURAL LEAGUE RESTOCK PASS',d.state())
+    return d.save_checkpoint('r05-league-restocked')
+
+
+def use_owned_medicine(item, slot):
+    """Use one purchased medicine through Bag/Use/party; never heal by debugger."""
+    assert item in (21,24) and 0 <= slot < d.state()['party']
+    assert d.field_ready(d.state())
+    before=d.value(f'(int)CountTotalItemQuantityInBag({item})')
+    mon=f'(void *)((char *)&gPlayerParty+{slot*100})'
+    hp=d.value(f'(int)GetMonData3({mon},57,0)')
+    maximum=d.value(f'(int)GetMonData3({mon},58,0)')
+    assert before > 0 and (hp == 0 if item == 24 else 0 < hp < maximum)
+    d.open_start_action(2)
+    for step in range(240):
+        if d.value(f'(int)CountTotalItemQuantityInBag({item})') == before-1:
+            break
+        if (d.state()['callback'] == 'CB2_UpdatePartyMenu'
+                and d.value('(int)FuncIsActiveTask((void *)Task_HandleChooseMonInput)')):
+            d.select_party_slot(slot); d.advance('A',24,1)
+        elif d.state()['callback'] == 'CB2_BagMenuRun':
+            d.advance(d.item_bag_button(item),24,1)
+        else:
+            d.advance('A',24,1)
+    else:
+        raise RuntimeError('Field medicine deadline: '+str(d.state()))
+    d.advance('NONE',180)
+    for step in range(20):
+        if d.field_ready(d.state()):
+            break
+        d.advance('B',120,1)
+    assert d.field_ready(d.state()), d.state()
+    assert d.value(f'(int)CountTotalItemQuantityInBag({item})') == before-1
+    after=d.value(f'(int)GetMonData3({mon},57,0)')
+    assert after == (maximum//2 if item == 24 else min(maximum,hp+200)), (hp,after,maximum)
+    print('NATURAL OWNED MEDICINE PASS',item,slot,hp,after)
+
+
+def restore_rayquaza():
+    assert d.value('(int)GetMonData3((void *)&gPlayerParty,11,0)') == 406
+    hp=d.value('(int)GetMonData3((void *)&gPlayerParty,57,0)')
+    maximum=d.value('(int)GetMonData3((void *)&gPlayerParty,58,0)')
+    if hp == 0:
+        use_owned_medicine(24,0)
+        hp=d.value('(int)GetMonData3((void *)&gPlayerParty,57,0)')
+    if hp < maximum and d.value('(int)CountTotalItemQuantityInBag(21)'):
+        use_owned_medicine(21,0)
+
+
+def league_retry():
+    """Replay the League with bought supplies and real between-room medicine."""
+    assert d.state()['map'] == 'EverGrandeCity_SidneysRoom'
+    rayquaza_sidney()
+    for opponent in ('phoebe','glacia','drake'):
+        restore_rayquaza()
+        result=rayquaza_elite(opponent,expected_outcome=None)
+        if result['map'] == 'EverGrandeCity':
+            print('NATURAL LEAGUE RETRY BLACKOUT',opponent)
+            return result
+    print('NATURAL LEAGUE RETRY ELITE FOUR VICTORY PASS',d.state())
+    return result
