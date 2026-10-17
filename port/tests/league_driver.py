@@ -169,3 +169,81 @@ def second_basement():
     assert (d.state()['x'],d.state()['y']) == (30,25)
     print('NATURAL VICTORY SECOND BASEMENT PASS',d.state())
     return d.save_checkpoint('r05-victory-road-b2f-entry')
+
+
+def cross_second_basement():
+    assert d.state()['map'] == 'VictoryRoad_B2F'
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.talk(33,17,'UP')
+    assert d.memory('gPlayerAvatar',1)[0]&8
+    d.warp_to(43,2,'VictoryRoad_B1F',150000)
+    assert (d.state()['x'],d.state()['y']) == (42,2)
+    print('NATURAL VICTORY B2F CROSSING PASS',d.state())
+    return d.save_checkpoint('r05-victory-road-b2f-crossed')
+
+
+def cave_waterfalls():
+    assert d.state()['map'] == 'VictoryRoad_B2F'
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.talk(33,17,'UP')
+    assert d.memory('gPlayerAvatar',1)[0]&8
+    d.go(26,13); d.go(26,12)
+    assert d.value('(int)IsPlayerSurfingNorth()') == 1
+    d.advance('A',48,8); d.settle(30000)
+    assert (d.state()['x'],d.state()['y']) == (26,8)
+    d.go(8,10,dialogue_limit=150000)
+    # Ordinary DOWN enters the western waterfall's native forced descent.
+    d.advance('DOWN',180,4); d.settle(50000)
+    assert (d.state()['x'],d.state()['y']) == (8,14)
+    d.warp_to(19,12,'VictoryRoad_B1F',150000)
+    assert (d.state()['x'],d.state()['y']) == (17,16)
+    print('NATURAL VICTORY CAVE WATERFALLS PASS',d.state())
+    return d.save_checkpoint('r05-victory-road-center-stairs')
+
+
+def central_puzzle():
+    import seafloor_driver as rocks
+    assert d.state()['map'] == 'VictoryRoad_B1F'
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.talk(19,25,'RIGHT',150000)
+    assert 11 not in rocks.positions()
+    d.talk(20,27,'UP',150000); rocks.push(5,'UP')
+    d.talk(20,26,'RIGHT',150000)
+    assert 12 not in rocks.positions()
+    d.warp_to(20,21,'VictoryRoad_1F',150000)
+    assert (d.state()['x'],d.state()['y']) == (21,32)
+    print('NATURAL VICTORY CENTRAL PUZZLE PASS',d.state())
+    return d.save_checkpoint('r05-victory-road-central-upper')
+
+
+def victory_exit():
+    assert d.state()['map'] == 'VictoryRoad_1F'
+    d.RUN_WILD=True; d.HEAL_ITEMS=(21,22,13)
+    d.warp_to(39,5,'EverGrandeCity',200000)
+    assert (d.state()['x'],d.state()['y']) == (18,28)
+    print('NATURAL VICTORY ROAD EXIT PASS',d.state())
+    return d.save_checkpoint('r05-victory-road-exit')
+
+
+def league_lobby():
+    assert d.state()['map'] == 'EverGrandeCity'
+    d.go(18,6); d.cross('UP','EverGrandeCity_PokemonLeague_1F')
+    # League layout differs from an ordinary Pokemon Center: counter at y3.
+    d.talk(3,4,'UP')
+    for index in range(d.state()['party']):
+        mon='(void *)((char *)&gPlayerParty+%d)'%(index*100)
+        assert d.value('(int)GetMonData3(%s,57,0)'%mon) == d.value('(int)GetMonData3(%s,58,0)'%mon)
+    print('NATURAL LEAGUE LOBBY HEAL PASS',d.state())
+    return d.save_checkpoint('r05-league-lobby-rested')
+
+
+def league_gate():
+    assert d.state()['map'] == 'EverGrandeCity_PokemonLeague_1F'
+    assert d.value('(int)FlagGet(0x107)') == 0
+    assert [d.value('(int)FlagGet(%d)'%(0x867+i)) for i in range(8)] == [1]*8
+    d.talk(9,3,'UP',50000)
+    assert d.value('(int)FlagGet(0x107)') == 1
+    d.warp_to(9,1,'EverGrandeCity_Hall5',50000)
+    assert (d.state()['x'],d.state()['y']) == (5,12)
+    print('NATURAL LEAGUE BADGE GATE PASS',d.state())
+    return d.save_checkpoint('r05-league-entered')

@@ -1274,3 +1274,31 @@ No ha aparecido otro fallo nativo en estos tramos. No se han escrito banderas,
 posiciones, objetos ni equipo: solo teclas y guardados del juego. El build ARM
 continua verificado con 0047 (sin cambios nativos posteriores). R05 sigue abierto:
 faltan el resto de Calle Victoria, Liga, creditos y Hall of Fame. Sin push.
+
+## T27 R05: salida de Calle Victoria y acceso real a Liga
+
+B2F: Surf desde (33,17), cascada central (26,12)->(26,8), cruce al oeste
+y bajada forzada original (8,10)->(8,14). La escalera (19,12) llega a B1F
+(17,16). La escalera del este es una zona lateral: se comprobo sin forzar
+warps y su replay separado tambien pasa. r05-cave-waterfalls PASS.
+
+En B1F se rompen rocas11/12 y empuja roca5 al norte una vez; la escalera
+(20,21) lleva a 1F(21,32). r05-central-puzzle PASS. La salida norte llega
+a EverGrande(18,28): incluye el paso automatico tras la puerta, que faltaba
+en la primera asercion del guion. El replay corregido r05-victory-exit PASS.
+La enfermera de Liga se alcanza desde (3,4), no desde el mostrador (3,3).
+Todos los HP se verifican al maximo. r05-league-lobby PASS y Continue del
+checkpoint r05-league-lobby-rested PASS, archivo sin cambios.
+
+Capturas privadas revisadas: r05-victory-road-exit.png,
+r05-league-lobby-rested.png y r05-sidney-ready.png, dentro de build/.
+El build GBA vuelve a dar pokeemerald.gba: OK (t27-league-gba-compare.log).
+Sin nuevo fallo nativo ni cambios en upstream. R05 sigue abierto para Alto
+Mando, Campeon, creditos y Hall of Fame. No se da T27 por terminado.
+
+El control original de medallas desplaza ambos guardias y activa flag107;
+r05-league-gate PASS desde el guardado del lobby. Se entra por Hall5 al cuarto
+de Sidney. El primer intento con el equipo de campana termina en derrota
+normal (gBattleOutcome=2), no en excepcion: reaparece fuera de Liga y permite
+guardar. Cuatro Hyper Potions consumidas y dinero14642->7321; no se cuenta
+como victoria ni se da el Alto Mando por cubierto. r05-sidney-result privado.
