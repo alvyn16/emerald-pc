@@ -525,10 +525,12 @@ def rayquaza_elite(opponent, expected_outcome=1):
         'glacia':('PhoebesRoom','Hall2','GlaciasRoom',0x4fd),
         'drake':('GlaciasRoom','Hall3','DrakesRoom',0x4fe),
     }[opponent]
-    assert d.state()['map'] == 'EverGrandeCity_'+previous
     assert d.value(f'(int)FlagGet({flag-1})') == 1
-    d.warp_to(6,2,'EverGrandeCity_'+hall,50000)
-    d.warp_to(5,2,'EverGrandeCity_'+room,50000)
+    assert d.value(f'(int)FlagGet({flag})') == 0
+    if d.state()['map'] != 'EverGrandeCity_'+room:
+        assert d.state()['map'] == 'EverGrandeCity_'+previous
+        d.warp_to(6,2,'EverGrandeCity_'+hall,50000)
+        d.warp_to(5,2,'EverGrandeCity_'+room,50000)
     d.save_checkpoint('r05-rayquaza-'+opponent+'-ready')
     original=d.HEAL_ITEMS
     try:
@@ -631,3 +633,119 @@ def league_retry():
             return result
     print('NATURAL LEAGUE RETRY ELITE FOUR VICTORY PASS',d.state())
     return result
+
+
+def drake_with_rest():
+    original=d.REST_SPECIES,d.REVIVE_SPECIES
+    try:
+        d.REST_SPECIES={406}
+        d.REVIVE_SPECIES={406}
+        return rayquaza_elite('drake',expected_outcome=None)
+    finally:
+        d.REST_SPECIES,d.REVIVE_SPECIES=original
+
+
+def leppa_preparation():
+    """Collect the initial Route104 Leppa tree and buy supplies after blackout."""
+    assert d.state()['map'] == 'EverGrandeCity'
+    d.fly_to('RustboroCity')
+    d.connect('Route104')
+    before=d.value('(int)CountTotalItemQuantityInBag(138)')
+    d.talk(36,7,'UP',30000)
+    count=d.value('(int)CountTotalItemQuantityInBag(138)')
+    assert count >= before+2, (before,count)
+    print('NATURAL LEPPA HARVEST PASS',before,count)
+    d.fly_to('MossdeepCity')
+    d.go(37,19); d.cross('UP','MossdeepCity_Mart')
+    d.buy_item(21,3)
+    d.buy_item(24,2)
+    d.go(3,7); d.cross('DOWN','MossdeepCity')
+    d.go(28,17); d.cross('UP','MossdeepCity_PokemonCenter_1F')
+    d.nurse()
+    d.go(7,8); d.cross('DOWN','MossdeepCity')
+    d.fly_to('EverGrandeCity')
+    d.go(18,6); d.cross('UP','EverGrandeCity_PokemonLeague_1F')
+    d.warp_to(9,1,'EverGrandeCity_Hall5',50000)
+    d.warp_to(5,2,'EverGrandeCity_SidneysRoom',50000)
+    assert d.value('(int)CountTotalItemQuantityInBag(138)') == count
+    return d.save_checkpoint('r05-league-leppa-ready')
+
+
+def restore_outrage():
+    """Use an actually harvested Leppa on Rayquaza's fourth move via menus."""
+    assert d.field_ready(d.state())
+    mon='(void *)&gPlayerParty'
+    assert d.value(f'(int)GetMonData3({mon},11,0)') == 406
+    assert d.value(f'(int)GetMonData3({mon},16,0)') == 200
+    pp=d.value(f'(int)GetMonData3({mon},20,0)')
+    before=d.value('(int)CountTotalItemQuantityInBag(138)')
+    bonus=d.value(f'(int)GetMonData3({mon},21,0)')
+    maximum=d.value(f'(int)CalculatePPWithBonus(200,{bonus},3)')
+    assert pp < maximum and before > 0
+    d.open_start_action(2)
+    for step in range(320):
+        if d.value('(int)CountTotalItemQuantityInBag(138)') == before-1:
+            break
+        if d.state()['callback'] == 'CB2_BagMenuRun':
+            if d.value('(int)FuncIsActiveTask((void *)Task_BagMenu_HandleInput)'):
+                position=d.memory('gBagPosition',28); pocket=position[5]
+                if pocket != 3:
+                    button='RIGHT' if pocket < 3 else 'LEFT'
+                else:
+                    entries=[d.value(f'(int)BagGetItemIdByPocketPosition(4,{i})') for i in range(46)]
+                    target=entries.index(138)
+                    cursor=int.from_bytes(position[14:16],'little')+int.from_bytes(position[24:26],'little')
+                    button='A' if cursor == target else 'DOWN' if cursor < target else 'UP'
+                d.advance(button,24,1)
+            elif d.value('(int)FuncIsActiveTask((void *)Task_ItemContext_MultipleRows)'):
+                d.advance(d.cursor_button(d.value('(int)Menu_GetCursorPos()'),2),24,1)
+            else:
+                d.advance('NONE',24)
+        elif d.value('(int)FuncIsActiveTask((void *)Task_HandleWhichMoveInput)'):
+            cursor=d.value('(int)Menu_GetCursorPos()')
+            d.advance('A' if cursor == 3 else 'DOWN' if cursor < 3 else 'UP',24,1)
+        elif d.value('(int)FuncIsActiveTask((void *)Task_HandleChooseMonInput)'):
+            d.select_party_slot(0); d.advance('A',24,1)
+        else:
+            d.advance('A',24,1)
+    else:
+        raise RuntimeError('Leppa use deadline: '+str(d.state()))
+    d.advance('NONE',180)
+    for step in range(20):
+        if d.field_ready(d.state()): break
+        d.advance('B',120,1)
+    assert d.field_ready(d.state())
+    restored=d.value(f'(int)GetMonData3({mon},20,0)')
+    assert restored == min(maximum,pp+10), (pp,restored,maximum)
+    assert d.value('(int)CountTotalItemQuantityInBag(138)') == before-1
+    print('NATURAL LEPPA PP RESTORED PASS',pp,restored,before,before-1)
+
+
+def league_with_leppa(start='sidney',glacia_lead=None):
+    original=d.REST_SPECIES,d.REVIVE_SPECIES
+    try:
+        d.REST_SPECIES=set(); d.REVIVE_SPECIES=set()
+        assert start in ('sidney','glacia')
+        if start == 'sidney':
+            rayquaza_sidney()
+        else:
+            assert d.state()['map'] == 'EverGrandeCity_PhoebesRoom'
+        opponents=('phoebe','glacia','drake') if start == 'sidney' else ('glacia','drake')
+        for opponent in opponents:
+            d.REST_SPECIES={406} if opponent == 'drake' else set()
+            d.REVIVE_SPECIES={406} if opponent == 'drake' else set()
+            restore_rayquaza()
+            if d.value('(int)GetMonData3((void *)&gPlayerParty,20,0)') < 5:
+                restore_outrage()
+            if opponent == 'glacia' and glacia_lead is not None:
+                d.set_lead(glacia_lead)
+            result=rayquaza_elite(opponent,expected_outcome=None)
+            if result['map'] == 'EverGrandeCity':
+                print('NATURAL LEPPA LEAGUE BLACKOUT',opponent)
+                return result
+            if opponent == 'glacia' and glacia_lead is not None:
+                d.set_lead(glacia_lead)
+        print('NATURAL LEPPA ELITE FOUR VICTORY PASS',d.state())
+        return result
+    finally:
+        d.REST_SPECIES,d.REVIVE_SPECIES=original
