@@ -6,8 +6,8 @@ La campaña continua natural tiene R01–R04 completos: ocho medallas y sus
 bloqueos de historia verificados por entrada, replay y Continue. R05 sigue
 parcial: Wally, Calle Victoria, acceso a Liga y victoria sobre Sidney PASS.
 Phoebe derrota al equipo; el blackout y la recarga funcionan. Tras obtener
-Bicicleta Carrera mediante Rydel, la partida volvió a Pilar Celeste 2F;
-el piso agrietado sigue pendiente. No se ha completado el Alto Mando,
+Bicicleta Carrera mediante Rydel, se cruzo el piso agrietado de 2F;
+checkpoint 3F(3,2), con replay y Continue PASS. El puzzle de 4F sigue pendiente. No se ha completado el Alto Mando,
 la captura de Rayquaza ni los créditos en esta campaña.
 
 R06–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
@@ -1375,3 +1375,24 @@ ROM original SHA1 f3ae088181bf583e55daf962a92bb46f4f1d07b7 y save del usuario
 SHA256 b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260
 conservados. Solo cambios en helpers/documentacion; GBA sin cambios desde0047,
 ultima verificacion pokeemerald.gba: OK. Sin push; planes del usuario intactos.
+
+## T27 R05: cruce real del piso agrietado de Pilar Celeste 2F
+
+Desde r05-sky-pillar-broken-floor se monta la Bici Carrera por Bag/Key Items.
+El recorrido usa (12,2)->(12,13)->(1,13)->(1,7)->(3,7)->(3,2) y la escalera
+original hasta 3F(3,2). ride_to observa cada dos frames sin soltar la direccion.
+El helper advance permite hold==frames; no cambia input ni comportamiento
+fuera del ejecutable de diagnostico. No se escriben velocidad ni coordenadas.
+
+Los intentos iniciales cayeron normalmente por frenar contra el muro en
+(13,7), o arrancar demasiado cerca de las grietas al subir desde (0,13).
+GetPlayerSpeed y bikeFrameCounter observados con GDB: llegar a un giro con
+contador2/velocidad3 conserva el impulso; detenerse reinicia el contador.
+No hubo excepcion nativa. No se modifica la fisica ni el callback del suelo.
+
+Replay r05-broken-floor-crossing PASS; Continue r05-sky-pillar-3f-mach PASS,
+guardado intacto. Captura privada r05-sky-pillar-3f-mach.png en build/.
+La repeticion arranca de Continue en frame2000, con pulsos solo hasta1800;
+fallos de control, cambio inesperado de mapa y deadline son aserciones.
+Queda resolver 4F, preparar el nuevo intento de Liga y completar R05; T27
+sigue abierto. No hay cambios nativos ni nuevos parches upstream.

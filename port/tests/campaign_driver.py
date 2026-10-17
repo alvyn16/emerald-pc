@@ -67,7 +67,8 @@ def advance(buttons="NONE", frames=24, hold=None):
     assert gdb.newest_frame().name() == "Port_ExitCleanly", "Unexpected debugger stop; inspect backtrace"
     frame = value("sDiagnosticFrame")
     hold = frames-1 if hold is None else hold
-    assert frames > 0 and 0 < hold < frames
+    # A full-length hold preserves bike momentum across observation checkpoints.
+    assert frames > 0 and 0 < hold <= frames
     (SCRATCH / "input.txt").write_text(f"{frame+1} {frame+hold} {buttons}\n",encoding="ascii")
     gdb.execute("call (int)PortInputScript_Init()",to_string=True)
     gdb.execute("set var sStopFrame = %d" % (frame+frames))

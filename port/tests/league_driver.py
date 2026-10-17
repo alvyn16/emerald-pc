@@ -397,3 +397,35 @@ def broken_floor_entry():
     assert d.value('(int)MapGridGetMetatileBehaviorAt(20,12)') == 0xd2
     print('NATURAL SKY PILLAR BROKEN FLOOR PASS',d.state())
     return d.save_checkpoint('r05-sky-pillar-broken-floor')
+
+
+def ride_to(button, x, y, limit=160):
+    """Steer with continuous keys; observe every two frames without braking."""
+    assert d.memory('gPlayerAvatar',1)[0]&2
+    start=d.value('sDiagnosticFrame')
+    origin=d.state()['map']
+    while (d.state()['x'],d.state()['y']) != (x,y):
+        assert d.state()['map'] == origin, d.state()
+        assert d.field_ready(d.state()), d.state()
+        assert d.value('sDiagnosticFrame')-start < limit, d.state()
+        d.advance(button,2,2)
+    print('NATURAL MACH BIKE TURN',button,d.state(),list(d.memory('gPlayerAvatar',12)))
+
+
+def broken_floor_crossing():
+    assert d.state()['map'] == 'SkyPillar_2F'
+    assert d.value('(int)VarGet(0x40ca)') == 3
+    d.RUN_WILD=True
+    d.go(12,2)
+    if not d.memory('gPlayerAvatar',1)[0]&2:
+        toggle_mach_bike()
+    # Enough straight run-up before cracks; turn before a wall brakes the bike.
+    for button,x,y in (('DOWN',12,13),('LEFT',1,13),('UP',1,7),
+                       ('RIGHT',3,7),('UP',3,2)):
+        ride_to(button,x,y)
+    d.advance('NONE',24)
+    d.settle(30000)
+    assert d.state()['map'] == 'SkyPillar_3F', d.state()
+    assert (d.state()['x'],d.state()['y']) == (3,2)
+    print('NATURAL SKY PILLAR SECOND FLOOR BIKE PASS',d.state())
+    return d.save_checkpoint('r05-sky-pillar-3f-mach')

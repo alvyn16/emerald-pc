@@ -56,7 +56,8 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   replays PASS; enfermera de Liga y Continue PASS. Alto Mando y final pendientes.
   Sidney: victoria original, replay y Continue PASS. Resto del Alto Mando pendiente.
   Blackout ante Phoebe y Bici Carrera por UI/replay PASS. Recarga del regreso
-  a Pilar Celeste 2F PASS; piso agrietado y nuevo intento de Liga pendientes.
+  a Pilar Celeste PASS; cruce de 2F con Bici Carrera, replay y Continue 3F PASS.
+  Puzzle de 4F y nuevo intento de Liga pendientes.
 - [ ] R06: crianza por pasos reales, generación de huevo, recogida por diálogo,
   eclosión mediante desplazamientos y conservación tras save/reload. No marcar
   readiness, contador de huevo ni especie manualmente.
