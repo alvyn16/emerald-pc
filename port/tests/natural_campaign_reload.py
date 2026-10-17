@@ -53,6 +53,11 @@ for key in ('map','x','y','party'):
 for index,mon in enumerate(expected['team']):
     for field,key in ((11,'species'),(56,'level')):
         assert d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{{index*100}}),{{field}},0)') == mon[key]
+    for field,key in ((57,'hp'),(58,'max_hp'),(55,'status')):
+        if key in mon:
+            assert d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{{index*100}}),{{field}},0)') == mon[key]
+    if 'pp' in mon:
+        assert [d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{{index*100}}),{{17+j}},0)') for j in range(4)] == mon['pp']
     if 'moves' in mon:
         assert [d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{{index*100}}),{{13+j}},0)') for j in range(4)] == mon['moves']
     if 'held_item' in mon:

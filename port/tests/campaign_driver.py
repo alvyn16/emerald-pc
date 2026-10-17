@@ -15,6 +15,8 @@ SWITCH_FROM_TYPES = set()  # Lead training can share XP with a healthy partner.
 TARGET_CHOICES = {}  # Planned targets, applied exclusively through menu keys.
 HEAL_ITEMS = ()  # Optional campaign consumables, never granted by the driver.
 HEAL_PLAN = {}
+REST_SPECIES = set()  # Optional actual Rest selection at low HP.
+REVIVE_SPECIES = set()  # Optional purchased Revive use for fainted partners.
 EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0x90,
                "match_call":0x12f,"pokenav":0x862,"letter":0xbd,"delivered_goods":0x95,
                "wally_mauville":0xbe,"rock_smash":0x6b,
@@ -174,7 +176,17 @@ def battle_button():
             return 'B'  # Keep current mon for optional between-opponent swaps.
         if function == "HandleInputChooseAction":
             hp,max_hp=struct.unpack_from('<H',battle_mons,battler*88+40)[0],struct.unpack_from('<H',battle_mons,battler*88+44)[0]
-            if HEAL_ITEMS and not catching and hp and hp*2 <= max_hp:
+            if REVIVE_SPECIES and not catching and not HEAL_PLAN:
+                for slot in range(memory('gPlayerPartyCount',1)[0]):
+                    mon=f'(void *)((char *)&gPlayerParty+{slot*100})'
+                    if (value(f'(int)GetMonData3({mon},11,0)') in REVIVE_SPECIES
+                            and value(f'(int)GetMonData3({mon},57,0)') == 0):
+                        quantity=value('(int)CountTotalItemQuantityInBag(24)')
+                        if quantity:
+                            HEAL_PLAN.update(item=24,quantity=quantity,field_slot=slot)
+                            print('NATURAL REVIVE MENU',slot,quantity)
+                            break
+            if not HEAL_PLAN and HEAL_ITEMS and not catching and hp and hp*2 <= max_hp:
                 for item in HEAL_ITEMS:
                     quantity=value(f'(int)CountTotalItemQuantityInBag({item})')
                     if quantity:
@@ -236,6 +248,21 @@ def battle_button():
         if not candidates:
             return "A"  # Engine offers Struggle when all PP are exhausted.
         best=max(candidates); target=best[3]; TARGET_CHOICES[battler]=best[4]
+        species=struct.unpack_from('<H',battle,battler*88)[0]
+        hp,max_hp=struct.unpack_from('<H',battle,battler*88+40)[0],struct.unpack_from('<H',battle,battler*88+44)[0]
+        status=struct.unpack_from('<I',battle,battler*88+76)[0]
+        ice_threat=False
+        if species in REST_SPECIES:
+            for opponent in opponents:
+                for enemy_move in struct.unpack_from('<4H',battle,opponent*88+12):
+                    if enemy_move:
+                        definition=bytes(gdb.selected_inferior().read_memory(value('(unsigned int)&gBattleMoves')+enemy_move*9,9))
+                        ice_threat |= definition[2] == 15 and definition[1] > 0
+        if species in REST_SPECIES and hp*2 <= max_hp and not status&7 and not ice_threat:
+            rest=next((i for i,move in enumerate(moves) if move == 156 and choices[8+i]
+                       and not (tormented and move == last_move)),None)
+            if rest is not None:
+                target=rest
         cursor=memory("gMoveSelectionCursor",4)[battler]
         button=cursor_button(cursor,target)
         if button == 'A':
@@ -245,8 +272,7 @@ def battle_button():
 
 
 def log_battle_choice(kind,battler,**fields):
-    if memory('gBattlersCount',1)[0] != 4:
-        return
+    """Retain actual selected moves for singles as well as doubles."""
     entry=dict(frame=value('sDiagnosticFrame'),kind=kind,battler=battler,**fields)
     with (SCRATCH/'battle-choices.jsonl').open('a',encoding='utf-8') as output:
         output.write(json.dumps(entry)+'\n')
@@ -710,6 +736,10 @@ def save_checkpoint(name):
     facts["team"]=[dict(species=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),11,0)"),
                         level=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),56,0)"),
                         held_item=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),12,0)"),
+                        hp=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),57,0)"),
+                        max_hp=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),58,0)"),
+                        status=value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),55,0)"),
+                        pp=[value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),{17+j},0)") for j in range(4)],
                         moves=[value(f"(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),{13+j},0)") for j in range(4)])
                    for i in range(facts["party"])]
     facts["dex"]=value("(int)FlagGet(0x861)")
@@ -740,7 +770,7 @@ def save_checkpoint(name):
     facts['victory_road']=value('(int)VarGet(0x40c3)')
     facts['flash_level']=value('(int)GetFlashLevel()')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
-                        for item in (1,2,3,13,21,22,75,77,78,182,259,288,291,302,314,375,*range(339,347))}
+                        for item in (1,2,3,13,21,22,24,75,77,78,138,182,259,288,291,302,314,375,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
     facts['money']=value(f'(int)GetMoney((void *)({save}+0x490))')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")
