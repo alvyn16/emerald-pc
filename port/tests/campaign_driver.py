@@ -37,7 +37,9 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "water_pulse_received":0xac,"wally_victory_road":0x7e,"flash_active":0x888,
                "league_entered":0x107,"sidney_defeated":0x4fb,
                "phoebe_defeated":0x4fc,"glacia_defeated":0x4fd,
-               "drake_defeated":0x4fe,"game_clear":0x864}
+               "drake_defeated":0x4fe,"game_clear":0x864,
+               "basement_key_received":0xd0,"thunderbolt_received":0xd1,
+               "new_mauville_rope_collected":0x434,"new_mauville_full_heal_collected":0x462}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -87,10 +89,12 @@ def advance(buttons="NONE", frames=24, hold=None):
     return result
 
 
-def settle(limit=10000):
+def settle(limit=10000, stop_when=None):
     start = value("sDiagnosticFrame")
     while value("sDiagnosticFrame")-start < limit:
         current = state()
+        if stop_when is not None and stop_when(current):
+            return current
         if field_ready(current):
             HEAL_PLAN.clear()
             current = advance("NONE",24)
@@ -768,9 +772,10 @@ def save_checkpoint(name):
     facts['sootopolis_city']=value('(int)VarGet(0x405e)')
     facts['sky_pillar']=value('(int)VarGet(0x40ca)')
     facts['victory_road']=value('(int)VarGet(0x40c3)')
+    facts['new_mauville']=value('(int)VarGet(0x40ba)')
     facts['flash_level']=value('(int)GetFlashLevel()')
     facts['inventory']={str(item):value(f'(int)CountTotalItemQuantityInBag({item})')
-                        for item in (1,2,3,13,21,22,24,75,77,78,138,182,259,288,291,302,314,375,*range(339,347))}
+                        for item in (1,2,3,13,21,22,23,24,75,77,78,85,138,182,259,271,288,291,302,312,314,375,*range(339,347))}
     save=value('*(unsigned int *)&gSaveBlock1Ptr')
     facts['money']=value(f'(int)GetMoney((void *)({save}+0x490))')
     (SCRATCH/(name+".json")).write_text(json.dumps(facts,indent=2),encoding="utf-8")
@@ -782,10 +787,10 @@ def save_checkpoint(name):
 def path_to(x,y):
     current = state(); goal=(x+7,y+7)
     switches=set()
-    if current['map'] == 'MossdeepCity_Gym':
-        events=json.loads((ROOT/'pokeemerald/data/maps/MossdeepCity_Gym/map.json').read_text())['coord_events']
+    if current['map'] in ('MossdeepCity_Gym','NewMauville_Inside'):
+        events=json.loads((ROOT/'pokeemerald/data/maps'/current['map']/'map.json').read_text())['coord_events']
         switches={(event['x']+7,event['y']+7) for event in events
-                  if event.get('script','').endswith('FloorSwitch')}
+                  if current['map'] == 'NewMauville_Inside' or event.get('script','').endswith('FloorSwitch')}
     width,height,address = struct.unpack("<III",memory("gBackupMapLayout",12))
     cells = struct.unpack("<%dH" % (width*height),bytes(gdb.selected_inferior().read_memory(address,width*height*2)))
     read=gdb.selected_inferior().read_memory

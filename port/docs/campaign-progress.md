@@ -2,14 +2,11 @@
 
 ## Estado actual: 17 de octubre de 2026
 
-La campaña continua natural tiene R01–R04 completos: ocho medallas y sus
-bloqueos de historia verificados por entrada, replay y Continue. R05 sigue
-parcial: Wally, Calle Victoria, acceso a Liga y victorias sobre Sidney/Phoebe/Glacia
-PASS. La victoria de Glacia y su Continue estan guardados; tambien se conserva
-la derrota previa y su blackout normal. Tras obtener
-Bicicleta Carrera mediante Rydel, se cruzaron los puzzles de 2F/4F y
-se capturo a Rayquaza nivel70 con la Master Ball obtenida antes. Replays y
-Continue PASS. No se ha completado el Alto Mando ni los creditos de esta campaña.
+La campaña continua natural completa R01–R04 y las ocho medallas. R05
+conserva Wally, Calle Victoria y victorias de Sidney/Phoebe/Glacia/Drake.
+La misión real de New Mauville dio Rayo a Rayquaza mediante Wattson y la MT24;
+replays y Continue del generador apagado y de Drake PASS. La entrada a Wallace
+está guardada; Wallace, Hall of Fame, créditos y recarga final siguen pendientes.
 
 R06–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
@@ -1685,3 +1682,31 @@ R06-R15, T27 y Checkpoint E permanecen abiertos. Este incremento cambia
 solo helpers y documentacion; el codigo del juego y los parches no cambian.
 
 Continue final de r05-glacia-ground-lead-loss: PASS; save sin reescribir.
+
+
+## T27: cobertura electrica obtenida sin conceder progreso (17-10-2026)
+
+Wattson entrego la Llave del Sotano por dialogo. Se entro a New Mauville
+con Surf y la llave, se resolvieron los interruptores por desplazamiento,
+se recogieron Escape Rope y Full Heal y se apago el generador. Continue
+conserva var 0x40BA=2; el parche 0048 corrige la recarga descrita en
+first-run-report.md. Se consumio Escape Rope por Bolsa y se regreso a Wattson:
+regalo TM24, flag 0xD1 y aprendizaje de Rayo por menu verificados; TM consumida.
+Rayquaza conserva Vuelo/Rayo/Velocidad Extrema/Enfado; no se concedieron
+movimientos, dinero, objetos, experiencia ni flags desde GDB.
+
+Se compraron cuatro Hiper Pociones (4800, saldo 5630->830), se curo el equipo
+y se volvio a la Liga por Fly/puertas reales. El replay r05-thunderbolt-league
+vence a Sidney (frame27448), Phoebe (49216), Glacia (75544) y Drake (95920).
+Save de Drake (96952): cuatro flags del Alto Mando=1, game-clear=0,
+Rayquaza72 PS75/249, PP12/12/5/2; dos Revivir, Full Heal1, Leppa1,
+saldo21630. Continue de Drake PASS, incluida integridad PS/PP/estado/inventario.
+Se uso la ultima Leppa por Bolsa (Enfado2->12PP) y se guardo delante de Wallace
+(Hall4,5,3). Esto no acredita aun victoria sobre Wallace ni el final.
+
+Replays PASS: r05-new-mauville-key/entry/generator/reward,
+r05-thunderbolt-league-prep/league y r05-champion-door. Evidencia y capturas
+privadas en build/natural-campaign/ y build/natural-campaign-replay-r05-*;
+resumenes build/t27-thunderbolt-league-replay.log,
+build/t27-thunderbolt-drake-win-reload.log y build/t27-champion-door-replay.log.
+R05 sigue abierto; R06-R15 y Checkpoint E siguen abiertos.

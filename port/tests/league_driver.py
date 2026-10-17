@@ -749,3 +749,15 @@ def league_with_leppa(start='sidney',glacia_lead=None):
         return result
     finally:
         d.REST_SPECIES,d.REVIVE_SPECIES=original
+
+
+def champion_door():
+    assert d.state()['map'] == 'EverGrandeCity_DrakesRoom'
+    assert all(d.value(f'(int)FlagGet({flag})') == 1 for flag in range(0x4fb,0x4ff))
+    assert d.value('(int)FlagGet(0x864)') == 0
+    if d.value('(int)GetMonData3((void *)&gPlayerParty,20,0)') < 5:
+        restore_outrage()
+    d.warp_to(6,2,'EverGrandeCity_Hall4',50000)
+    d.go(5,3)
+    print('NATURAL CHAMPION DOOR READY PASS',d.state())
+    return d.save_checkpoint('r05-wallace-door-ready')
