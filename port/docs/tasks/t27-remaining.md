@@ -58,7 +58,8 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Blackout ante Phoebe y Bici Carrera por UI/replay PASS. Recarga del regreso
   a Pilar Celeste PASS; cruce de 2F con Bici Carrera, replay y Continue 3F PASS.
   Puzzle de 4F/caida central, llegada a 5F, replay y Continue PASS.
-  Captura de Rayquaza y nuevo intento de Liga pendientes.
+  Captura real de Rayquaza70/Master Ball, replay y Continue PASS.
+  Nuevo intento de Liga y final pendientes.
 - [ ] R06: crianza por pasos reales, generación de huevo, recogida por diálogo,
   eclosión mediante desplazamientos y conservación tras save/reload. No marcar
   readiness, contador de huevo ni especie manualmente.

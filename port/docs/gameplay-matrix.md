@@ -89,8 +89,8 @@ al PC. No fuerzan resultados de almacenamiento. Capturas raw locales en build/.
 ## T27 — matriz de campaña y segmentos
 
 Estado al 17 de octubre de 2026: campaña natural R01–R04 completa;
-R05 parcial (Wally, Calle Victoria y Sidney PASS). Punto actual: Pilar
-Celeste 2F con Bicicleta Carrera; piso agrietado pendiente. R06–R15 y
+R05 parcial (Wally, Calle Victoria y Sidney PASS). Pilar Celeste: puzzles
+2F/4F y captura real de Rayquaza70 con Master Ball, replays y Continue PASS. R06–R15 y
 Checkpoint E abiertos. La tabla conserva también pruebas con fixtures
 preparados; esas pruebas no acreditan completar la campaña natural.
 
@@ -113,7 +113,7 @@ cambian con input real y callback de campo conservado. Capturas privadas en buil
 | Safari | Huida previa más admisión/cobro 500/30 bolas, captura Magikarp, salida por pasos y limpieza de modo | PASS dirigido; rutina de pasos invocada, no paseo ni agotamiento de bolas |
 | Battle Frontier | Tower singles, rival generado de la tabla de facility, Swampert/Salamence/Metagross 50, victoria y save | PASS de un combate; no racha completa ni otras seis facilities |
 | Campaña continua | R01–R04 naturales completos; ocho medallas, Wally, Calle Victoria, acceso a Liga y Sidney con replay/Continue | R05 PARCIAL; resto del Alto Mando y créditos pendientes |
-| Historia | R01–R04: Devon/Peeko/Steven, gimnasios, escondites, Space Center, Dive/Seafloor, Sky Pillar/Rayquaza de historia y Sootopolis por input real | PASS para R01–R04; captura de Rayquaza y contenidos posteriores pendientes |
+| Historia | R01–R04: Devon/Peeko/Steven, gimnasios, escondites, Space Center, Dive/Seafloor, Sky Pillar/Rayquaza de historia y Sootopolis por input real | PASS para R01–R04; captura de Rayquaza PASS; contenidos posteriores pendientes |
 
 El progreso medido procede de scripts NPC y guardados reales; warps y equipo
 asistidos no acreditan recorrido ni desbloqueos de historia. T27 y Checkpoint E

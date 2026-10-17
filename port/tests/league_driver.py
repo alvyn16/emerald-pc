@@ -455,3 +455,27 @@ def upper_broken_floor():
     assert (d.state()['x'],d.state()['y']) == (3,2)
     print('NATURAL SKY PILLAR FOURTH FLOOR PUZZLE PASS',d.state())
     return d.save_checkpoint('r05-sky-pillar-5f-mach')
+
+
+def catch_rayquaza():
+    assert d.state()['map'] == 'SkyPillar_5F'
+    assert d.state()['party'] == 5
+    assert d.value('(int)CountTotalItemQuantityInBag(1)') == 1
+    d.RUN_WILD=True
+    d.warp_to(10,1,'SkyPillar_Top',50000)
+    d.go(14,7)
+    d.save_checkpoint('r05-rayquaza-catch-ready')
+    original_species,original_ball=d.CATCH_SPECIES,d.CATCH_BALL
+    try:
+        d.CATCH_SPECIES={406}; d.CATCH_BALL=1
+        d.talk(14,7,'UP',120000)
+        assert d.value('*(unsigned char *)&gBattleOutcome') == 7
+        assert d.value('(int)CountTotalItemQuantityInBag(1)') == 0
+        assert d.state()['party'] == 6
+        mon='(void *)((char *)&gPlayerParty+500)'
+        for field,expected in ((11,406),(56,70),(38,1)):
+            assert d.value(f'(int)GetMonData3({mon},{field},0)') == expected
+        print('NATURAL RAYQUAZA MASTER BALL CAPTURE PASS',d.state())
+        return d.save_checkpoint('r05-rayquaza-caught')
+    finally:
+        d.CATCH_SPECIES,d.CATCH_BALL=original_species,original_ball

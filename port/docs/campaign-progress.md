@@ -6,9 +6,9 @@ La campaña continua natural tiene R01–R04 completos: ocho medallas y sus
 bloqueos de historia verificados por entrada, replay y Continue. R05 sigue
 parcial: Wally, Calle Victoria, acceso a Liga y victoria sobre Sidney PASS.
 Phoebe derrota al equipo; el blackout y la recarga funcionan. Tras obtener
-Bicicleta Carrera mediante Rydel, se cruzo el piso agrietado de 2F;
-checkpoint 3F(3,2), con replay y Continue PASS. El puzzle de 4F sigue pendiente. No se ha completado el Alto Mando,
-la captura de Rayquaza ni los créditos en esta campaña.
+Bicicleta Carrera mediante Rydel, se cruzaron los puzzles de 2F/4F y
+se capturo a Rayquaza nivel70 con la Master Ball obtenida antes. Replays y
+Continue PASS. No se ha completado el Alto Mando ni los creditos de esta campaña.
 
 R06–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
@@ -1516,3 +1516,19 @@ Un intento por la columna13 quedo contra el muro13,3 y fallo por deadline del
 helper; el recorrido correcto usa columna12. No es bloqueo ni excepcion del
 juego y no requiere parche nativo. Captura de Rayquaza/final aun no acreditan
 R05; se verifican en el siguiente incremento. T27 sigue abierto.
+
+## T27 R05: captura natural de Rayquaza nivel70 con Master Ball
+
+Desde 5F se sube por (10,1) a SkyPillar_Top y se llega a (14,7) andando.
+La conversacion mirando arriba inicia BattleSetup_StartLegendaryBattle.
+El helper selecciona Bag/Poke Balls/Master Ball, conservando las reglas del
+combate. Outcome7, equipo5->6, especie406/nivel70/PokeBall1 y HP240/240.
+La Master Ball obtenida por UI en el escondite Aqua pasa1->0. No se crean
+Pokemon ni se conceden objetos, niveles, movimientos o resultados con GDB.
+
+Replay r05-rayquaza-catch PASS y Continue r05-rayquaza-caught PASS; save
+sin cambios. Se comprueban especie, nivel, movimientos, objetos equipados,
+medallas y cantidades de inventario tras la recarga. Capturas antes/despues
+privadas en build/natural-campaign/. No hubo excepcion nativa.
+La captura habilita una nueva preparacion legal para Liga, pero no acredita
+las victorias pendientes. R05, R06-R15 y Checkpoint E siguen abiertos.

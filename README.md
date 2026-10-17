@@ -17,8 +17,9 @@ Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Es
 - R05 parcial: Wally, Calle Victoria, acceso a la Liga y Sidney comprobados.
   Phoebe derrota al equipo y el regreso tras perder funciona; no se ha
   completado la Liga en esta campaña.
-- Punto actual de esa partida de diagnóstico: Pilar Celeste 5F tras cruzar
-  los puzzles de 2F/4F con Bicicleta Carrera (replays y recargas PASS).
+- Pilar Celeste: puzzles de 2F/4F cruzados con Bicicleta Carrera y
+  Rayquaza de nivel 70 capturado con la Master Ball obtenida en la campa�a.
+  Replays y recargas PASS; nuevo intento de Liga pendiente.
 - R06–R15 y Checkpoint E siguen abiertos. Las pruebas anteriores de Liga,
   créditos y Hall of Fame con equipo preparado son evidencia separada;
   no acreditan completar la campaña continua.
