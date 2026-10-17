@@ -32,7 +32,10 @@ EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0
                "legendaries_sootopolis":0x53,"steven_cave_guide":0x133,
                "wallace_sky_pillar":0x137,"waterfall_received":0x138,
                "sootopolis_archie_maxie_left":0x9e,"sootopolis_gym_defeated":0x4f7,
-               "water_pulse_received":0xac,"wally_victory_road":0x7e,"flash_active":0x888}
+               "water_pulse_received":0xac,"wally_victory_road":0x7e,"flash_active":0x888,
+               "league_entered":0x107,"sidney_defeated":0x4fb,
+               "phoebe_defeated":0x4fc,"glacia_defeated":0x4fd,
+               "drake_defeated":0x4fe,"game_clear":0x864}
 GROUPS = json.loads((ROOT / "pokeemerald/data/maps/map_groups.json").read_text(encoding="utf-8"))
 MAPS = {(group,index): name for group,key in enumerate(GROUPS["group_order"])
         for index,name in enumerate(GROUPS[key])}
@@ -202,8 +205,12 @@ def battle_button():
                    not absent&(1<<opponent) and struct.unpack_from('<H',battle,opponent*88+40)[0]]
         chart=memory("gTypeEffectiveness",336)
         candidates=[]
+        # Torment rejects repeating the last move without spending a turn.
+        # Read its state; never keep selecting a stronger but forbidden move.
+        tormented=struct.unpack_from('<I',battle,battler*88+80)[0] & (1<<31)
+        last_move=struct.unpack_from('<H',memory('gLastMoves',8),battler*2)[0]
         for index,move in enumerate(moves):
-            if move and choices[8+index]:
+            if move and choices[8+index] and not (tormented and move == last_move):
                 definition=bytes(gdb.selected_inferior().read_memory(value("(unsigned int)&gBattleMoves")+move*9,9))
                 physical=definition[2] < 10  # Gen III categories are by type.
                 attack_offset,defense_offset=(2,4) if physical else (8,10)

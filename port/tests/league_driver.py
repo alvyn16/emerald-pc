@@ -247,3 +247,67 @@ def league_gate():
     assert (d.state()['x'],d.state()['y']) == (5,12)
     print('NATURAL LEAGUE BADGE GATE PASS',d.state())
     return d.save_checkpoint('r05-league-entered')
+
+
+def sidney_tactical():
+    """Switch through the real battle menu so Grass cannot sweep Swampert."""
+    import gdb
+    assert d.state()['map'] == 'EverGrandeCity_SidneysRoom'
+    assert d.value('(int)FlagGet(0x4fb)') == 0
+    original_heals=d.HEAL_ITEMS; d.HEAL_ITEMS=(21,22,13)
+    original_choose=d.battle_button; original_party=d.battle_party_button
+    desired=None; switches=0; last_action=None
+    def choose():
+        nonlocal desired,last_action,switches
+        battle=d.memory('gBattleMons',352)
+        function=gdb.execute('info symbol %d'%d.value('*(unsigned int *)&gBattlerControllerFuncs'),to_string=True).split(' in ')[0]
+        if function == 'HandleInputChooseAction':
+            player=int.from_bytes(battle[:2],'little')
+            enemy=int.from_bytes(battle[88:90],'little')
+            if player == desired:
+                desired=None; switches+=1
+            target=310 if 12 in battle[121:123] else 285  # TYPE_GRASS.
+            healthy=any(d.value('(int)GetMonData3((void *)((char *)&gPlayerParty+%d),11,0)'%(i*100)) == target and
+                        d.value('(int)GetMonData3((void *)((char *)&gPlayerParty+%d),57,0)'%(i*100)) > 0
+                        for i in range(d.state()['party']))
+            action=(player,enemy,int.from_bytes(battle[40:42],'little'),tuple(battle[24:32]))
+            if action != last_action:
+                print('NATURAL SIDNEY TURN',d.state()['frame'],action)
+                last_action=action
+            if player != target and healthy and not d.HEAL_PLAN:
+                desired=target
+                return d.cursor_button(d.memory('gActionSelectionCursor',1)[0],2)
+        return original_choose()
+    def party():
+        if desired is None:
+            return original_party()
+        if not d.value('(int)FuncIsActiveTask((void *)Task_HandleChooseMonInput)'):
+            return 'A'  # Wait for initialization, or choose Send Out in context menu.
+        slots=[i for i in range(d.state()['party'])
+               if d.value('(int)GetMonData3((void *)((char *)&gPlayerParty+%d),11,0)'%(i*100)) == desired and
+                  d.value('(int)GetMonData3((void *)((char *)&gPlayerParty+%d),57,0)'%(i*100)) > 0]
+        assert len(slots) == 1
+        target=slots[0]; cursor=d.memory('gPartyMenu',10)[9]
+        return 'A' if cursor == target else 'RIGHT' if cursor == 0 else 'LEFT' if target == 0 else 'DOWN' if cursor < target else 'UP'
+    try:
+        d.battle_button=choose; d.battle_party_button=party
+        d.talk(6,6,'UP',220000)
+        outcome=d.value('*(unsigned char *)&gBattleOutcome')
+        print('NATURAL SIDNEY TACTICAL RESULT',outcome,switches,d.state())
+        assert outcome == 1 and d.value('(int)FlagGet(0x4fb)') == 1
+        assert switches > 0
+        return d.save_checkpoint('r05-sidney-win')
+    finally:
+        d.battle_button=original_choose; d.battle_party_button=original_party
+        d.HEAL_ITEMS=original_heals
+
+
+def retry_supplies():
+    assert d.state()['map'] == 'EverGrandeCity'
+    assert d.value('(int)CountTotalItemQuantityInBag(21)') == 0
+    d.cross('UP','EverGrandeCity_PokemonLeague_1F')
+    d.buy_item(21,5,position=(16,4),facing='UP')
+    d.talk(3,4,'UP')
+    assert d.value('(int)CountTotalItemQuantityInBag(21)') == 5
+    print('NATURAL LEAGUE RETRY SUPPLIES PASS',d.state())
+    return d.save_checkpoint('r05-sidney-retry-supplies')

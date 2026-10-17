@@ -1302,3 +1302,26 @@ de Sidney. El primer intento con el equipo de campana termina en derrota
 normal (gBattleOutcome=2), no en excepcion: reaparece fuera de Liga y permite
 guardar. Cuatro Hyper Potions consumidas y dinero14642->7321; no se cuenta
 como victoria ni se da el Alto Mando por cubierto. r05-sidney-result privado.
+
+## T27 R05: Sidney, Torment y recarga del primer Alto Mando
+
+Tras la derrota se compran cinco Hyper Potions por UI (6000), sin reponer
+objetos por el depurador. r05-sidney-supplies PASS. El guion de combate elige
+Pelipper contra Grass y Swampert contra el resto, usando Pokemon/Send Out y
+las pociones reales. r05-sidney-tactical PASS: outcome1, flag4FB=1 y tres
+cambios observados. No se alteran stats, PP, rivales ni reglas de combate.
+
+Se encontro una espera propia de la automatizacion: Pelipper bajo Torment
+(status2=80000000, gLastMoves=19) intentaba repetir Fly. GDB lo situa en
+BattleScript_SelectingTormentedMove+3 / CompleteOnInactiveTextPrinter2.
+El selector ahora omite ese ultimo movimiento mientras Torment esta activo;
+solo lee estado y pulsa teclas. La misma batalla antes detenida termina en
+outcome1 tras recargar el helper, sin reiniciar ni editar progreso del juego.
+
+Tambien se limita Continue a frame1181 al estar frente a Sidney: los pulsos
+hasta8000 podian iniciar la pelea antes de instalar la politica de pruebas.
+Se conservan logs del replay anterior, y el replay corregido sale normalmente.
+Continue de r05-sidney-win-verified PASS, archivo sin cambios; el manifiesto
+incluye flag107, victorias del Alto Mando y game-clear. Captura privada
+r05-sidney-win-verified.png. Se ha llegado al cuarto de Phoebe por las puertas
+originales; R05 sigue abierto para los otros combates, creditos y Hall of Fame.
