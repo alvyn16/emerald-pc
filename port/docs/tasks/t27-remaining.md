@@ -49,7 +49,7 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   paz y Continue PASS. Waterfall por regalo/UI/replay y tres tableros de hielo
   por teclado/replay PASS. Juan gana con cambio/objetos comprados por UI;
   ocho medallas, recompensas, replay y Continue PASS. R05-R15 pendientes.
-- [ ] R05: Waterfall, Victory Road, acceso a Liga, ocho medallas y créditos
+- [x] R05: Waterfall, Victory Road, acceso a Liga, ocho medallas y créditos
   desde esa misma partida; sin warps del harness ni equipo preparado. Recarga
   final: game-clear, equipo y Hall of Fame válidos. Capturas privadas.
   Cascadas, Wally, Flash, Fuerza, Golpe Roca y salida de Calle Victoria:
@@ -67,7 +67,11 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   normal (historial). New Mauville/Llave/generador/Rayo por UI y Continue PASS.
   Replay con Rayo vence Sidney/Phoebe/Glacia/Drake; Continue de Drake PASS.
   Ultima Leppa consumida por UI; checkpoint Hall4 ante Wallace PASS.
-  Wallace, Hall of Fame, creditos y Continue final siguen pendientes.
+  Wallace, Hall of Fame y The End: replay PASS. Continue final devuelve
+  al dormitorio, conserva ocho medallas, game-clear y seis especies/niveles;
+  registros/checksums Hall of Fame validos y save intacto. R05 completo.
+  Evidencia: build/t27-wallace-champion-replay.log y
+  build/t27-natural-ending-reload.log. R06-R15 siguen abiertos.
 - [ ] R06: crianza por pasos reales, generación de huevo, recogida por diálogo,
   eclosión mediante desplazamientos y conservación tras save/reload. No marcar
   readiness, contador de huevo ni especie manualmente.

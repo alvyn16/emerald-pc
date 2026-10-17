@@ -88,11 +88,11 @@ al PC. No fuerzan resultados de almacenamiento. Capturas raw locales en build/.
 
 ## T27 — matriz de campaña y segmentos
 
-Estado al 17 de octubre de 2026: campaña natural R01–R04 completa;
-R05 parcial (Wally, Calle Victoria, Sidney, Phoebe y Glacia PASS; Continue verificado). Pilar Celeste: puzzles
-2F/4F y captura real de Rayquaza70 con Master Ball, replays y Continue PASS. R06–R15 y
-Checkpoint E abiertos. La tabla conserva también pruebas con fixtures
-preparados; esas pruebas no acreditan completar la campaña natural.
+Estado al 17 de octubre de 2026: campaña natural R01–R05 completa;
+ocho medallas, Calle Victoria, Alto Mando, Wallace, Hall of Fame y The End.
+Replay y Continue final PASS, incluyendo integridad del equipo y Hall of Fame.
+R06–R15 y Checkpoint E abiertos. La tabla conserva pruebas con fixtures
+preparados, identificadas como evidencia independiente de la campaña natural.
 
 El upstream contiene 518 mapas en 34 grupos. PASS para 32 cargas seleccionadas:
 las 16 ciudades/pueblos, rutas 101/110/119/124/134, casa de Brendan, Centro
@@ -112,7 +112,7 @@ cambian con input real y callback de campo conservado. Capturas privadas en buil
 | Crianza | Mudkip + Ditto guardados, huevo generado por rutinas reales, especie Mudkip, IS_EGG=1, save | PASS; readiness del huevo dirigida, no espera de pasos ni eclosión |
 | Safari | Huida previa más admisión/cobro 500/30 bolas, captura Magikarp, salida por pasos y limpieza de modo | PASS dirigido; rutina de pasos invocada, no paseo ni agotamiento de bolas |
 | Battle Frontier | Tower singles, rival generado de la tabla de facility, Swampert/Salamence/Metagross 50, victoria y save | PASS de un combate; no racha completa ni otras seis facilities |
-| Campaña continua | R01–R04 naturales completos; ocho medallas, Wally, Calle Victoria, acceso a Liga y Sidney/Phoebe/Glacia con replay/Continue | R05 PARCIAL; resto del Alto Mando y créditos pendientes |
+| Campaña continua | R01–R05 naturales completos; ocho medallas, Calle Victoria, Alto Mando, Wallace, Hall of Fame y The End; replay/Continue final | R05 PASS; R06-R15 pendientes |
 | Historia | R01–R04: Devon/Peeko/Steven, gimnasios, escondites, Space Center, Dive/Seafloor, Sky Pillar/Rayquaza de historia y Sootopolis por input real | PASS para R01–R04; captura de Rayquaza PASS; contenidos posteriores pendientes |
 
 El progreso medido procede de scripts NPC y guardados reales; warps y equipo
@@ -156,3 +156,7 @@ Parche0048 corrige Continue en New Mauville antes de asignar buffers BG.
 Sidney/Phoebe/Glacia/Drake ganados en el replay con Rayo; Continue Drake PASS.
 R05 sigue PARCIAL: puerta de Wallace guardada; final y recarga pendientes.
 R06-R15 y Checkpoint E siguen abiertos. Detalle: campaign-progress.md.
+
+
+Actualizacion posterior: R05 COMPLETO; Wallace/Hall of Fame/The End y Continue
+final PASS. R06-R15 y Checkpoint E siguen abiertos. Ver campaign-progress.md.

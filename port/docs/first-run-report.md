@@ -2,11 +2,11 @@
 
 ## Estado actual: 17 de octubre de 2026
 
-La campaña continua natural completa R01–R04 y las ocho medallas. R05
-conserva Wally, Calle Victoria y victorias de Sidney/Phoebe/Glacia/Drake.
-La misión real de New Mauville dio Rayo a Rayquaza mediante Wattson y la MT24;
-replays y Continue del generador apagado y de Drake PASS. La entrada a Wallace
-está guardada; Wallace, Hall of Fame, créditos y recarga final siguen pendientes.
+La campaña continua natural completa R01–R05: ocho medallas, Calle Victoria,
+cuatro victorias del Alto Mando, Wallace, Hall of Fame y The End. El replay
+del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
+ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
+Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
 R06–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
@@ -1637,3 +1637,44 @@ privadas en build/natural-campaign/ y build/natural-campaign-replay-r05-*;
 resumenes build/t27-thunderbolt-league-replay.log,
 build/t27-thunderbolt-drake-win-reload.log y build/t27-champion-door-replay.log.
 R05 sigue abierto; R06-R15 y Checkpoint E siguen abiertos.
+
+
+## T27: final natural y cierre de R05 (17-10-2026)
+
+Desde r05-wallace-door-ready, la entrada real a la sala inicia el combate
+contra Wallace. La observacion de CB2_EndTrainerBattle registra outcome1;
+ningun resultado, objeto, experiencia o flag se escribe desde el debugger.
+Se usan los menus para movimientos/cambios y los Revivir adquiridos antes.
+Dos ejecuciones llegan al Hall of Fame. La segunda verifica el registro de
+los seis miembros y continua sin pulsaciones durante los creditos hasta
+Task_CreditsTheEnd6: The End capturado en frame68624.
+
+Equipo del Hall of Fame: Rayquaza73, Pelipper52, Gloom21, Castform25,
+Tentacool18 y Swampert54. Ocho medallas y game-clear=1. Capturas y saves
+privados: build/natural-campaign/r05-hall-of-fame.* y r05-the-end.*.
+La captura del Hall of Fame muestra al entrenador, su equipo y
+LEAGUE CHAMPION / CONGRATULATIONS. La pantalla final coincide en los
+38400 pixeles con una referencia derivada de las tablas originales de
+letras, sus flips y los graficos/paleta generados por GBA (expansion RGB5).
+Una sospecha visual inicial de trazos ausentes no se confirma: 0 diferencias
+(build/t27-the-end-reference-check.json); no se hizo ningun cambio por ella.
+
+Otro proceso carga ese save mediante Continue: dormitorio de Brendan 2F,
+control de campo libre, ocho medallas, game-clear y seis especies/niveles
+conservados. LoadGameSave(SAVE_HALL_OF_FAME) devuelve SAVE_STATUS_OK y los
+seis registros persistidos coinciden. El save queda identico byte a byte.
+No hubo una nueva excepcion del host en el tramo del Campeon/final.
+
+Reproduccion MINGW32, con los checkpoints naturales previos en build/:
+python port/tests/natural_campaign_smoke.py --phase r05-wallace-champion
+Conservar r05-hall-of-fame y r05-the-end en build/natural-campaign/ y ejecutar:
+python port/tests/natural_ending_reload.py
+Logs: build/t27-wallace-champion-replay.log,
+build/natural-campaign-replay-r05-wallace-champion/campaign.log,
+build/t27-natural-ending-reload.log y build/natural-campaign-ending-reload/reload.log.
+
+R05 completo; T27 y Checkpoint E siguen abiertos. Siguiente cobertura:
+R06 (crianza/huevo/eclosion natural), despues Safari y Battle Frontier
+R07-R14, y los gates finales R15. Los fixtures preparados anteriores no
+sustituyen estos criterios. Normal/diagnostico y 21 suites PASS; GBA compare
+OK con ARM Binutils2.43.1, como consta en los logs del parche0048.

@@ -20,8 +20,9 @@ El ejecutable para jugar es `build/emerald-pc.exe`; las pruebas usan
 `build/emerald-pc-diagnostic.exe` y guardados separados. Para construir y
 comprobar esa separación: `make -C port diagnostic-exe verify-normal`.
 
-La campaña continua tiene ocho medallas y victorias sobre Sidney/Phoebe/Glacia/Drake;
-T27 sigue abierto. Estado y límites: [campaña](docs/campaign-progress.md) y
+La campaña continua completa R01–R05: ocho medallas, Alto Mando, Wallace,
+Hall of Fame y créditos; replay y Continue final PASS. T27 sigue abierto
+por R06–R15. Estado y límites: [campaña](docs/campaign-progress.md) y
 [cobertura pendiente](docs/tasks/t27-remaining.md).
 
 Los nuevos checkpoints de campaña registran PS, estados, PP y consumibles;

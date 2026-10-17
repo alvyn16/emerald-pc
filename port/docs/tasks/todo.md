@@ -427,18 +427,13 @@ Verificación: checkpoints de progreso y regresiones por cada fallo nuevo.
 
 Evidencia T27: [matriz](../gameplay-matrix.md),
 [campaña](../campaign-progress.md) y [pendientes](t27-remaining.md).
-La campaña continua natural completa R01–R04 y las ocho medallas. R05 es
-parcial: Wally, Calle Victoria, Liga y victorias sobre Sidney/Phoebe/Glacia PASS.
-Pilar Celeste: puzzles 2F/4F y captura real de Rayquaza70/Master Ball,
-replays y Continue PASS. Derrota previa ante Glacia conservada; Drake, Wallace
-y final siguen pendientes.
-R06–R15 siguen abiertos.
-Los segmentos anteriores de Liga/Hall of Fame con equipo preparado no
-cierran la campaña natural. No se cierra Checkpoint E.
-
-T27: diagnostico de recursos ampliado (PS/estado/PP/Revive/Leppa) y recargas PASS.
-Cosecha real y uso de Leppa8->15PP verificados. Drake y final siguen pendientes;
-proximo tramo: cobertura electrica y mas curacion por medios normales.
+La campaña continua natural completa R01–R05: ocho medallas, Calle Victoria,
+Sidney/Phoebe/Glacia/Drake, Wallace, Hall of Fame y The End. New Mauville,
+Llave/Rayo y consumibles por UI; replay del final y Continue PASS. La recarga
+conserva game-clear, ocho medallas, seis especies/niveles y registros validos
+del Hall of Fame; no modifica el save. Detalle: campaign-progress.md.
+R06–R15 siguen abiertos. No se cierra Checkpoint E ni T27.
+Los segmentos anteriores con equipo preparado siguen siendo evidencia separada.
 
 ### Checkpoint E — juego individual
 
@@ -597,3 +592,7 @@ Parche0048 corrige Continue en New Mauville antes de asignar buffers BG.
 Sidney/Phoebe/Glacia/Drake ganados en el replay con Rayo; Continue Drake PASS.
 R05 sigue PARCIAL: puerta de Wallace guardada; final y recarga pendientes.
 R06-R15 y Checkpoint E siguen abiertos. Detalle: campaign-progress.md.
+
+
+Actualizacion posterior: R05 COMPLETO; Wallace/Hall of Fame/The End y Continue
+final PASS. R06-R15 y Checkpoint E siguen abiertos. Ver campaign-progress.md.
