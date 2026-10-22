@@ -1839,3 +1839,14 @@ Normal/diagnostico, 21 suites y verify-normal PASS (build/t27-r06-host.log).
 ARM Binutils2.43.1, make compare -> pokeemerald.gba: OK (build/t27-r06-gba.log).
 R06 completo. T27/Checkpoint E siguen abiertos para R07-R15; el siguiente
 recorrido es Safari por bolas agotadas y por 500 pasos reales.
+
+
+## T27 / R07: preparacion de Safari (21-10-2026)
+
+Desde el Oddish nacido en R06, se obtuvo la Cana Vieja del pescador movil
+de Dewford y el Tubo Pokecubos de la recepcion de concursos de Lilycove,
+por dialogos/menus reales. Salida y conexion caminada a Ruta121; un entrenador
+intercepto el recorrido y fue resuelto mediante el combate normal. Llegada
+a recepcion de Safari y guardado r07-safari-reception PASS. ModoSafari=0,
+bolas=0, pasos=0. El inventario registrado incluye Cana262 y Tubo273.
+No se declara todavia admision ni agotamiento de cuotas. Sin cambios nativos.
