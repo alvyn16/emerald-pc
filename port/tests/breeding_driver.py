@@ -31,14 +31,18 @@ def daycare():
                 compatibility=d.value('(unsigned char)GetDaycareCompatibilityScoreFromSave()'))
 
 
-def checkpoint(name):
-    facts=d.save_checkpoint(name)
-    facts['breeding']=daycare()
-    facts['breeding_party']=[dict(mon,
+def party_details():
+    return [dict(mon,
         personality=d.value(f'(unsigned int)GetMonData3((void *)((char *)&gPlayerParty+{mon["slot"]*100}),0,0)'),
         is_egg=d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{mon["slot"]*100}),45,0)'),
         cycles=d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{mon["slot"]*100}),32,0)'))
         for mon in party()]
+
+
+def checkpoint(name):
+    facts=d.save_checkpoint(name)
+    facts['breeding']=daycare()
+    facts['breeding_party']=party_details()
     (d.SCRATCH/(name+'.json')).write_text(json.dumps(facts,indent=2),encoding='utf-8')
     print('NATURAL BREEDING CHECKPOINT',name,facts['breeding'],facts['breeding_party'])
     return facts
@@ -74,6 +78,79 @@ def mother():
     d.warp_to(2,8,'Route117')
     assert daycare()['offspring'] == 0
     return checkpoint('r06-mother-deposited')
+
+
+def catch_father():
+    assert d.state()['map'] == 'Route117' and d.state()['party'] == 5
+    assert daycare()['parents'][0]['species'] == 44
+    previous=d.CATCH_SPECIES,d.CATCH_GENDER,d.CATCH_BALL,d.RUN_WILD
+    try:
+        d.CATCH_SPECIES={43}; d.CATCH_GENDER=0; d.CATCH_BALL=4; d.RUN_WILD=True
+        grass=None
+        layout=struct.unpack('<I',d.memory('gMapHeader',4))[0]
+        width,height=struct.unpack('<II',bytes(gdb.selected_inferior().read_memory(layout,8)))
+        position=d.state()
+        points=sorted(((x,y) for y in range(height) for x in range(width-1)),
+                      key=lambda p:abs(p[0]-position['x'])+abs(p[1]-position['y']))
+        for x,y in points:
+            if not all(d.value(f'(unsigned char)MapGridGetMetatileBehaviorAt({xx+7},{y+7})') == 2 for xx in (x,x+1)):
+                continue
+            try:
+                d.path_to(x,y)
+            except RuntimeError:
+                continue
+            grass=(x,y); break
+        assert grass, 'No reachable grass pair in Route117'
+        print('NATURAL BREEDING GRASS',grass)
+        before=d.value('(int)CountTotalItemQuantityInBag(4)')
+        for step in range(400):
+            d.go(grass[0]+step%2,grass[1],dialogue_limit=60000)
+            if d.state()['party'] == 6:break
+        else:
+            raise RuntimeError('Male Oddish encounter deadline')
+        assert party()[5]['species'] == 43 and party()[5]['gender'] == 0
+        assert d.value('(int)CountTotalItemQuantityInBag(4)') < before
+        print('NATURAL MALE ODDISH CATCH PASS',party()[5])
+        return checkpoint('r06-father-caught')
+    finally:
+        d.CATCH_SPECIES,d.CATCH_GENDER,d.CATCH_BALL,d.RUN_WILD=previous
+
+
+def pace(stop_when=None):
+    current=d.state()
+    assert current['map'] == 'Route117' and current['y'] == 6
+    target=58 if current['x'] <= 54 else 51
+    route=d.path_to(target,6)
+    assert route and all(button == route[0] for button in route)
+    assert route[0] in ('LEFT','RIGHT')
+    hold=8*(len(route)-1)+4
+    d.advance(route[0]+'+B',hold+20,hold)
+    d.settle(60000,stop_when=stop_when)
+    current=d.state()
+    assert current['map'] == 'Route117' and current['y'] == 6 and 50 <= current['x'] <= 59
+
+
+def generate():
+    assert d.state()['party'] == 6 and party()[5]['species'] == 43
+    assert party()[5]['gender'] == 0
+    d.RUN_WILD=True
+    d.go(51,6); d.cross('UP','Route117_PokemonDayCare'); deposit(5)
+    d.warp_to(2,8,'Route117')
+    before=daycare()
+    assert [mon['species'] for mon in before['parents']] == [44,43]
+    assert before['compatibility'] == 20 and before['offspring'] == 0
+    checkpoint('r06-parents-deposited')
+    d.go(51,6)
+    for step in range(2000):
+        if daycare()['pending']:break
+        pace()
+    else:
+        raise RuntimeError('Daycare egg generation deadline: '+str(daycare()))
+    after=daycare()
+    assert after['offspring'] != 0 and after['pending'] == 1
+    assert all(a['steps'] > b['steps'] for a,b in zip(after['parents'],before['parents']))
+    print('NATURAL DAYCARE EGG GENERATED PASS',before,after)
+    return checkpoint('r06-egg-pending')
 
 
 def prepare():

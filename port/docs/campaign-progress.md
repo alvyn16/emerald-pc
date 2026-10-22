@@ -1783,3 +1783,15 @@ offspring280, contador284; SaveBlock1.daycare=0x2EE8, confirmado en el getter
 del ejecutable. No se usan los offsets comentados del header GBA para el host.
 Ajustes del harness: aproximacion/entrada por puerta, hablar desde el lado
 del mostrador y nombre real GetBoxMonData3. Ningun cambio nativo requerido.
+
+
+R06, padre y produccion del huevo: captura natural de Oddish macho13 PASS,
+con Poke Balls compradas y seleccion por genero mediante huida/menus normales.
+Se dejo el padre en la guarderia: pareja Gloom44/Oddish43, compatibilidad20.
+El replay r06-generate produjo el huevo caminando/corriendo: pasos padre4->2560,
+madre110->2666; offspring0->1496255074 y flag0x86 0->1. Checkpoints privados
+r06-parents-deposited y r06-egg-pending. No se modifican contadores, flags,
+experiencia, especies ni personalidad desde GDB. El cambio de filtro de genero
+es optativo y solo afecta la eleccion de teclas en el harness de diagnostico.
+Continue de r06-mother-deposited PASS: identidad/pasos/contador/inventario/equipo
+conservados y save intacto. Recogida/eclosion y sus recargas siguen pendientes.

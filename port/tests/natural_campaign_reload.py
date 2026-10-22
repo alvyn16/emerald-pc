@@ -82,6 +82,11 @@ if 'flash_level' in expected:
 if 'money' in expected:
     save=d.value('*(unsigned int *)&gSaveBlock1Ptr')
     assert d.value(f'(int)GetMoney((void *)({{save}}+0x490))') == expected['money']
+if 'breeding' in expected:
+    import breeding_driver as breeding
+    assert breeding.daycare() == expected['breeding'], (breeding.daycare(),expected['breeding'])
+    assert breeding.party_details() == expected['breeding_party']
+    print('NATURAL BREEDING RELOAD PASS',breeding.daycare(),breeding.party_details())
 print('NATURAL RELOAD PASS',actual)
 from pathlib import Path
 Path({str(scratch/'reload.raw')!r}).write_bytes(bytes(gdb.selected_inferior().read_memory(d.value('(unsigned int)&sPixels'),153600)))

@@ -9,6 +9,7 @@ ROOT = Path.cwd()
 SCRATCH = ROOT / "build/natural-campaign"
 RUN_WILD = False  # Opt in after starter/rival; preserves HP during travel.
 CATCH_SPECIES = set()  # Optional natural catches; never constructs a Pokemon.
+CATCH_GENDER = None  # Optional breeding selection; rejects through ordinary Run.
 CATCH_BALL = 4  # Explicit Poke Ball default; never consume an unrelated ball stack.
 RUN_FROM_TYPES = set()  # Training may avoid unfavorable wild matchups.
 SWITCH_FROM_TYPES = set()  # Lead training can share XP with a healthy partner.
@@ -170,6 +171,9 @@ def battle_button():
     wild=not value("*(unsigned int *)&gBattleTypeFlags") & (8|16|512)
     battle_mons=memory('gBattleMons',352)
     catching=wild and struct.unpack_from('<H',battle_mons,88)[0] in CATCH_SPECIES
+    if catching and CATCH_GENDER is not None:
+        slot=struct.unpack_from('<H',memory('gBattlerPartyIndexes',8),2)[0]
+        catching=value(f'(unsigned char)GetMonGender((void *)((char *)&gEnemyParty+{slot*100}))') == CATCH_GENDER
     avoid=bool(set(battle_mons[88+33:88+35]) & RUN_FROM_TYPES)
     can_run=(RUN_WILD or avoid) and wild and not catching
     share=wild and bool(set(battle_mons[88+33:88+35]) & SWITCH_FROM_TYPES)
