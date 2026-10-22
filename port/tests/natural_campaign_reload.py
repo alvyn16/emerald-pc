@@ -87,6 +87,10 @@ if 'breeding' in expected:
     assert breeding.daycare() == expected['breeding'], (breeding.daycare(),expected['breeding'])
     assert breeding.party_details() == expected['breeding_party']
     print('NATURAL BREEDING RELOAD PASS',breeding.daycare(),breeding.party_details())
+if 'safari' in expected:
+    import safari_driver as safari
+    assert safari.counters() == expected['safari']
+    print('NATURAL SAFARI RELOAD PASS',safari.counters())
 print('NATURAL RELOAD PASS',actual)
 from pathlib import Path
 Path({str(scratch/'reload.raw')!r}).write_bytes(bytes(gdb.selected_inferior().read_memory(d.value('(unsigned int)&sPixels'),153600)))

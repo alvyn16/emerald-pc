@@ -8,7 +8,7 @@ del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
 ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
 Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
-R06 (crianza/eclosión y cuatro recargas) PASS. R07–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+R06 (crianza/eclosión y cuatro recargas) PASS. R08–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
 Consulta [cobertura pendiente](tasks/t27-remaining.md) y
 [informe de ejecución](first-run-report.md). Los checkpoints, capturas,
@@ -1850,3 +1850,20 @@ intercepto el recorrido y fue resuelto mediante el combate normal. Llegada
 a recepcion de Safari y guardado r07-safari-reception PASS. ModoSafari=0,
 bolas=0, pasos=0. El inventario registrado incluye Cana262 y Tubo273.
 No se declara todavia admision ni agotamiento de cuotas. Sin cambios nativos.
+
+
+## T27 / R07 completo: cuotas naturales y Continue (22-10-2026)
+
+Dos admisiones reales, 500 de dinero cada una. Pesca en SafariZone_Southwest
+(8,31), Cana Vieja por Bolsa, capturas/escapadas originales: observador de
+HandleAction_SafariZoneBallThrow registra exactamente [30,29,...,1]. La ultima
+bola captura y el script devuelve a recepcion (9,4), modo/bolas/pasos=0.
+Segundo recorrido alterna teclas entre (32,35)/(31,35): observador de
+SafariZoneTakeStep registra [500,499,...,1], sin llamar la rutina desde GDB.
+TimesUp devuelve a recepcion; las 30 bolas permanecen durante el paseo.
+
+Checkpoints r07-balls-exhausted y r07-steps-exhausted: Continue PASS con estado
+Safari cero, equipo, PS/PP, inventario y dinero persistidos, save intacto.
+Evidencia privada: build/t27-r07-{balls,steps}.log,
+build/t27-r07-{balls,steps}-reload.log y build/natural-campaign/r07-*.
+No cambio nativo ni parche upstream; R08-R15 siguen abiertos.

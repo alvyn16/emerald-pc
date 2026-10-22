@@ -80,8 +80,11 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Oddish hembra5 conserva personalidad1496255074; cuatro Continue PASS
   (madre/pending/huevo/nacido), incluyendo contadores/estado/equipo y save
   intacto. Evidencia: build/t27-r06-*.log y campaign-progress.md.
-- [ ] R07: Safari con agotamiento real de sus 30 bolas y salida correcta;
+- [x] R07: Safari con agotamiento real de sus 30 bolas y salida correcta;
   paseo que consuma los 500 pasos, además del test previo de la rutina de pasos.
+  30 lanzamientos observados [30..1] y 500 pasos por teclado [500..1]: PASS.
+  Ambas salidas limpian modo/bolas/pasos a cero; Continue de ambos checkpoints
+  PASS, conserva equipo/inventario/dinero y no reescribe el save.
 - [ ] R08: Battle Tower: admisión, selección legal, racha completa, registro
   y recompensa; reanudación/recarga y salida de una derrota.
 - [ ] R09: Factory: alquileres, intercambios y racha/recompensa mediante UI.

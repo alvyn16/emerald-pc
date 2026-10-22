@@ -18,6 +18,7 @@ HEAL_ITEMS = ()  # Optional campaign consumables, never granted by the driver.
 HEAL_PLAN = {}
 REST_SPECIES = set()  # Optional actual Rest selection at low HP.
 REVIVE_SPECIES = set()  # Optional purchased Revive use for fainted partners.
+SAFARI_ACTION = 0  # Actual Safari menu: Ball, Pokeblock, Go Near, Run.
 EVENT_FLAGS = {"flash":0x6d,"cut":0x89,"recovered_goods":0x8f,"returned_goods":0x90,
                "match_call":0x12f,"pokenav":0x862,"letter":0xbd,"delivered_goods":0x95,
                "wally_mauville":0xbe,"rock_smash":0x6b,
@@ -166,6 +167,9 @@ def battle_button():
         if definition[1] == 0:
             return 'B'  # Decline status moves instead of replacing an attack.
     controllers=struct.unpack("<4I",memory("gBattlerControllerFuncs",16))
+    if value('*(unsigned int *)&gBattleTypeFlags') & 128:
+        function=gdb.execute('info symbol %d'%controllers[0],to_string=True).split(' in ')[0]
+        return cursor_button(memory('gActionSelectionCursor',4)[0],SAFARI_ACTION) if function == 'HandleInputChooseAction' else 'A'
     if HEAL_PLAN and value(f"(int)CountTotalItemQuantityInBag({HEAL_PLAN['item']})") < HEAL_PLAN['quantity']:
         HEAL_PLAN.clear()
     wild=not value("*(unsigned int *)&gBattleTypeFlags") & (8|16|512)

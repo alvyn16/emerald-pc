@@ -23,7 +23,7 @@ Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Es
   y consumibles al recargar.
 - R06 completo: cría de Gloom/Oddish, huevo generado y recogido mediante
   entradas reales, eclosión de Oddish nivel 5 y cuatro recargas PASS.
-- R07–R15 y Checkpoint E siguen abiertos. Las pruebas anteriores de Liga,
+- R08–R15 y Checkpoint E siguen abiertos. Las pruebas anteriores de Liga,
   créditos y Hall of Fame con equipo preparado son evidencia separada;
   no acreditan completar la campaña continua.
 
