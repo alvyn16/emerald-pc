@@ -1771,3 +1771,15 @@ macho para Gloom; todavia no se acredita huevo, eclosion ni cierre de R06.
 Normal/diagnostico, 21 suites y verify-normal PASS (build/t27-r06-host.log).
 GBA compare: pokeemerald.gba: OK con ARM Binutils2.43.1
 (build/t27-r06-gba.log). El recorrido usa copias privadas en build/.
+
+
+R06, deposito materno: replay r06-mother PASS. Se compraron 20 Poke Balls
+por tienda y se dejo Gloom hembra mediante el menu de la guarderia.
+Checkpoint r06-mother-deposited: equipo5, Gloom44 en guarderia, segundo
+hueco vacio, offspring=0, flag0x86=0 y compatibilidad0. La instantanea registra
+identidad/pasos de los padres, personalidad de cada miembro y estado de huevo.
+Layout medido con GCC i686: DayCare288, DaycareMon140, steps136,
+offspring280, contador284; SaveBlock1.daycare=0x2EE8, confirmado en el getter
+del ejecutable. No se usan los offsets comentados del header GBA para el host.
+Ajustes del harness: aproximacion/entrada por puerta, hablar desde el lado
+del mostrador y nombre real GetBoxMonData3. Ningun cambio nativo requerido.
