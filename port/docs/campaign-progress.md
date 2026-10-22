@@ -1867,3 +1867,20 @@ Safari cero, equipo, PS/PP, inventario y dinero persistidos, save intacto.
 Evidencia privada: build/t27-r07-{balls,steps}.log,
 build/t27-r07-{balls,steps}-reload.log y build/natural-campaign/r07-*.
 No cambio nativo ni parche upstream; R08-R15 siguen abiertos.
+
+
+## T27 / R08: acceso natural y admision a Torre (22-10-2026)
+
+Viaje desde Lilycove a Slateport con SS Ticket: escena Scott, flag 0x1D0=1,
+dos descansos en camarote y llegada por script PASS. Nuevo ferry selecciona
+Battle Frontier del menu real; llegada y Continue (save intacto) PASS.
+Recepcion entrega Frontier Pass por script. Desplazamiento desde el muelle,
+puerta de recepcion, conexion este y entrada a Torre: PASS.
+
+Nivel Abierto seleccionado por multichoice24, equipo real [5,2,3]:
+Swampert54, Pelipper52 y Castform25. Rayquaza excluido por las reglas.
+Seleccion, guardado obligatorio, ascensor y primera batalla al frame6400 PASS.
+No se acredita aun victoria, racha, recompensa ni suspension/reanudacion.
+Evidencia: build/t27-r08-access.log, t27-r08-arrival-reload.log,
+t27-r08-tower-lobby.log, t27-r08-tower-enter.log; checkpoints privados
+r08-frontier-arrival y r08-tower-reception. R08-R15 abiertos.
