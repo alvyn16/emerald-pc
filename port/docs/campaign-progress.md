@@ -1751,3 +1751,23 @@ R06 (crianza/huevo/eclosion natural), despues Safari y Battle Frontier
 R07-R14, y los gates finales R15. Los fixtures preparados anteriores no
 sustituyen estos criterios. Normal/diagnostico y 21 suites PASS; GBA compare
 OK con ARM Binutils2.43.1, como consta en los logs del parche0048.
+
+
+## T27 / R06: preparacion natural (21-10-2026)
+
+Se continua el save real del Hall of Fame. La salida de casa recorre la
+secuencia posterior a los creditos (SS Ticket/television/laboratorio de Birch),
+despues sale por la puerta del laboratorio, vuela a Mauville y camina hasta
+la guarderia en Route117 (51,6). Replay r06-daycare PASS y checkpoint privado
+r06-daycare-arrival. Dos intentos anteriores del harness asumian terminar
+junto a la puerta de casa: el evento legitimo acaba en el laboratorio. Se
+corrigio solo la ruta de prueba; no hubo excepcion nativa ni parche upstream.
+
+Lectura de generos: Rayquaza sin genero; Pelipper/Gloom/Tentacool/Swampert
+hembras, Castform macho. La tabla real da Planta/Planta a Gloom y Hada/Amorfo
+a Castform: no son compatibles. Se prepara la captura natural de un Oddish
+macho para Gloom; todavia no se acredita huevo, eclosion ni cierre de R06.
+
+Normal/diagnostico, 21 suites y verify-normal PASS (build/t27-r06-host.log).
+GBA compare: pokeemerald.gba: OK con ARM Binutils2.43.1
+(build/t27-r06-gba.log). El recorrido usa copias privadas en build/.
