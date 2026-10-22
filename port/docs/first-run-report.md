@@ -1,6 +1,6 @@
 # Primera ejecución de `emerald-pc.exe` i686
 
-## Estado actual: 17 de octubre de 2026
+## Estado actual: 21 de octubre de 2026
 
 La campaña continua natural completa R01–R05: ocho medallas, Calle Victoria,
 cuatro victorias del Alto Mando, Wallace, Hall of Fame y The End. El replay
@@ -8,7 +8,7 @@ del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
 ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
 Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
-R06–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+R06 (crianza/eclosión y cuatro recargas) PASS. R07–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
 Consulta [cobertura pendiente](tasks/t27-remaining.md) y
 [registro de campaña](campaign-progress.md). Los checkpoints, capturas,
@@ -1678,3 +1678,47 @@ R06 (crianza/huevo/eclosion natural), despues Safari y Battle Frontier
 R07-R14, y los gates finales R15. Los fixtures preparados anteriores no
 sustituyen estos criterios. Normal/diagnostico y 21 suites PASS; GBA compare
 OK con ARM Binutils2.43.1, como consta en los logs del parche0048.
+
+
+## T27 / R06 completo: huevo y eclosion naturales (21-10-2026)
+
+La partida procede del Hall of Fame ganado en R05. Se compraron 20 Poke Balls,
+se deposito Gloom hembra y se capturo Oddish macho13 mediante Bolsa/huida.
+La pareja real Gloom/Oddish tiene compatibilidad20. Los padres se dejaron por
+UI y el huevo aparecio con pasos del padre4->2560, personalidad1496255074 y
+flag pendiente0->1. No se invocaron rutinas para producir huevos ni se
+escribieron readiness, pasos, especie, experiencia o personalidad desde GDB.
+
+Se entro/salio de la guarderia para que el script colocara al cuidador fuera,
+y se recogio el huevo por dialogo. Equipo5->6, especie43, is_egg=1, ciclos20,
+personalidad1496255074; pending y offspring se limpian mediante el script.
+Despues se recorrieron 5375 pasos medidos por el contador materno2677->8052.
+Los ciclos bajan por el juego; la animacion y el texto ODDISH hatched from
+the EGG aparecen. Oddish hembra5 conserva su personalidad, is_egg pasa a0,
+friendship=120 y no es Bad Egg. Regreso al campo y guardado en Route117(53,6).
+Mientras se caminaba, los padres generaron un segundo huevo pendiente; se
+conserva ese estado normal, sin confundir su personalidad2442798564 con la
+del primer huevo ya eclosionado.
+
+Cuatro Continue en procesos nuevos PASS: madre depositada, huevo pendiente,
+huevo recogido y Oddish nacido. Se comparan padres/identidades/pasos,
+compatibilidad, pending/offspring/contador y especie/nivel/genero/personalidad/
+is_egg/friendship-ciclos de todo el equipo, ademas de PS/PP/movimientos/estado,
+inventario, dinero y progreso. Cada recarga deja el archivo save intacto.
+No aparecio una excepcion nativa: solo se ajustaron rutas y simbolos del
+harness. No hace falta parche0049; los 48 parches existentes no cambian.
+
+Evidencia privada: build/t27-r06-{daycare,mother,father-catch,generate,receive,hatch}.log;
+build/t27-r06-{mother,pending,received,hatched}-reload.log.
+Checkpoints en build/natural-campaign/r06-*. Capturas PNG de
+r06-hatch-animation y r06-oddish-hatched bajo ese mismo directorio, fuera de Git.
+Reproduccion MINGW32, con los checkpoints previos obtenidos naturalmente:
+python port/tests/natural_campaign_smoke.py --phase r06-daycare
+Continuar con --phase r06-mother, r06-father-catch, r06-generate, r06-receive y
+r06-hatch; conservar sus checkpoints en build/natural-campaign/ entre fases.
+python port/tests/natural_campaign_reload.py r06-oddish-hatched --continue-until 1181
+
+Normal/diagnostico, 21 suites y verify-normal PASS (build/t27-r06-host.log).
+ARM Binutils2.43.1, make compare -> pokeemerald.gba: OK (build/t27-r06-gba.log).
+R06 completo. T27/Checkpoint E siguen abiertos para R07-R15; el siguiente
+recorrido es Safari por bolas agotadas y por 500 pasos reales.

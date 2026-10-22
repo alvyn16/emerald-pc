@@ -10,7 +10,7 @@ pueden aparecer fallos fuera del recorrido probado.
 
 Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Este repositorio no distribuye ROMs, saves, assets ni código de pokeemerald. Es un proyecto de fans no afiliado a Nintendo, Game Freak ni The Pokémon Company.
 
-## Estado verificado (17 de octubre de 2026)
+## Estado verificado (21 de octubre de 2026)
 
 - Campaña continua: R01–R05 completos, ocho medallas, Calle Victoria,
   Alto Mando, Wallace, Hall of Fame y «The End» mediante entradas reales.
@@ -21,7 +21,9 @@ Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Es
   Replays y recargas PASS; regreso a la Liga con Rayquaza verificado.
 - Los nuevos checkpoints de diagnóstico comprueban también PS, estados, PP
   y consumibles al recargar.
-- R06–R15 y Checkpoint E siguen abiertos. Las pruebas anteriores de Liga,
+- R06 completo: cría de Gloom/Oddish, huevo generado y recogido mediante
+  entradas reales, eclosión de Oddish nivel 5 y cuatro recargas PASS.
+- R07–R15 y Checkpoint E siguen abiertos. Las pruebas anteriores de Liga,
   créditos y Hall of Fame con equipo preparado son evidencia separada;
   no acreditan completar la campaña continua.
 

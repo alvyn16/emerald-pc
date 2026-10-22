@@ -432,7 +432,8 @@ Sidney/Phoebe/Glacia/Drake, Wallace, Hall of Fame y The End. New Mauville,
 Llave/Rayo y consumibles por UI; replay del final y Continue PASS. La recarga
 conserva game-clear, ocho medallas, seis especies/niveles y registros validos
 del Hall of Fame; no modifica el save. Detalle: campaign-progress.md.
-R06–R15 siguen abiertos. No se cierra Checkpoint E ni T27.
+R06 completo: huevo y eclosion naturales de Gloom/Oddish; cuatro Continue PASS.
+R07–R15 siguen abiertos. No se cierra Checkpoint E ni T27.
 Los segmentos anteriores con equipo preparado siguen siendo evidencia separada.
 
 ### Checkpoint E — juego individual

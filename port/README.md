@@ -22,7 +22,7 @@ comprobar esa separación: `make -C port diagnostic-exe verify-normal`.
 
 La campaña continua completa R01–R05: ocho medallas, Alto Mando, Wallace,
 Hall of Fame y créditos; replay y Continue final PASS. T27 sigue abierto
-por R06–R15. Estado y límites: [campaña](docs/campaign-progress.md) y
+por R07–R15; R06 (crianza, huevo, eclosión y recargas) PASS. Estado y límites: [campaña](docs/campaign-progress.md) y
 [cobertura pendiente](docs/tasks/t27-remaining.md).
 
 Los nuevos checkpoints de campaña registran PS, estados, PP y consumibles;

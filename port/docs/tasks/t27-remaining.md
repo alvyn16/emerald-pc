@@ -72,9 +72,14 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   registros/checksums Hall of Fame validos y save intacto. R05 completo.
   Evidencia: build/t27-wallace-champion-replay.log y
   build/t27-natural-ending-reload.log. R06-R15 siguen abiertos.
-- [ ] R06: crianza por pasos reales, generación de huevo, recogida por diálogo,
+- [x] R06: crianza por pasos reales, generación de huevo, recogida por diálogo,
   eclosión mediante desplazamientos y conservación tras save/reload. No marcar
   readiness, contador de huevo ni especie manualmente.
+  Gloom hembra/Oddish macho capturado; compatibilidad20, huevo producido tras
+  pasos reales, recogida por cuidador y eclosion despues de 5375 pasos PASS.
+  Oddish hembra5 conserva personalidad1496255074; cuatro Continue PASS
+  (madre/pending/huevo/nacido), incluyendo contadores/estado/equipo y save
+  intacto. Evidencia: build/t27-r06-*.log y campaign-progress.md.
 - [ ] R07: Safari con agotamiento real de sus 30 bolas y salida correcta;
   paseo que consuma los 500 pasos, además del test previo de la rutina de pasos.
 - [ ] R08: Battle Tower: admisión, selección legal, racha completa, registro
