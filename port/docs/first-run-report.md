@@ -1,6 +1,6 @@
 # Primera ejecución de `emerald-pc.exe` i686
 
-## Estado actual: 21 de octubre de 2026
+## Estado actual: 22 de octubre de 2026
 
 La campaña continua natural completa R01–R05: ocho medallas, Calle Victoria,
 cuatro victorias del Alto Mando, Wallace, Hall of Fame y The End. El replay
@@ -8,7 +8,7 @@ del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
 ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
 Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
-R06 (crianza/eclosión y cuatro recargas) PASS. R07–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+R06 (crianza/eclosión y cuatro recargas) PASS. R07 Safari completo (30 bolas/500 pasos y dos Continue). R08–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
 Consulta [cobertura pendiente](tasks/t27-remaining.md) y
 [registro de campaña](campaign-progress.md). Los checkpoints, capturas,
@@ -1722,3 +1722,30 @@ Normal/diagnostico, 21 suites y verify-normal PASS (build/t27-r06-host.log).
 ARM Binutils2.43.1, make compare -> pokeemerald.gba: OK (build/t27-r06-gba.log).
 R06 completo. T27/Checkpoint E siguen abiertos para R07-R15; el siguiente
 recorrido es Safari por bolas agotadas y por 500 pasos reales.
+
+
+## T27 / R09: fallo real al abrir alquileres de Fabrica (22-10-2026)
+
+Admision por recepcionista, Nivel50 y guardado originales llevan a
+CB2_InitSelectScreen. SIGSEGV en 0x100af91f: movzbl 0x6(%eax),%eax,
+con EAX=0. sFactorySelectScreen esta a NULL antes de Select_InitMonsData
+(case5); los cases2/4/5 consultan fromSummaryScreen antes de asignarla.
+Upstream ya tiene comprobaciones bajo UBFIX, pero PORT_PC solo habilitaba
+SAFE_DIV, no todos los UBFIX de C.
+
+Parche0049 habilita esas tres comprobaciones con
+#if defined(UBFIX) || defined(PORT_PC). No habilita globalmente UBFIX
+ni altera GBA. Pantalla de alquileres CB2_SelectScreen: replay PASS.
+Normal/diagnostico compilan; make compare -> pokeemerald.gba: OK
+(build/t27-r09-host-build.log, t27-r09-gba.log).
+
+Clon limpio del commit fijado +49 parches por git am: arbol
+1bd153153472fc30461897998ef4ea2d62ec478e identico. battle_factory_screen.c
+compilado en ese clon produce objeto identico SHA256
+7709c41c996230c23cc8c3d1aeddbb2b1510fb8028855e10c5b3f16cf70903af.
+Reenlace sustituyendo ese objeto y nueva entrada por UI PASS
+(build/t27-r09-clean-entry.log). Se reutilizan headers/recursos generados
+y los demas objetos; no se afirma una reconstruccion integral desde cero.
+R09 sigue abierto: esta prueba aun no selecciona alquileres ni intercambios
+ni completa la ronda. Evidencia previa SIGSEGV en history/ del replay;
+los siguientes fallos se registraran al continuar desde esta pantalla.

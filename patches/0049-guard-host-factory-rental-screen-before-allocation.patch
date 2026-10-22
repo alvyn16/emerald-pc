@@ -1,0 +1,43 @@
+From 6fbad752fdcc4b118152157385b4f627270dab56 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Thu, 22 Oct 2026 19:45:57 -0400
+Subject: [PATCH] Guard host Factory rental screen before its allocation
+
+---
+ src/battle_factory_screen.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/battle_factory_screen.c b/src/battle_factory_screen.c
+index 40f1868..94d4990 100644
+--- a/src/battle_factory_screen.c
++++ b/src/battle_factory_screen.c
+@@ -1190,7 +1190,7 @@ static void CB2_InitSelectScreen(void)
+         LoadPalette(gFrontierFactoryMenu_Pal, 0, 2 * PLTT_SIZE_4BPP);
+         LoadPalette(sSelectText_Pal, BG_PLTT_ID(PALNUM_TEXT), PLTT_SIZEOF(4));
+         LoadPalette(sSelectText_Pal, BG_PLTT_ID(PALNUM_FADE_TEXT), PLTT_SIZEOF(5));
+-#ifdef UBFIX
++#if defined(UBFIX) || defined(PORT_PC)
+         if (sFactorySelectScreen && sFactorySelectScreen->fromSummaryScreen)
+ #else
+         if (sFactorySelectScreen->fromSummaryScreen == TRUE)
+@@ -1216,7 +1216,7 @@ static void CB2_InitSelectScreen(void)
+         SetVBlankCallback(VBlankCB_SelectScreen);
+         BeginNormalPaletteFade(PALETTES_ALL, 0, 16, 0, RGB_BLACK);
+         SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_OBJ_ON | DISPCNT_BG0_ON | DISPCNT_BG1_ON | DISPCNT_OBJ_1D_MAP);
+-#ifdef UBFIX
++#if defined(UBFIX) || defined(PORT_PC)
+         if (sFactorySelectScreen && sFactorySelectScreen->fromSummaryScreen)
+ #else
+         if (sFactorySelectScreen->fromSummaryScreen == TRUE)
+@@ -1234,7 +1234,7 @@ static void CB2_InitSelectScreen(void)
+         gMain.state++;
+         break;
+     case 5:
+-#ifdef UBFIX
++#if defined(UBFIX) || defined(PORT_PC)
+         if (sFactorySelectScreen && sFactorySelectScreen->fromSummaryScreen)
+ #else
+         if (sFactorySelectScreen->fromSummaryScreen == TRUE)
+-- 
+2.50.0.windows.1
+
