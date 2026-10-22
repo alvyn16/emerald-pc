@@ -1884,3 +1884,21 @@ No se acredita aun victoria, racha, recompensa ni suspension/reanudacion.
 Evidencia: build/t27-r08-access.log, t27-r08-arrival-reload.log,
 t27-r08-tower-lobby.log, t27-r08-tower-enter.log; checkpoints privados
 r08-frontier-arrival y r08-tower-reception. R08-R15 abiertos.
+
+
+## T27 / R08: seis victorias y derrota normal (22-10-2026)
+
+Primer intento Torre Nivel Abierto: resultados observados en
+HandleSpecialTrainerBattleEnd [1,1,1,1,1,1,2]. Swampert54/Pelipper52/Castform25
+vencen seis rivales, pierden ante el septimo; lobby restaura y cura los seis
+miembros originales, streak/record=6, BP=0. Sin excepcion ni bloqueo nativo.
+Checkpoint r08-tower-loss y Continue PASS: records, equipo, PS/PP, inventario
+y dinero conservados, save intacto. R08 no completo: faltan siete victorias,
+recompensa y suspension/reanudacion. Nuevo intento desde la derrota en curso.
+
+Se agrega probe C propio frontier_layout.c para medir offsets de SaveBlock2
+con GCC MINGW32 en cada replay R08, en vez de comentarios del layout GBA.
+Evidencia privada: build/t27-r08-tower-round.log,
+build/t27-r08-tower-loss-reload.log y t27-r08-tower-live.png.
+GBA original: make compare KEEP_TEMPS=1 NODEP=1 -> pokeemerald.gba: OK
+(build/t27-r08-gba.log), ARM Binutils 2.43.1. No parche nativo nuevo.

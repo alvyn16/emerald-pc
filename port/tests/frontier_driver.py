@@ -96,3 +96,53 @@ def tower_enter():
             button='A' if cursor == target else 'DOWN' if cursor < target else 'UP'
         d.advance(button,48,1)
     raise RuntimeError('Tower admission deadline: '+str(d.state()))
+
+
+def records():
+    """Read measured i686 save offsets; never use stale GBA layout comments."""
+    import json
+    import struct
+    layout=json.loads((d.ROOT/'build/frontier-layout.json').read_text())
+    address=d.value('*(unsigned int *)&gSaveBlock2Ptr')
+    data=bytes(gdb.selected_inferior().read_memory(address,layout['SaveBlock2_size']))
+    sizes={'towerWinStreaks':8,'towerRecordWinStreaks':8,'domeWinStreaks':4,
+           'domeTotalChampionships':4,'palaceWinStreaks':4,'arenaWinStreaks':2,
+           'factoryWinStreaks':4,'factoryRentsCount':4,'pikeWinStreaks':2,
+           'pyramidWinStreaks':2,'selectedPartyMons':4}
+    result={name:list(struct.unpack_from('<'+'H'*count,data,layout[name])) for name,count in sizes.items()}
+    for name in ('battlePoints','curChallengeBattleNum'):
+        result[name]=struct.unpack_from('<H',data,layout[name])[0]
+    result['battlesCount']=struct.unpack_from('<I',data,layout['battlesCount'])[0]
+    result['challengeStatus']=data[layout['challengeStatus']]
+    return result
+
+
+def tower_round():
+    before=records(); outcomes=[]
+    class End(gdb.Breakpoint):
+        def stop(self):
+            outcomes.append(d.memory('gBattleOutcome',1)[0])
+            print('NATURAL TOWER BATTLE END',len(outcomes),outcomes[-1],records(),flush=True)
+            return False
+    observer=End('HandleSpecialTrainerBattleEnd',internal=True); observer.silent=True
+    try:
+        tower_enter()
+        d.settle(250000)
+        assert d.state()['map'] == 'BattleFrontier_BattleTowerLobby'
+        after=records()
+        print('NATURAL TOWER ROUND RESULT',outcomes,before,after,flush=True)
+        if outcomes == [1]*7:
+            assert after['towerWinStreaks'][1] == 7
+            assert after['towerRecordWinStreaks'][1] >= 7
+            assert after['battlePoints'] > before['battlePoints']
+            name='r08-tower-seven-wins'
+        else:
+            assert outcomes and outcomes[-1] == 2, outcomes
+            name='r08-tower-loss'
+        facts=d.save_checkpoint(name)
+        facts['frontier']=records()
+        import json
+        (d.SCRATCH/(name+'.json')).write_text(json.dumps(facts,indent=2),encoding='utf-8')
+        print('NATURAL TOWER RESULT SAVED PASS',name)
+    finally:
+        observer.delete()

@@ -91,6 +91,12 @@ if 'safari' in expected:
     import safari_driver as safari
     assert safari.counters() == expected['safari']
     print('NATURAL SAFARI RELOAD PASS',safari.counters())
+if 'frontier' in expected:
+    import frontier_driver as frontier
+    observed=frontier.records()
+    for key,want in expected['frontier'].items():
+        assert observed[key] == want, (key,observed[key],want)
+    print('NATURAL FRONTIER RELOAD PASS',observed)
 print('NATURAL RELOAD PASS',actual)
 from pathlib import Path
 Path({str(scratch/'reload.raw')!r}).write_bytes(bytes(gdb.selected_inferior().read_memory(d.value('(unsigned int)&sPixels'),153600)))
