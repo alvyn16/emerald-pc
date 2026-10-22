@@ -1902,3 +1902,16 @@ Evidencia privada: build/t27-r08-tower-round.log,
 build/t27-r08-tower-loss-reload.log y t27-r08-tower-live.png.
 GBA original: make compare KEEP_TEMPS=1 NODEP=1 -> pokeemerald.gba: OK
 (build/t27-r08-gba.log), ARM Binutils 2.43.1. No parche nativo nuevo.
+
+
+## T27 / R08: ronda completa y recompensa (22-10-2026)
+
+Segundo intento desde r08-tower-loss: siete resultados [1,1,1,1,1,1,1],
+record/streak=7, batallas acumuladas14 y PB0->1. Guardado r08-tower-seven-wins
+por menu y Continue PASS, conserva records/PB y equipo completo, save intacto.
+El primer arranque de este retry no interactuaba con la recepcionista: el
+harness ahora camina hasta (6,6) y se orienta arriba antes de pulsar A,
+en vez de depender de la direccion heredada del checkpoint. No fallo nativo.
+Evidencia: build/t27-r08-tower-retry.log y t27-r08-seven-wins-reload.log.
+R08 sigue abierto solo por suspension/reanudacion; derrota/recarga, seleccion,
+ronda de siete, registro y recompensa ya verificados.

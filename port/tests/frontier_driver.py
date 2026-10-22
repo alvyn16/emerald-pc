@@ -77,7 +77,7 @@ def choose_party(slots):
 
 def tower_enter():
     assert d.state()['map'] == 'BattleFrontier_BattleTowerLobby'
-    d.go(6,7); d.advance('UP',8,1); d.advance('A',24,1)
+    d.go(6,6); d.advance('UP',24,4); d.advance('A',24,1)
     for step in range(1000):
         current=d.state()
         if current['callback'] == 'CB2_UpdatePartyMenu':
