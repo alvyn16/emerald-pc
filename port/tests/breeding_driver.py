@@ -153,6 +153,46 @@ def generate():
     return checkpoint('r06-egg-pending')
 
 
+def receive():
+    assert daycare()['pending'] == 1 and daycare()['offspring'] != 0
+    assert d.state()['party'] == 5
+    d.go(51,6); d.cross('UP','Route117_PokemonDayCare')
+    d.warp_to(2,8,'Route117')  # The map script moves the waiting keeper outside.
+    d.talk(47,7,'UP')
+    assert d.state()['party'] == 6
+    egg=party_details()[5]
+    assert egg['species'] == 43 and egg['is_egg'] == 1 and egg['cycles'] == 20
+    assert daycare()['pending'] == 0 and daycare()['offspring'] == 0
+    print('NATURAL DAYCARE EGG RECEIVED PASS',egg,daycare())
+    return checkpoint('r06-egg-received')
+
+
+def hatch():
+    original=party_details()[5]
+    assert original['is_egg'] == 1 and original['species'] == 43
+    d.go(51,6)
+    captured=False
+    for step in range(2000):
+        if party_details()[5]['is_egg'] == 0:break
+        pace(stop_when=lambda current:current['callback'] == 'CB2_EggHatch')
+        if d.state()['callback'] == 'CB2_EggHatch':
+            d.advance('NONE',480)
+            (d.SCRATCH/'r06-hatch-animation.raw').write_bytes(d.memory('sPixels',153600))
+            captured=True
+            d.settle(60000)
+        if step%100 == 0:
+            print('NATURAL EGG WALKING',step,party_details()[5],daycare())
+    else:
+        raise RuntimeError('Egg hatch walking deadline: '+str(party_details()))
+    hatched=party_details()[5]
+    assert captured and hatched['is_egg'] == 0 and hatched['species'] == 43
+    assert hatched['level'] == 5 and hatched['personality'] == original['personality']
+    assert d.value('(int)GetMonData3((void *)((char *)&gPlayerParty+500),4,0)') == 0
+    assert d.field_ready(d.state())
+    print('NATURAL EGG HATCH PASS',original,hatched)
+    return checkpoint('r06-oddish-hatched')
+
+
 def prepare():
     assert d.state()['map'] == 'LittlerootTown_BrendansHouse_2F'
     assert d.value('(int)FlagGet(0x864)') == 1
