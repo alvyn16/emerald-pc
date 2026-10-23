@@ -85,8 +85,12 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   30 lanzamientos observados [30..1] y 500 pasos por teclado [500..1]: PASS.
   Ambas salidas limpian modo/bolas/pasos a cero; Continue de ambos checkpoints
   PASS, conserva equipo/inventario/dinero y no reescribe el save.
-- [ ] R08: Battle Tower: admisión, selección legal, racha completa, registro
+- [x] R08: Battle Tower: admisión, selección legal, racha completa, registro
   y recompensa; reanudación/recarga y salida de una derrota.
+  Ronda [1,1,1,1,1,1,1], record7 y PB0->1; Continue PASS. Derrota
+  previa [1,1,1,1,1,1,2], salida/restauracion/equipo y Continue PASS.
+  Copia de recepcion: victoria1, Rest por menu, PAUSED2 guardado y reset
+  diagnostico limpio; Continue reanuda batalla2 con mismos contadores/equipo.
 - [ ] R09: Factory: alquileres, intercambios y racha/recompensa mediante UI.
 - [ ] R10: Palace: selección automática de movimientos y racha/recompensa.
 - [ ] R11: Arena: juicio, restricciones de cambio y racha/recompensa.

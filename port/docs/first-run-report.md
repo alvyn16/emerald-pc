@@ -8,7 +8,7 @@ del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
 ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
 Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
-R06 (crianza/eclosión y cuatro recargas) PASS. R07 Safari completo (30 bolas/500 pasos y dos Continue). R08–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+R06 (crianza/eclosión y cuatro recargas) PASS. R07 Safari completo (30 bolas/500 pasos y dos Continue). R09–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
 Consulta [cobertura pendiente](tasks/t27-remaining.md) y
 [registro de campaña](campaign-progress.md). Los checkpoints, capturas,

@@ -146,3 +146,59 @@ def tower_round():
         print('NATURAL TOWER RESULT SAVED PASS',name)
     finally:
         observer.delete()
+
+
+def multichoice():
+    task=d.value('(unsigned char)FindTaskIdByFunc((void *)Task_HandleMultichoiceInput)')
+    if task == 255:return None
+    return int.from_bytes(d.memory('gTasks',640)[task*40+22:task*40+24],'little')
+
+
+def tower_pause():
+    import json
+    before=records()
+    tower_enter()
+    d.settle(100000,stop_when=lambda current:multichoice() in (103,104))
+    assert records()['towerWinStreaks'][1] == before['towerWinStreaks'][1]+1
+    for step in range(500):
+        menu=multichoice(); button='A'
+        if menu in (103,104):
+            target=2 if menu == 103 else 1
+            cursor=d.value('(int)Menu_GetCursorPos()')
+            button='A' if cursor == target else 'DOWN' if cursor < target else 'UP'
+        try:
+            d.advance(button,48,1)
+        except AssertionError:
+            # Diagnostic SoftReset intentionally exits before the next frame target.
+            # Accept only this exact native path after its real paused save.
+            assert gdb.newest_frame().name() == 'Port_ExitCleanly'
+            assert gdb.newest_frame().older().name() == 'SoftReset'
+            result=records(); assert result['challengeStatus'] == 2, result
+            assert result['towerWinStreaks'][1] == before['towerWinStreaks'][1]+1
+            source=d.SCRATCH/'saves/emerald-pc-diagnostic.sav'
+            (d.SCRATCH/'r08-tower-paused.sav').write_bytes(source.read_bytes())
+            (d.SCRATCH/'r08-tower-paused.json').write_text(json.dumps(result,indent=2))
+            (d.SCRATCH/'r08-tower-paused.raw').write_bytes(d.memory('sPixels',153600))
+            print('NATURAL TOWER PAUSED SAVE AND SOFT RESET PASS',result)
+            return
+    raise RuntimeError('Tower suspension deadline')
+
+
+def tower_resume():
+    import json
+    expected=json.loads((d.ROOT/'build/natural-campaign/r08-tower-paused.json').read_text())
+    initial=records()
+    for key in ('towerWinStreaks','selectedPartyMons','curChallengeBattleNum','battlesCount'):
+        assert initial[key] == expected[key], (key,initial,expected)
+    assert initial['challengeStatus'] in (1,2), initial
+    result=d.settle(60000,stop_when=lambda current:current['callback'] == 'BattleMainCB2')
+    assert result['map'] == 'BattleFrontier_BattleTowerBattleRoom'
+    assert result['party'] == 3
+    resumed=records()
+    for key in ('towerWinStreaks','selectedPartyMons','curChallengeBattleNum','battlesCount'):
+        assert resumed[key] == expected[key], (key,resumed,expected)
+    assert resumed['challengeStatus'] == 1
+    assert [d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),11,0)') for i in range(3)] == [285,310,385]
+    (d.SCRATCH/'r08-tower-resumed.raw').write_bytes(d.memory('sPixels',153600))
+    (d.SCRATCH/'r08-tower-resumed.json').write_text(json.dumps(resumed,indent=2))
+    print('NATURAL TOWER CONTINUE RESUMED SECOND BATTLE PASS',resumed,result)

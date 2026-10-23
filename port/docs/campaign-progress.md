@@ -8,7 +8,7 @@ del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
 ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
 Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
-R06 (crianza/eclosión y cuatro recargas) PASS. R08–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+R06 (crianza/eclosión y cuatro recargas) PASS. R09–R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
 Consulta [cobertura pendiente](tasks/t27-remaining.md) y
 [informe de ejecución](first-run-report.md). Los checkpoints, capturas,
@@ -1915,3 +1915,22 @@ en vez de depender de la direccion heredada del checkpoint. No fallo nativo.
 Evidencia: build/t27-r08-tower-retry.log y t27-r08-seven-wins-reload.log.
 R08 sigue abierto solo por suspension/reanudacion; derrota/recarga, seleccion,
 ronda de siete, registro y recompensa ya verificados.
+
+
+## T27 / R08 completo: suspension y reanudacion (23-10-2026)
+
+Copia de r08-tower-reception: primera victoria natural, Rest en menu103,
+guardado real challengeStatus2, curChallengeBattleNum1 y selectedPartyMons
+[5,2,3,0]. SoftReset diagnostico termina limpio; no se invoca reset desde GDB.
+Continue del archivo r08-tower-paused recupera esos mismos contadores y
+seleccion, native resume status1, ascensor y segunda batalla al frame4016 PASS.
+Prueba independiente de la ronda ganada/derrota anteriores, como permiten
+los criterios R06-R14. Intento previo de pausa tras siete pierde el siguiente
+combate normalmente (historial); no se acredita como suspension.
+R08 completo por conjunto de pruebas. Logs build/t27-r08-tower-pause.log,
+t27-r08-tower-resume.log; capturas/checkpoints privados en build/.
+
+R09, alquileres: tres seleccionados mediante bolas/Rent/Yes, equipo realmente
+prestado [247,202,333] nivel50; traslado y primer combate PASS
+(build/t27-r09-factory-rent.log). La eleccion lee las seis fichas generadas;
+no crea Pokemon ni modifica datos. Falta intercambio y ronda/recompensa.
