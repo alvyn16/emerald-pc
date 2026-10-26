@@ -1792,3 +1792,28 @@ Clon limpio con51 parches: arbol b8234061de43be38e7d3c607f5dc11e161010de5
 identico. pokemon_animation.o identico SHA256
 611c8934d75596bea2428b6810af545bff15c8276348fc882422b66829b68df6.
 Reenlace reutiliza otros objetos/recursos; no es un build integral desde cero.
+
+
+## T27 / R09: segundo consumidor del terminador vertical (26-10-2026)
+
+Cuatro victorias e intercambios reales en Nivel Abierto; al quinto combate
+SIGFPE 0x10270d1d en VerticalShakeTwice. Es el otro consumidor de
+sVerticalShakeData y divide por0 al leer {-1,0}. La busqueda completa de
+referencias a esa tabla confirma solo dos consumidores: este y
+VerticalShakeLowTwice (0051). Parche0052 usa SAFE_DIV tambien aqui; GBA
+conserva make compare -> pokeemerald.gba: OK. Normal/diagnostico compilan
+(build/t27-r09-shake-twice-{host-build,gba}.log).
+
+Prueba aislada animation_terminator_smoke.py: sprite propio asignado en
+heap, offsets medidos con C i686, estado terminal3 y y2=99; ambos callbacks
+terminan con WaitAnimEnd/y2=0 sin senal. Libera el sprite y confirma save
+privado intacto. PASS en build/t27-animation-terminators.log. Es una prueba
+sintetica de animacion; no acredita victorias ni progreso de campana.
+
+Clon limpio con52 parches: arbol e9666c86f7675b77464010db280893524d28633a
+identico; pokemon_animation.o identico SHA256
+ecc43416b6c68e18104387dea98f69e080e81195afbb8d258463436b10c42fd1.
+Se reenlazo con esos objetos y se repitieron cuatro victorias de Fabrica;
+Rest por UI guarda challengeStatus2/streak4/battleNum4 y termina limpio.
+Falta reanudar y completar las tres batallas restantes. No se afirma build
+integral desde cero ni cierre de R09.

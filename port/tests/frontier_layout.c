@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include "global.h"
+#include "sprite.h"
 _Static_assert(sizeof(void *) == 4, "Run the layout probe under MINGW32");
 #define FIELD(name) printf("\"" #name "\":%zu,", offsetof(struct SaveBlock2, frontier) + offsetof(struct BattleFrontier, name))
 int main(void) {
@@ -11,6 +12,7 @@ int main(void) {
  FIELD(arenaWinStreaks); FIELD(factoryWinStreaks); FIELD(factoryRentsCount);
  FIELD(pikeWinStreaks); FIELD(pyramidWinStreaks); FIELD(battlePoints);
  FIELD(rentalMons); FIELD(battlesCount);
+ printf("\"Sprite_size\":%zu,\"Sprite_data\":%zu,\"Sprite_y2\":%zu,\"Sprite_callback\":%zu,", sizeof(struct Sprite), offsetof(struct Sprite, data), offsetof(struct Sprite, y2), offsetof(struct Sprite, callback));
  printf("\"SaveBlock2_size\":%zu,\"RentalMon_size\":%zu}\n", sizeof(struct SaveBlock2), sizeof(struct RentalMon));
  return 0;
 }

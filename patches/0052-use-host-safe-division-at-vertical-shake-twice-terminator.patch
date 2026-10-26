@@ -1,0 +1,25 @@
+From 06905e6f0dd369932aec2f1e97ff8d825221637c Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Mon, 26 Oct 2026 17:43:28 -0400
+Subject: [PATCH] Use host safe division at vertical shake twice terminator
+
+---
+ src/pokemon_animation.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/pokemon_animation.c b/src/pokemon_animation.c
+index 53d5f35..94737d9 100644
+--- a/src/pokemon_animation.c
++++ b/src/pokemon_animation.c
+@@ -1644,7 +1644,7 @@ static void VerticalShakeTwice(struct Sprite *sprite)
+     u8 amplitude = 0;
+ 
+     if (var5 != (u8)-2)
+-        amplitude = (var6 - var7) * var5 / var6;
++        amplitude = SAFE_DIV((var6 - var7) * var5, var6);
+     else
+         amplitude = 0;
+ 
+-- 
+2.50.0.windows.1
+
