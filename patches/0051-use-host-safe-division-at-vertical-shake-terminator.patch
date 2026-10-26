@@ -1,0 +1,25 @@
+From 129e1595168e38678fe1f61f4702b0208e359a80 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Mon, 26 Oct 2026 17:33:56 -0400
+Subject: [PATCH] Use host safe division at vertical shake animation terminator
+
+---
+ src/pokemon_animation.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/pokemon_animation.c b/src/pokemon_animation.c
+index 55d72df..53d5f35 100644
+--- a/src/pokemon_animation.c
++++ b/src/pokemon_animation.c
+@@ -4073,7 +4073,7 @@ static void VerticalShakeLowTwice(struct Sprite *sprite)
+     var6 = sVerticalShakeData[sprite->data[5]][1];
+     var7 = 0;
+     if (sVerticalShakeData[sprite->data[5]][0] != (u8)-2)
+-        var7 = (var6 - var9) * var5 / var6;
++        var7 = SAFE_DIV((var6 - var9) * var5, var6);
+     else
+         var7 = 0;
+ 
+-- 
+2.50.0.windows.1
+

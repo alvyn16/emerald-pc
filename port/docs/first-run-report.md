@@ -1771,3 +1771,24 @@ Objeto battle_factory_screen.c identico SHA256
 338fd9baa42d065efcc4d7b1b2ce768f6253ed2a656673a2e9cbf9497efac2e6.
 Se reutilizaron recursos/headers generados y otros objetos; no es un build
 integral desde cero. R09 permanece abierto por ronda, recompensa y recarga.
+
+
+## T27 / R09: division por cero en animacion vertical (26-10-2026)
+
+Nivel Abierto, entrada de Wailord/Gyarados en el intento r09-factory-open-retry:
+SIGFPE 0x10276e21 en VerticalShakeLowTwice -> AnimateSprites -> BattleMainCB2.
+sVerticalShakeData termina en {-1,0}; la funcion calcula el cociente con
+var6=0 antes de tratar el terminador. Parche0051 cambia esa division a
+SAFE_DIV, que devuelve0 en PORT_PC y conserva la division original GBA.
+
+Normal/diagnostico compilan; compare GBA OK
+(build/t27-r09-shake-host-build.log, t27-r09-shake-gba.log). Mismo checkpoint
+e input, ejecutable reenlazado con objetos del clon limpio: supera frame8288
+y gana primer combate al35599, sin SIGFPE. La ronda sigue en curso; no se
+acredita aun racha/recompensa. Los registros factory-results.jsonl y
+factory-rosters.json retienen resultado y equipos para diagnosticar derrotas.
+
+Clon limpio con51 parches: arbol b8234061de43be38e7d3c607f5dc11e161010de5
+identico. pokemon_animation.o identico SHA256
+611c8934d75596bea2428b6810af545bff15c8276348fc882422b66829b68df6.
+Reenlace reutiliza otros objetos/recursos; no es un build integral desde cero.
