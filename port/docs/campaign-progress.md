@@ -1934,3 +1934,30 @@ R09, alquileres: tres seleccionados mediante bolas/Rent/Yes, equipo realmente
 prestado [247,202,333] nivel50; traslado y primer combate PASS
 (build/t27-r09-factory-rent.log). La eleccion lee las seis fichas generadas;
 no crea Pokemon ni modifica datos. Falta intercambio y ronda/recompensa.
+
+
+## T27 / R09-R11: diagnosticos naturales pendientes (26-10-2026)
+
+Fabrica: seleccion real de seis fichas, Rent/Yes y primer intercambio PASS
+en el historial de r09-factory-exchange. Parche0050 corrige NULL al entrar
+al intercambio; parche0051 corrige division por cero al terminar animacion
+VerticalShakeLowTwice. Compare GBA OK y objetos de clon limpio identicos,
+detalle en first-run-report.md. Ronda nivel50 termina en derrota normal
+[2], guardado r09-factory-loss. Nivel Abierto tambien [2], conserva salida
+normal y equipo; siguiente intento recibe Rhydon/Gyarados/Porygon2 nivel100
+y vence primer combate35599 despues del0051. Ronda/recompensa aun pendientes.
+
+Palacio: ruta desde Torre/puerta/recepcion y Nivel Abierto/seleccion legal
+PASS. Primer intento [2],120 callbacks automaticos, cero elecciones manuales.
+Continue de r10-palace-loss PASS con equipo, record/PB y save intacto.
+Retry [1,1,1,2],464 callbacks automaticos, cero manuales. No se acredita
+ronda completa ni recompensa; los intentos interrumpidos anteriores tampoco
+son PASS. Evidencia build/t27-r10-palace-{round,retry,loss-reload}.log.
+
+Arena: desplazamiento a recepcion y guardado r11-arena-reception PASS.
+Entrada legal y apertura de Pokemon en combate: PARTY_ACTION_CANT_SWITCH2.
+Segundo Pokemon ofrece Summary/Cancel; la segunda opcion vuelve a lista,
+no abre Summary como ocurriria si hubiera Shift. Cancelar devuelve al combate
+con el mismo indice activo0 al frame9356. Sin cambio de Pokemon.
+Evidencia build/t27-r11-arena-{lobby,restriction}.log. Faltan juicio, ronda
+y recompensa. R09-R15 y T27 permanecen abiertos.

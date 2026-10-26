@@ -76,16 +76,20 @@ def choose_party(slots):
 
 
 def tower_enter():
-    assert d.state()['map'] == 'BattleFrontier_BattleTowerLobby'
-    d.go(6,6); d.advance('UP',24,4); d.advance('A',24,1)
+    return owned_enter('BattleFrontier_BattleTowerLobby',6,6)
+
+
+def owned_enter(lobby,x,y,slots=(4,1,2)):
+    assert d.state()['map'] == lobby
+    d.go(x,y); d.advance('UP',24,4); d.advance('A',24,1)
     for step in range(1000):
         current=d.state()
         if current['callback'] == 'CB2_UpdatePartyMenu':
-            choose_party([4,1,2])
-            print('NATURAL TOWER PARTY SELECTED PASS',list(d.memory('gSelectedOrderFromParty',3)))
+            choose_party(list(slots))
+            print('NATURAL OWNED FACILITY PARTY SELECTED PASS',list(d.memory('gSelectedOrderFromParty',3)))
             continue
         if current['callback'] == 'BattleMainCB2':
-            print('NATURAL TOWER FIRST BATTLE START PASS',current)
+            print('NATURAL OWNED FACILITY FIRST BATTLE START PASS',current)
             return
         button='A'
         task=d.value('(unsigned char)FindTaskIdByFunc((void *)Task_HandleMultichoiceInput)')
@@ -95,7 +99,7 @@ def tower_enter():
             cursor=d.value('(int)Menu_GetCursorPos()')
             button='A' if cursor == target else 'DOWN' if cursor < target else 'UP'
         d.advance(button,48,1)
-    raise RuntimeError('Tower admission deadline: '+str(d.state()))
+    raise RuntimeError('Owned facility admission deadline: '+str(d.state()))
 
 
 def records():
