@@ -1,0 +1,25 @@
+From bd2cd3e03c36f4ad642b416ff35f78b055799abd Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Fri, 23 Oct 2026 01:02:42 -0400
+Subject: [PATCH] Guard host Factory swap screen before its allocation
+
+---
+ src/battle_factory_screen.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/battle_factory_screen.c b/src/battle_factory_screen.c
+index 94d4990..3704a8b 100644
+--- a/src/battle_factory_screen.c
++++ b/src/battle_factory_screen.c
+@@ -3345,7 +3345,7 @@ static void CB2_InitSwapScreen(void)
+         gMain.state++;
+         break;
+     case 5:
+-#ifdef UBFIX
++#if defined(UBFIX) || defined(PORT_PC)
+         if (sFactorySwapScreen && sFactorySwapScreen->fromSummaryScreen)
+ #else
+         if (sFactorySwapScreen->fromSummaryScreen == TRUE)
+-- 
+2.50.0.windows.1
+

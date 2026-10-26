@@ -1749,3 +1749,25 @@ y los demas objetos; no se afirma una reconstruccion integral desde cero.
 R09 sigue abierto: esta prueba aun no selecciona alquileres ni intercambios
 ni completa la ronda. Evidencia previa SIGSEGV en history/ del replay;
 los siguientes fallos se registraran al continuar desde esta pantalla.
+
+
+## T27 / R09: fallo de intercambio y parche0050 (26-10-2026)
+
+Tras vencer el primer rival y aceptar intercambio, SIGSEGV en
+CB2_InitSwapScreen (0x100b60a3). case5 consulta fromSummaryScreen del
+puntero sFactorySwapScreen, aun NULL; Swap_InitStruct lo asigna en case6.
+El parche0050 habilita tambien bajo PORT_PC la comprobacion UBFIX existente.
+GBA sigue la rama original: make compare -> pokeemerald.gba: OK
+(build/t27-r09-swap-gba.log). Normal/diagnostico compilan.
+
+La repeticion normal del diagnostico llego a intercambio real de alquiler
+325 por354 y a segundo combate, identidad/movimientos/nivel comprobados:
+build/t27-r09-factory-exchange/history/ conserva ese intento PASS.
+Un intento posterior con objeto del clon limpio quedo interrumpido; no se
+cuenta como PASS. Repeticion integral de ronda con ese ejecutable en curso.
+Arbol limpio tras aplicar los50 parches desde el commit fijado:
+916eb3ca0fe0a8dc9d0d9a6adbc5826fb6ffa39b, identico al checkout privado.
+Objeto battle_factory_screen.c identico SHA256
+338fd9baa42d065efcc4d7b1b2ce768f6253ed2a656673a2e9cbf9497efac2e6.
+Se reutilizaron recursos/headers generados y otros objetos; no es un build
+integral desde cero. R09 permanece abierto por ronda, recompensa y recarga.
