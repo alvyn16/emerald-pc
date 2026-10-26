@@ -13,6 +13,7 @@ def main():
     parser.add_argument("checkpoint",nargs="?",default="r01-birch-dex")
     parser.add_argument("--continue-until",type=int,default=8000,
                         help="Stop Continue key pulses before field actions can respond")
+    parser.add_argument('--exe',type=Path,help='Alternate current diagnostic binary')
     args=parser.parse_args()
     name=args.checkpoint
     assert 1000 < args.continue_until <= 8000
@@ -22,8 +23,11 @@ def main():
     expected=json.loads((source/(name+".json")).read_text())
     for directory in ("build","roms","saves"):
         (scratch/directory).mkdir(parents=True,exist_ok=True)
+    if 'frontier' in expected:
+        from frontier_layout import measure
+        measure(project,scratch)
     for filename in ("emerald-pc-diagnostic.exe","SDL2.dll"):
-        shutil.copy2(source/"build"/filename,scratch/"build"/filename)
+        shutil.copy2(args.exe if filename=='emerald-pc-diagnostic.exe' and args.exe else project/'build'/filename,scratch/'build'/filename)
     shutil.copy2(source/"roms/test.gba",scratch/"roms/test.gba")
     save=scratch/"saves/emerald-pc-diagnostic.sav"
     saved=(source/(name+".sav")).read_bytes()
@@ -44,6 +48,9 @@ python
 import sys,json,gdb
 sys.path.insert(0,'port/tests')
 import campaign_driver as d
+from pathlib import Path
+d.SCRATCH=Path({scratch.as_posix()!r})
+d.FRONTIER_LAYOUT=Path({(scratch/'frontier-layout.json').as_posix()!r})
 assert gdb.newest_frame().name() == 'Port_ExitCleanly', 'Continue stopped outside the host frame checkpoint'
 actual=d.state()
 assert d.field_ready(actual), actual

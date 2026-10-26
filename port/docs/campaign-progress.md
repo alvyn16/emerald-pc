@@ -1961,3 +1961,21 @@ no abre Summary como ocurriria si hubiera Shift. Cancelar devuelve al combate
 con el mismo indice activo0 al frame9356. Sin cambio de Pokemon.
 Evidencia build/t27-r11-arena-{lobby,restriction}.log. Faltan juicio, ronda
 y recompensa. R09-R15 y T27 permanecen abiertos.
+
+
+## T27 / R15: corregir verificacion de recarga obsoleta (26-10-2026)
+
+El wrapper Continue copiaba el diagnostico del directorio canonico de
+fixtures; ese binario era distinto al build actual. Ahora usa build/ actual
+por defecto y permite --exe para comprobar un reenlace limpio concreto.
+Cada recarga Frontier mide offsets en su propio directorio de prueba, con
+escritura atomica del JSON; evita compartir el ejecutable/JSON del probe.
+El driver acepta la ruta explicita FRONTIER_LAYOUT, con fallback para
+experimentos anteriores. owned_enter permite una condicion de parada para
+inspeccionar menus previos al combate, sin alterar los controles normales.
+
+Recarga r11-arena-loss con binario actual PASS y save intacto; SHA256 del
+exe copiado coincide con build/:37dabf5bc0254cf4fe7d2108a833f260c139020dd50304845e3f8e102f75d75c.
+La copia antigua era distinta, confirmado por comparacion de bytes.
+Evidencia: build/t27-r11-arena-loss-reload.log. R15 no se cierra hasta
+completar las facilities y los gates finales restantes.

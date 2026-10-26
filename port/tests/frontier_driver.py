@@ -79,11 +79,12 @@ def tower_enter():
     return owned_enter('BattleFrontier_BattleTowerLobby',6,6)
 
 
-def owned_enter(lobby,x,y,slots=(4,1,2)):
+def owned_enter(lobby,x,y,slots=(4,1,2),stop_when=None):
     assert d.state()['map'] == lobby
     d.go(x,y); d.advance('UP',24,4); d.advance('A',24,1)
     for step in range(1000):
         current=d.state()
+        if stop_when is not None and stop_when(current):return current
         if current['callback'] == 'CB2_UpdatePartyMenu':
             choose_party(list(slots))
             print('NATURAL OWNED FACILITY PARTY SELECTED PASS',list(d.memory('gSelectedOrderFromParty',3)))
@@ -106,7 +107,7 @@ def records():
     """Read measured i686 save offsets; never use stale GBA layout comments."""
     import json
     import struct
-    layout=json.loads((d.ROOT/'build/frontier-layout.json').read_text())
+    layout=json.loads(getattr(d,'FRONTIER_LAYOUT',d.ROOT/'build/frontier-layout.json').read_text())
     address=d.value('*(unsigned int *)&gSaveBlock2Ptr')
     data=bytes(gdb.selected_inferior().read_memory(address,layout['SaveBlock2_size']))
     sizes={'towerWinStreaks':8,'towerRecordWinStreaks':8,'domeWinStreaks':4,
