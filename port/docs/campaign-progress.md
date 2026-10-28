@@ -1979,3 +1979,17 @@ exe copiado coincide con build/:37dabf5bc0254cf4fe7d2108a833f260c139020dd5030484
 La copia antigua era distinta, confirmado por comparacion de bytes.
 Evidencia: build/t27-r11-arena-loss-reload.log. R15 no se cierra hasta
 completar las facilities y los gates finales restantes.
+
+
+## T27 / R09: ronda Factory completa (27-10-2026)
+
+Nivel Abierto: cuatro victorias naturales y Rest por menu; Continue
+recupera los tres alquileres con personalidad, nivel y movimientos intactos.
+Despues otras tres victorias; seis intercambios reales en total. Resultado
+[1,1,1,1,1,1,1], racha7, alquileres7 y PB0->3. Guardado desde el menu y
+Continue verifican registros, equipo e inventario sin alterar el archivo.
+Los anteriores intentos perdidos permanecen en el historial.
+Evidencia build/t27-r09-factory-open-pause.log,
+build/t27-r09-factory-resume.log y build/t27-r09-factory-seven-reload.log.
+El ejecutable de la ronda reanudada reenlaza dos objetos del clon limpio;
+los demas objetos se reutilizan del build principal: no es build limpio total.

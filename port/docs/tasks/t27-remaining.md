@@ -91,7 +91,11 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   previa [1,1,1,1,1,1,2], salida/restauracion/equipo y Continue PASS.
   Copia de recepcion: victoria1, Rest por menu, PAUSED2 guardado y reset
   diagnostico limpio; Continue reanuda batalla2 con mismos contadores/equipo.
-- [ ] R09: Factory: alquileres, intercambios y racha/recompensa mediante UI.
+- [x] R09: Factory: alquileres, intercambios y racha/recompensa mediante UI.
+  Siete victorias reales, seis intercambios, racha7 y PB0->3. Rest tras
+  cuatro victorias y Continue conservan alquileres, personalidad y movimientos.
+  Continue final PASS conserva equipo, registros y save intacto. Evidencia:
+  build/t27-r09-factory-resume.log y build/t27-r09-factory-seven-reload.log.
 - [ ] R10: Palace: selección automática de movimientos y racha/recompensa.
 - [ ] R11: Arena: juicio, restricciones de cambio y racha/recompensa.
 - [ ] R12: Dome: inscripción, cuadro/elección del equipo y torneo/recompensa.
