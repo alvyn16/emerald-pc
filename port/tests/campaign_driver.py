@@ -234,8 +234,17 @@ def battle_button():
         # Read its state; never keep selecting a stronger but forbidden move.
         tormented=struct.unpack_from('<I',battle,battler*88+80)[0] & (1<<31)
         last_move=struct.unpack_from('<H',memory('gLastMoves',8),battler*2)[0]
+        # i686 DisableStruct ABI: 28 bytes; timer bitfields at bytes 14 and 19.
+        restriction=memory('gDisableStructs',4*28)[battler*28:(battler+1)*28]
+        disabled,encored=struct.unpack_from('<HH',restriction,4)
+        encore_timer=restriction[14]&15
+        taunt_timer=restriction[19]&15
         for index,move in enumerate(moves):
-            if move and choices[8+index] and not (tormented and move == last_move):
+            if (move and choices[8+index] and move != disabled
+                    and not (tormented and move == last_move)
+                    and not (encore_timer and move != encored)):
+                if taunt_timer and bytes(gdb.selected_inferior().read_memory(value('(unsigned int)&gBattleMoves')+move*9+1,1))[0] == 0:
+                    continue
                 definition=bytes(gdb.selected_inferior().read_memory(value("(unsigned int)&gBattleMoves")+move*9,9))
                 physical=definition[2] < 10  # Gen III categories are by type.
                 attack_offset,defense_offset=(2,4) if physical else (8,10)
