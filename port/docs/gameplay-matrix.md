@@ -91,7 +91,7 @@ al PC. No fuerzan resultados de almacenamiento. Capturas raw locales en build/.
 Estado al 28 de octubre de 2026: campaña natural R01–R05 completa;
 ocho medallas, Calle Victoria, Alto Mando, Wallace, Hall of Fame y The End.
 Replay y Continue final PASS, incluyendo integridad del equipo y Hall of Fame.
-R06–R09 y R11–R14 PASS. R10, R15 y Checkpoint E abiertos. La tabla conserva pruebas con fixtures
+R06–R09 y R11–R14 PASS. R10 y Checkpoint E abiertos. La tabla conserva pruebas con fixtures
 preparados, identificadas como evidencia independiente de la campaña natural.
 
 El upstream contiene 518 mapas en 34 grupos. PASS para 32 cargas seleccionadas:
@@ -112,7 +112,7 @@ cambian con input real y callback de campo conservado. Capturas privadas en buil
 | Crianza | Mudkip + Ditto guardados, huevo generado por rutinas reales, especie Mudkip, IS_EGG=1, save | PASS; readiness del huevo dirigida, no espera de pasos ni eclosión |
 | Safari | Huida previa más admisión/cobro 500/30 bolas, captura Magikarp, salida por pasos y limpieza de modo | PASS dirigido; rutina de pasos invocada, no paseo ni agotamiento de bolas |
 | Frontier fixture dirigido | Tower singles, rival generado de la tabla de facility, Swampert/Salamence/Metagross 50, victoria y save | PASS de un combate; no racha completa ni otras seis facilities |
-| Campaña continua | R01–R05 naturales completos; ocho medallas, Calle Victoria, Alto Mando, Wallace, Hall of Fame y The End; replay/Continue final | R01–R09 y R11–R14 PASS; R10 y R15 pendientes |
+| Campaña continua | R01–R05 naturales completos; ocho medallas, Calle Victoria, Alto Mando, Wallace, Hall of Fame y The End; replay/Continue final | R01–R09 y R11–R14 PASS; R10 pendiente |
 | Frontier natural | Torre, Factory, Arena, Dome, Pike y Pyramid: rondas/recompensas y Continue; Factory pausa/intercambio, Arena juicio y restricciones, Pike estados, Pyramid bolsa | R08–R09 y R11–R14 PASS; Palace pendiente |
 | Safari natural R07 | 30 bolas lanzadas y 500 pasos por teclas; dos salidas limpias, Continue conserva equipo/inventario/dinero y save intacto | PASS |
 | Crianza natural R06 | Padres Gloom/Oddish por UI, captura de macho, huevo generado/recogido, 5375 pasos hasta Oddish5, identidad conservada; cuatro Continue/save intacto | PASS |
