@@ -2,6 +2,7 @@
 import campaign_driver as d
 import gdb
 
+PAUSE_AFTER=0  # Optional real Rest/save checkpoint between wins.
 LEVEL_MODE=0  # Real reception choice: Lv50=0, Open Level=1.
 
 
@@ -135,7 +136,7 @@ def first_exchange():
     print('NATURAL FACTORY SECOND BATTLE AFTER EXCHANGE PASS',result)
 
 
-def round_trip():
+def round_trip(resume=False):
     import json
     import frontier_driver as frontier
     before=frontier.records(); outcomes=[]; swaps=0
@@ -154,16 +155,34 @@ def round_trip():
             return False
     observer=End('HandleSpecialTrainerBattleEnd',internal=True); observer.silent=True
     try:
-        first_battle()
+        if resume:
+            expected=json.loads((d.ROOT/'build/natural-campaign/r09-factory-open-paused-four.json').read_text())
+            for key in ('factoryWinStreaks','factoryRentsCount','curChallengeBattleNum','battlesCount'):
+                assert before[key]==expected[key],(key,before,expected)
+            current=d.settle(60000,stop_when=lambda state:state['callback']=='Swap_CB2')
+            assert current['callback']=='Swap_CB2',current
+            expected_team=json.loads((d.ROOT/'build/natural-campaign/r09-factory-open-paused-four-team.json').read_text())
+            actual=[mon_stats(d.value('(unsigned int)&gPlayerParty')+i*100) for i in range(3)]
+            for old,new in zip(expected_team,actual):
+                for key in ('species','personality','level','moves'):assert old[key]==new[key],(key,old,new)
+            print('NATURAL FACTORY RESUMED RENTALS PASS',actual)
+            swaps=3
+            exchange();swaps+=1
+        else:
+            first_battle()
         for stage in range(8):
-            current=d.settle(100000,stop_when=lambda state:state['callback']=='Swap_CB2')
+            current=d.settle(100000,stop_when=lambda state:state['callback']=='Swap_CB2' or (PAUSE_AFTER and len(outcomes)>=PAUSE_AFTER and frontier.multichoice() in (103,104)))
+            if PAUSE_AFTER and len(outcomes)>=PAUSE_AFTER and frontier.multichoice() in (103,104):
+                assert outcomes==[1]*PAUSE_AFTER,outcomes
+                pause_challenge(PAUSE_AFTER)
+                return
             if current['map']=='BattleFrontier_BattleFactoryLobby':break
             assert current['callback']=='Swap_CB2',current
             exchange(); swaps+=1
         else:raise RuntimeError('Factory round did not end after seven battles')
         after=frontier.records()
         print('NATURAL FACTORY ROUND RESULT',outcomes,'exchanges',swaps,before,after)
-        if outcomes==[1]*7:
+        if outcomes==[1]*(3 if resume else 7):
             assert swaps==6 and after['factoryRentsCount'][LEVEL_MODE]>=6
             assert after['factoryWinStreaks'][LEVEL_MODE]==7
             assert after['battlePoints']>before['battlePoints']
@@ -175,3 +194,29 @@ def round_trip():
         (d.SCRATCH/(name+'.json')).write_text(json.dumps(facts,indent=2),encoding='utf-8')
     finally:
         observer.delete()
+
+
+def pause_challenge(wins):
+    import json
+    import frontier_driver as frontier
+    for step in range(400):
+        menu=frontier.multichoice();button='A'
+        if menu in (103,104):
+            target=2 if menu==103 else 1
+            cursor=d.value('(int)Menu_GetCursorPos()')
+            button='A' if cursor==target else 'DOWN' if cursor<target else 'UP'
+        try:
+            d.advance(button,48,1)
+        except AssertionError:
+            assert gdb.newest_frame().name()=='Port_ExitCleanly'
+            assert gdb.newest_frame().older().name()=='SoftReset'
+            result=frontier.records()
+            assert result['challengeStatus']==2,result
+            assert result['factoryWinStreaks'][LEVEL_MODE]==wins,result
+            name='r09-factory-open-paused-four'
+            (d.SCRATCH/(name+'.sav')).write_bytes((d.SCRATCH/'saves/emerald-pc-diagnostic.sav').read_bytes())
+            (d.SCRATCH/(name+'.json')).write_text(json.dumps(result,indent=2))
+            (d.SCRATCH/(name+'.raw')).write_bytes(d.memory('sPixels',153600))
+            print('NATURAL FACTORY REAL PAUSED CHECKPOINT PASS',result)
+            return
+    raise RuntimeError('Factory native suspension deadline')
