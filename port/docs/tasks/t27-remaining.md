@@ -118,6 +118,11 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
 - [ ] R15: repetición de regresiones afectadas, build normal/diagnóstico,
   suites host, compare GBA OK y reproducción limpia de cualquier parche nuevo.
   Revisar matriz/informes y cerrar únicamente lo que tenga evidencia.
+  Clon limpio desde base + 53 parches via setup.ps1 reproduce el mismo arbol;
+  GBA limpio compare OK y PC limpio exe/diagnostic/test/verify-normal PASS
+  (21 suites). Compilador agbcc ya instalado y ROM propia copiados solo a
+  build/. Evidencia build/t27-clean-series53-{setup,gba-build,pc-resume}.log.
+  Falta auditoria final y regresiones especificas de los ultimos cambios.
 
 R01–R05 forman una campaña continua con checkpoints guardados. R06–R14 pueden
 usar copias de esa partida en directorios independientes bajo build/; se
