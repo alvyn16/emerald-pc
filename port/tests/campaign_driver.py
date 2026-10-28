@@ -804,6 +804,9 @@ def path_to(x,y):
     read=gdb.selected_inferior().read_memory
     layout=struct.unpack("<I",memory("gMapHeader",4))[0]
     map_width,map_height=struct.unpack('<II',bytes(read(layout,8)))
+    # Pyramid generates a 32x32 floor from its 8x8 map template.
+    if current['map']=='BattleFrontier_BattlePyramidFloor':
+        map_width,map_height=32,32
     def within_route(point):
         # Loaded neighbor tiles are useful for checking a connection step,
         # but must not become shortcuts that leave the current map en route.
