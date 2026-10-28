@@ -1,0 +1,32 @@
+From 207e3b6d3e60e922e9f5ba2417262c91a852db97 Mon Sep 17 00:00:00 2001
+From: alvyn16 <alvyn655@gmail.com>
+Date: Tue, 27 Oct 2026 23:02:29 -0400
+Subject: [PATCH] Service host VBlank during Pyramid bag loading
+
+---
+ src/battle_pyramid_bag.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/src/battle_pyramid_bag.c b/src/battle_pyramid_bag.c
+index 5e21be6..144c4d5 100644
+--- a/src/battle_pyramid_bag.c
++++ b/src/battle_pyramid_bag.c
+@@ -453,7 +453,14 @@ static void CB2_LoadPyramidBagMenu(void)
+ {
+     while (MenuHelpers_ShouldWaitForLinkRecv() != TRUE
+         && LoadPyramidBagMenu() != TRUE
+-        && MenuHelpers_IsLinkActive() != TRUE);
++        && MenuHelpers_IsLinkActive() != TRUE)
++    {
++#ifdef PORT_PC
++        // Deferred tile DMA needs the cooperative host VBlank service.
++        extern void PortHost_RunFrame(void);
++        PortHost_RunFrame();
++#endif
++    }
+ }
+ 
+ static bool8 LoadPyramidBagMenu(void)
+-- 
+2.50.0.windows.1
+

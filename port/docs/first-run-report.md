@@ -1817,3 +1817,18 @@ Se reenlazo con esos objetos y se repitieron cuatro victorias de Fabrica;
 Rest por UI guarda challengeStatus2/streak4/battleNum4 y termina limpio.
 Falta reanudar y completar las tres batallas restantes. No se afirma build
 integral desde cero ni cierre de R09.
+
+
+## T27: bloqueo de la bolsa de Pyramid (27-10-2026)
+
+La entrada natural al piso y apertura de la bolsa especial quedaban sin
+producir frames. GDB detuvo LoadPyramidBagGfx con estado1, llamado por
+LoadPyramidBagMenu y CB2_LoadPyramidBagMenu; el bucle espera que se complete
+la copia DMA de tiles, que en PC requiere atender VBlank cooperativamente.
+El parche0053 hace PortHost_RunFrame dentro del bucle solo bajo PORT_PC,
+como el parche0014 de la bolsa normal. Build PC normal y diagnostico PASS;
+make compare con ARM Binutils 2.43.1: pokeemerald.gba: OK. Aplicacion del
+parche al clon de verificacion produce el mismo arbol Git. La prueba de
+bolsa/pisos se esta repitiendo; no se acredita la ronda hasta completarla.
+Evidencia: build/natural-campaign-replay-r14-pyramid-bag-diagnose/campaign.log,
+build/t27-r14-bag-host-build.log, build/t27-r14-bag-gba-compare.log.

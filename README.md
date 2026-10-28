@@ -72,7 +72,7 @@ las herramientas y recursos locales generados por el build GBA.
 
 Ejecutables normal y de diagnóstico compilados; las 21 suites host y
 `make -C port verify-normal` pasan. El build original con ARM Binutils
-2.43.1 conserva `make compare` → `pokeemerald.gba: OK`. Los 52 parches
+2.43.1 conserva `make compare` → `pokeemerald.gba: OK`. Los 53 parches
 reproducen el mismo árbol upstream en un clon limpio local.
 
 ## Controles
