@@ -98,7 +98,10 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   build/t27-r09-factory-resume.log y build/t27-r09-factory-seven-reload.log.
 - [ ] R10: Palace: selección automática de movimientos y racha/recompensa.
 - [ ] R11: Arena: juicio, restricciones de cambio y racha/recompensa.
-- [ ] R12: Dome: inscripción, cuadro/elección del equipo y torneo/recompensa.
+- [x] R12: Dome: inscripción, cuadro/elección del equipo y torneo/recompensa.
+  Inscripcion legal, cuadro de 16 y eleccion de dos: PASS. Cuatro victorias,
+  campeonato1, racha1 y PB1->2: PASS; Continue conserva equipo y registros.
+  Evidencia: build/t27-r12-dome-round.log y t27-r12-dome-champion-reload.log.
 - [ ] R13: Pike: elecciones de salas, encuentros/estados y circuito/recompensa.
 - [ ] R14: Pyramid: exploración de pisos, bolsa propia, ascenso y recompensa.
 - [ ] R15: repetición de regresiones afectadas, build normal/diagnóstico,

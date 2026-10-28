@@ -1993,3 +1993,12 @@ Evidencia build/t27-r09-factory-open-pause.log,
 build/t27-r09-factory-resume.log y build/t27-r09-factory-seven-reload.log.
 El ejecutable de la ronda reanudada reenlaza dos objetos del clon limpio;
 los demas objetos se reutilizan del build principal: no es build limpio total.
+
+
+## T27 / R12: campeonato Dome completo (27-10-2026)
+
+Inscripcion de tres participantes, cuadro de 16 y seleccion de dos mediante
+interfaz nativa; cuatro victorias [1,1,1,1], campeonato1, racha1 y PB1->2.
+Guardado desde menu y Continue verifican registros, equipo e inventario sin
+alterar el archivo. Evidencia build/t27-r12-dome-round.log y
+build/t27-r12-dome-champion-reload.log; captura del cuadro en build/.

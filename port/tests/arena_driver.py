@@ -40,3 +40,43 @@ def restriction():
     assert struct.unpack_from('<H',d.memory('gBattlerPartyIndexes',8))[0]==original
     (d.SCRATCH/'r11-arena-restriction.raw').write_bytes(d.memory('sPixels',153600))
     print('NATURAL ARENA SWITCH RESTRICTION PASS',d.state(),original)
+
+
+def round_trip():
+    import struct,json,gdb
+    import frontier_driver as frontier
+    before=frontier.records();outcomes=[];judgment=set()
+    class Judge(gdb.Breakpoint):
+        def stop(self):
+            # Explicit function entry, i686 cdecl: first argument is ESP+4.
+            pointer=d.value('*(unsigned int *)($esp+4)')
+            state=bytes(gdb.selected_inferior().read_memory(pointer,1))[0]
+            judgment.add(state)
+            if state==8:
+                (d.SCRATCH/'r11-arena-judgment.raw').write_bytes(d.memory('sPixels',153600))
+            return False
+    class End(gdb.Breakpoint):
+        def stop(self):
+            outcomes.append(d.memory('gBattleOutcome',1)[0])
+            print('NATURAL ARENA BATTLE END',len(outcomes),outcomes[-1],sorted(judgment),frontier.records())
+            return False
+    observers=[Judge('*BattleArena_ShowJudgmentWindow',internal=True),
+               End('HandleSpecialTrainerBattleEnd',internal=True)]
+    for observer in observers:observer.silent=True
+    try:
+        restriction();d.settle(300000)
+        assert d.state()['map']=='BattleFrontier_BattleArenaLobby'
+        after=frontier.records()
+        print('NATURAL ARENA ROUND RESULT',outcomes,sorted(judgment),before,after)
+        if outcomes==[1]*7:
+            assert after['arenaWinStreaks'][1]==7
+            assert after['battlePoints']>before['battlePoints']
+            name='r11-arena-seven-wins'
+        else:
+            assert outcomes and outcomes[-1]==2,outcomes
+            name='r11-arena-loss'
+        facts=d.save_checkpoint(name);facts['frontier']=frontier.records()
+        facts['arena_judgment_states']=sorted(judgment)
+        (d.SCRATCH/(name+'.json')).write_text(json.dumps(facts,indent=2),encoding='utf-8')
+    finally:
+        for observer in observers:observer.delete()
