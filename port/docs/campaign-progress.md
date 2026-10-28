@@ -8,7 +8,7 @@ del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
 ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
 Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
-R06–R09 y R12 completos. R10, R11, R13, R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+R06–R09 y R12 completos. R10, R11, R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
 Consulta [cobertura pendiente](tasks/t27-remaining.md) y
 [informe de ejecución](first-run-report.md). Los checkpoints, capturas,
@@ -2011,3 +2011,14 @@ Siete pisos naturales [0,1,2,3,4,5,6], encuentros y desplazamientos por teclas,
 cima, racha7 y PB1->6. Guardado por menu y Continue preservan registros,
 equipo e inventario sin modificar el save. Evidencia: 
 build/t27-r14-pyramid-round-retry.log y t27-r14-pyramid-complete-reload.log.
+
+
+## T27 / R13: circuito Pike completo (28-10-2026)
+
+Las elecciones reales atraviesan salas 1 a 14, incluyendo encuentros
+salvajes, paralisis64 y curacion; racha14, PB1->2 y regreso al lobby.
+El guardado por menu y Continue conservan equipo, inventario y registros
+sin modificar el save. Evidencia build/t27-r13-pike-sixth-attempt.log,
+build/natural-campaign-replay-r13-pike-retry/campaign.log y
+build/t27-r13-pike-complete-reload.log. Los intentos perdidos siguen en
+checkpoints privados y en history/.

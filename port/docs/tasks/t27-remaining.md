@@ -102,10 +102,11 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Inscripcion legal, cuadro de 16 y eleccion de dos: PASS. Cuatro victorias,
   campeonato1, racha1 y PB1->2: PASS; Continue conserva equipo y registros.
   Evidencia: build/t27-r12-dome-round.log y t27-r12-dome-champion-reload.log.
-- [ ] R13: Pike: elecciones de salas, encuentros/estados y circuito/recompensa.
-  Intentos naturales: salas hasta la 14 (otro hasta la 11), encuentro salvaje
-  y sala de estado con paralisis64 observados. La racha completa y recompensa
-  aun no se han verificado; los intentos interrumpidos no cuentan como PASS.
+- [x] R13: Pike: elecciones de salas, encuentros/estados y circuito/recompensa.
+  14 salas, encuentros salvajes, paralisis64 y curacion observados; racha14,
+  PB1->2. Guardado y Continue conservan equipo y registros sin modificar save.
+  Evidencia: build/t27-r13-pike-sixth-attempt.log y
+  build/t27-r13-pike-complete-reload.log; derrotas previas conservadas.
 - [x] R14: Pyramid: exploración de pisos, bolsa propia, ascenso y recompensa.
   Bolsa especial, siete pisos [0..6], cima, racha7 y PB1->6: PASS.
   Continue conserva registros y equipo sin modificar el save: PASS.
