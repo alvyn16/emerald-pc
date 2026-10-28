@@ -97,6 +97,9 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Continue final PASS conserva equipo, registros y save intacto. Evidencia:
   build/t27-r09-factory-resume.log y build/t27-r09-factory-seven-reload.log.
 - [ ] R10: Palace: selección automática de movimientos y racha/recompensa.
+  IA automatica observada sin entradas manuales; rondas anteriores perdidas.
+  Castform subido naturalmente 25->30, aprende Bola Clima y Pulso Agua por MT;
+  Continue del equipo entrenado PASS. Aun falta racha completa y recompensa.
 - [x] R11: Arena: juicio, restricciones de cambio y racha/recompensa.
   Restriccion de cambio, juicio estados0-10, siete victorias, racha7 y PB1->2:
   PASS. Continue conserva equipo y registros sin modificar el save. Evidencia:
