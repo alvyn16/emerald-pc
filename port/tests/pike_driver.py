@@ -23,14 +23,18 @@ def enter():
 def round_trip():
     import json
     import frontier_driver as frontier
-    before=frontier.records(); enter(); visits=[]
+    before=frontier.records(); enter(); visits=[]; statuses=[]
+    d.RUN_WILD=True  # Use the ordinary Run command in wild Pike rooms.
     for step in range(60):
         current=d.settle(90000)
         room=current['map']
         if room=='BattleFrontier_BattlePikeLobby':break
         count=frontier.records()['curChallengeBattleNum']
         visits.append((room,count))
-        print('NATURAL PIKE ROOM',room,count,current,flush=True)
+        party_status=[d.value(f'(int)GetMonData3((void *)((char *)&gPlayerParty+{i*100}),55,0)')
+                      for i in range(current['party'])]
+        statuses.append((count,party_status))
+        print('NATURAL PIKE ROOM',room,count,current,'status',party_status,flush=True)
         if room=='BattleFrontier_BattlePikeThreePathRoom':
             d.go(2,3,dialogue_limit=90000)
         elif room=='BattleFrontier_BattlePikeRoomNormal':
@@ -52,5 +56,5 @@ def round_trip():
         assert after['battlePoints']>before['battlePoints']
         name='r13-pike-complete'
     else:name='r13-pike-loss'
-    facts=d.save_checkpoint(name);facts['frontier']=frontier.records();facts['pike_visits']=visits
+    facts=d.save_checkpoint(name);facts['frontier']=frontier.records();facts['pike_visits']=visits;facts['pike_statuses']=statuses
     (d.SCRATCH/(name+'.json')).write_text(json.dumps(facts,indent=2),encoding='utf-8')
