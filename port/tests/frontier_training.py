@@ -20,7 +20,7 @@ def prepare():
     return d.save_checkpoint('r10-training-cave')
 
 
-def train():
+def train(target=30,checkpoint="r10-castform-trained"):
     mon='(void *)((char *)&gPlayerParty+200)'
     assert d.state()['map']=='VictoryRoad_1F'
     assert d.value(f'(int)GetMonData3({mon},12,0)')==182
@@ -35,6 +35,7 @@ def train():
                if abs(a[0]-b[0])+abs(a[1]-b[1])>=3),None)
     assert pair,('No safe cave training route',candidates)
     print('NATURAL TRAINING WALK ROUTE',pair,flush=True)
+    saved_level=d.value(f'(int)GetMonData3({mon},56,0)')
     for visit in range(10):
         d.RUN_WILD=False
         for step in range(120):
@@ -44,9 +45,12 @@ def train():
             pp=sum(d.value(f'(int)GetMonData3((void *)&gPlayerParty,{17+i},0)') for i in range(4))
             hp=d.value('(int)GetMonData3((void *)&gPlayerParty,57,0)')
             print('NATURAL TRAINING PROGRESS',level,hp,pp,step,flush=True)
-            if level>=30:
+            if level>=target:
                 print('NATURAL CASTFORM TRAINING PASS',level,flush=True)
-                return d.save_checkpoint('r10-castform-trained')
+                return d.save_checkpoint(checkpoint)
+            if level>saved_level:
+                d.save_checkpoint('r10-training-progress')
+                saved_level=level
             if hp<50 or pp<5:break
         d.RUN_WILD=True
         d.warp_to(39,5,'EverGrandeCity',90000)
