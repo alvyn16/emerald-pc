@@ -24,7 +24,9 @@ def preserve_previous_run(scratch):
         if source.exists():
             target=history/name
             target.parent.mkdir(parents=True,exist_ok=True)
-            shutil.copy2(source,target)
+            # Move generated evidence into the private history so new logs
+            # and checkpoints cannot be mistaken for the previous attempt.
+            shutil.move(str(source),str(target))
     return history
 
 
