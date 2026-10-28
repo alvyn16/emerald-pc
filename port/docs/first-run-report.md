@@ -1832,3 +1832,8 @@ parche al clon de verificacion produce el mismo arbol Git. La prueba de
 bolsa/pisos se esta repitiendo; no se acredita la ronda hasta completarla.
 Evidencia: build/natural-campaign-replay-r14-pyramid-bag-diagnose/campaign.log,
 build/t27-r14-bag-host-build.log, build/t27-r14-bag-gba-compare.log.
+
+El replay posterior abre/cierra la bolsa, completa los siete pisos y recibe
+5 PB; Continue PASS. Evidencia build/t27-r14-pyramid-round-retry.log y
+build/t27-r14-pyramid-complete-reload.log. make test verify-normal PASS
+en build/t27-r14-bag-host-tests.log.
