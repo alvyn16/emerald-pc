@@ -118,7 +118,7 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Continue conserva registros y equipo sin modificar el save: PASS.
   Evidencia: build/t27-r14-pyramid-round-retry.log y
   build/t27-r14-pyramid-complete-reload.log.
-- [ ] R15: repetición de regresiones afectadas, build normal/diagnóstico,
+- [x] R15: repetición de regresiones afectadas, build normal/diagnóstico,
   suites host, compare GBA OK y reproducción limpia de cualquier parche nuevo.
   Revisar matriz/informes y cerrar únicamente lo que tenga evidencia.
   Clon limpio desde base + 53 parches via setup.ps1 reproduce el mismo arbol;
@@ -126,8 +126,12 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   (21 suites). Compilador agbcc ya instalado y ROM propia copiados solo a
   build/. Evidencia build/t27-clean-series53-{setup,gba-build,pc-resume}.log.
   El diagnostico construido desde ese clon arranca 2000 frames y termina
-  limpio: build/t27-clean-series53-boot.log. Falta auditoria final y
-  regresiones especificas de los ultimos cambios.
+  limpio: build/t27-clean-series53-boot.log. Bolsa Pyramid, siete pisos y
+  Continue PASS; ambos finales de animacion PASS con save privado intacto
+  (build/t27-final-animation-regression.log). Concurso dirigido: cinco
+  apelaciones y retorno al campo PASS (build/t27-final-contest-regression.log);
+  no se acredita inscripcion natural. Matriz e informes actualizados; archivos
+  seguidos sin ROM, save, assets ni binarios y hash de ROM original intacto.
 
 R01–R05 forman una campaña continua con checkpoints guardados. R06–R14 pueden
 usar copias de esa partida en directorios independientes bajo build/; se
