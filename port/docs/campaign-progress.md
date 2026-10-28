@@ -8,7 +8,7 @@ del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
 ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
 Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
-R06–R09 y R12 completos. R10, R11, R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+R06–R09 y R12 completos. R10, R15 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
 Consulta [cobertura pendiente](tasks/t27-remaining.md) y
 [informe de ejecución](first-run-report.md). Los checkpoints, capturas,
@@ -2022,3 +2022,11 @@ sin modificar el save. Evidencia build/t27-r13-pike-sixth-attempt.log,
 build/natural-campaign-replay-r13-pike-retry/campaign.log y
 build/t27-r13-pike-complete-reload.log. Los intentos perdidos siguen en
 checkpoints privados y en history/.
+
+
+## T27 / R11: ronda Arena completa (28-10-2026)
+
+Restriccion de cambio comprobada en menu real; juicio observa estados0-10.
+Siete victorias [1,1,1,1,1,1,1], racha7 y PB1->2; guardar y Continue
+conservan equipo y registros sin modificar save. Evidencia
+build/t27-r11-arena-third-loss-isolated.log y t27-r11-arena-seven-reload.log.
