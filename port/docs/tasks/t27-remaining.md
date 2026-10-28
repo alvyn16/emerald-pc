@@ -122,7 +122,9 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   GBA limpio compare OK y PC limpio exe/diagnostic/test/verify-normal PASS
   (21 suites). Compilador agbcc ya instalado y ROM propia copiados solo a
   build/. Evidencia build/t27-clean-series53-{setup,gba-build,pc-resume}.log.
-  Falta auditoria final y regresiones especificas de los ultimos cambios.
+  El diagnostico construido desde ese clon arranca 2000 frames y termina
+  limpio: build/t27-clean-series53-boot.log. Falta auditoria final y
+  regresiones especificas de los ultimos cambios.
 
 R01–R05 forman una campaña continua con checkpoints guardados. R06–R14 pueden
 usar copias de esa partida en directorios independientes bajo build/; se
