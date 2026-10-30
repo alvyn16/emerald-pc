@@ -2047,3 +2047,10 @@ build/t27-r10-training-level40.log y
 build/natural-campaign-replay-r10-training-advanced/campaign.log.
 R10 sigue pendiente de siete victorias, recompensa y Continue. No se
 alteraron niveles ni resultados con GDB.
+
+El equipo nivel40 regreso a Palace por UI y se guardo:
+build/t27-r10-training-return40.log PASS. Continue de
+r10-palace-level40-ready conserva equipo, HP, PP, movimientos e inventario
+sin reescribir el save: build/t27-r10-palace-level40-reload.log PASS.
+La ronda desde ese checkpoint se registra en build/t27-r10-palace-level40.log;
+su resultado no se presupone a partir de la preparacion.

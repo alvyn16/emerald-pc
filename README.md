@@ -10,7 +10,7 @@ pueden aparecer fallos fuera del recorrido probado.
 
 Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Este repositorio no distribuye ROMs, saves, assets ni código de pokeemerald. Es un proyecto de fans no afiliado a Nintendo, Game Freak ni The Pokémon Company.
 
-## Estado verificado (21 de octubre de 2026)
+## Estado verificado (30 de octubre de 2026)
 
 - Campaña continua: R01–R05 completos, ocho medallas, Calle Victoria,
   Alto Mando, Wallace, Hall of Fame y «The End» mediante entradas reales.
@@ -24,7 +24,12 @@ Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Es
 - R06 completo: cría de Gloom/Oddish, huevo generado y recogido mediante
   entradas reales, eclosión de Oddish nivel 5 y cuatro recargas PASS.
 - R07 completo: 30 bolas y 500 pasos reales de Safari, salidas y dos Continue PASS.
-- R09–R15 y Checkpoint E siguen abiertos. Las pruebas anteriores de Liga,
+- Frontier: Torre, Factory, Arena, Dome, Pike y Pyramid tienen rondas,
+  recompensas y recargas verificadas. Palace (R10) sigue pendiente de su
+  circuito completo; T27 y Checkpoint E permanecen abiertos.
+- R15: reproducción limpia de los 53 parches, build GBA `compare` OK,
+  builds PC normal/diagnóstico y 21 suites host PASS.
+- Las pruebas anteriores de Liga,
   créditos y Hall of Fame con equipo preparado son evidencia separada;
   no acreditan completar la campaña continua.
 
@@ -106,12 +111,14 @@ Los writes m4a de PSG ya capturan bancos y triggers entre frames; PCM tiene
 vectores contrastados con el mezclador ARM original. Consulta
 `port/docs/audio-model.md` para pruebas, escucha y límites de audio.
 
-Enlace/RFU/multiboot y campaña completa siguen pendientes. No se garantiza
+Enlace/RFU/multiboot siguen pendientes. No se garantiza
 precisión por ciclo, filtro de sonido analógico ni compatibilidad total con
 accesorios. El soporte actual es Windows de 32 bits; x86-64 queda como
 trabajo futuro. T24–T26 tienen regresiones de combate y almacenamiento;
-T27 sigue abierto: la campaña continua todavía no completa el Alto Mando,
-los créditos ni todos los contenidos posteriores.
+T27 sigue abierto por el circuito de Palace. La campaña continua llega a
+los créditos; los Concursos se verificaron con un fixture dirigido de cinco
+apelaciones y retorno al campo, sin acreditar inscripción natural. No se
+afirma cobertura exhaustiva de todos los contenidos o combinaciones.
 El estado completo está en `port/docs/tasks/todo.md`.
 
 Consulta `port/docs/toolchain.md` para reproducir el entorno. ROMs, saves,
