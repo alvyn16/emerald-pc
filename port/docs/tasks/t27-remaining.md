@@ -48,19 +48,19 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   caida/subida, despertar y cinco segmentos de Rayquaza por replay PASS;
   paz y Continue PASS. Waterfall por regalo/UI/replay y tres tableros de hielo
   por teclado/replay PASS. Juan gana con cambio/objetos comprados por UI;
-  ocho medallas, recompensas, replay y Continue PASS. R05-R15 pendientes.
+  ocho medallas, recompensas, replay y Continue PASS.
 - [x] R05: Waterfall, Victory Road, acceso a Liga, ocho medallas y créditos
   desde esa misma partida; sin warps del harness ni equipo preparado. Recarga
   final: game-clear, equipo y Hall of Fame válidos. Capturas privadas.
   Cascadas, Wally, Flash, Fuerza, Golpe Roca y salida de Calle Victoria:
-  replays PASS; enfermera de Liga y Continue PASS. Alto Mando y final pendientes.
-  Sidney: victoria original, replay y Continue PASS. Resto del Alto Mando pendiente.
+  replays PASS; enfermera de Liga y Continue PASS.
+  Sidney: victoria original, replay y Continue PASS.
   Blackout ante Phoebe y Bici Carrera por UI/replay PASS. Recarga del regreso
   a Pilar Celeste PASS; cruce de 2F con Bici Carrera, replay y Continue 3F PASS.
   Puzzle de 4F/caida central, llegada a 5F, replay y Continue PASS.
   Captura real de Rayquaza70/Master Ball, replay y Continue PASS.
   Regreso preparado a Liga y victorias de Sidney/Phoebe/Glacia, replays y Continue PASS.
-  Derrota previa ante Glacia conservada; Drake, Wallace y final pendientes.
+  Derrota previa ante Glacia conservada en el historial.
   Derrota normal ante Drake, Continue y reabastecimiento por tienda/enfermera PASS.
   Cosecha Leppa, uso por menu (Enfado8->15PP), PS/estado/PP/consumibles
   persistidos y Continue PASS. Nuevos intentos ante Glacia terminan en derrota
@@ -71,7 +71,7 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   al dormitorio, conserva ocho medallas, game-clear y seis especies/niveles;
   registros/checksums Hall of Fame validos y save intacto. R05 completo.
   Evidencia: build/t27-wallace-champion-replay.log y
-  build/t27-natural-ending-reload.log. R06-R15 siguen abiertos.
+  build/t27-natural-ending-reload.log.
 - [x] R06: crianza por pasos reales, generación de huevo, recogida por diálogo,
   eclosión mediante desplazamientos y conservación tras save/reload. No marcar
   readiness, contador de huevo ni especie manualmente.
