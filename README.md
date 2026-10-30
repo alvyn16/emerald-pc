@@ -25,8 +25,8 @@ Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Es
   entradas reales, eclosión de Oddish nivel 5 y cuatro recargas PASS.
 - R07 completo: 30 bolas y 500 pasos reales de Safari, salidas y dos Continue PASS.
 - Frontier: Torre, Factory, Arena, Dome, Pike y Pyramid tienen rondas,
-  recompensas y recargas verificadas. Palace (R10) sigue pendiente de su
-  circuito completo; T27 y Checkpoint E permanecen abiertos.
+  recompensas y recargas verificadas. Palace completo: siete victorias,
+  PB1→5 y Continue. T27 y Checkpoint E cerrados con alcance documentado.
 - R15: reproducción limpia de los 53 parches, build GBA `compare` OK,
   builds PC normal/diagnóstico y 21 suites host PASS.
 - Las pruebas anteriores de Liga,
@@ -34,9 +34,10 @@ Cada usuario debe aportar su propia ROM legal de Pokémon Emerald en inglés. Es
   no acreditan completar la campaña continua.
 
 Consulta el [registro de campaña](port/docs/campaign-progress.md), la
-[cobertura pendiente de T27](port/docs/tasks/t27-remaining.md) y el
+[checklist de T27](port/docs/tasks/t27-remaining.md) y el
 [informe de ejecución](port/docs/first-run-report.md). Capturas, partidas y
 resultados completos de diagnóstico permanecen en `build/`, fuera de Git.
+Consulta la [auditoría de cierre y sus límites](port/docs/t27-completion-audit.md).
 
 ## Preparación en Windows
 
@@ -115,7 +116,7 @@ Enlace/RFU/multiboot siguen pendientes. No se garantiza
 precisión por ciclo, filtro de sonido analógico ni compatibilidad total con
 accesorios. El soporte actual es Windows de 32 bits; x86-64 queda como
 trabajo futuro. T24–T26 tienen regresiones de combate y almacenamiento;
-T27 sigue abierto por el circuito de Palace. La campaña continua llega a
+T27 está completado dentro de su matriz de pruebas. La campaña continua llega a
 los créditos; los Concursos se verificaron con un fixture dirigido de cinco
 apelaciones y retorno al campo, sin acreditar inscripción natural. No se
 afirma cobertura exhaustiva de todos los contenidos o combinaciones.

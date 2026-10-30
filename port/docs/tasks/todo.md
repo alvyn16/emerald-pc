@@ -417,7 +417,7 @@ fixes. Verificación: datos antes/después y timeout en transiciones.
 
 - [x] Crear matriz de rutas/ciudades, interiores, cuevas, surf/bici,
   scripts de historia y cargas de mapas; usar saves locales de prueba.
-- [ ] Completar un recorrido hasta Liga/créditos y revisar Concursos,
+- [x] Completar un recorrido hasta Liga/créditos y revisar Concursos,
   crianza, Safari y Battle Frontier por tramos separados.
 - [x] Mantener catálogo de casos cubiertos y pendientes, sin versionar saves
   ni afirmar cobertura exhaustiva de todas las combinaciones del juego.
@@ -433,12 +433,13 @@ Llave/Rayo y consumibles por UI; replay del final y Continue PASS. La recarga
 conserva game-clear, ocho medallas, seis especies/niveles y registros validos
 del Hall of Fame; no modifica el save. Detalle: campaign-progress.md.
 R06 completo: huevo y eclosion naturales de Gloom/Oddish; cuatro Continue PASS.
-R07–R09 y R11–R14 completos con sus recargas; R10 sigue abierto. No se cierra Checkpoint E ni T27.
+R07–R14 completos con sus recargas; Palace siete victorias, PB1->5 y Continue PASS.
+R15 reproducido desde base + 53 parches; auditoria en ../t27-completion-audit.md.
 Los segmentos anteriores con equipo preparado siguen siendo evidencia separada.
 
 ### Checkpoint E — juego individual
 
-- [ ] Matriz de campaña, save, RTC, gráficos y audio completada con evidencia;
+- [x] Matriz de campaña, save, RTC, gráficos y audio completada con evidencia;
   lista explícita de restricciones todavía presentes.
 
 ## Hito 31 — experiencia y reproducción local

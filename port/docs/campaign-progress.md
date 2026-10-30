@@ -8,7 +8,7 @@ del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
 ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
 Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
-R06–R09 y R11–R15 completos. R10 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+R06–R15 completos. T27 y Checkpoint E cerrados con los limites de la auditoria final. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
 Consulta [cobertura pendiente](tasks/t27-remaining.md) y
 [informe de ejecución](first-run-report.md). Los checkpoints, capturas,
@@ -2054,3 +2054,20 @@ r10-palace-level40-ready conserva equipo, HP, PP, movimientos e inventario
 sin reescribir el save: build/t27-r10-palace-level40-reload.log PASS.
 La ronda desde ese checkpoint se registra en build/t27-r10-palace-level40.log;
 su resultado no se presupone a partir de la preparacion.
+
+
+## T27 / R10: Palace completo y cierre (30-10-2026)
+
+Desde r10-palace-level40-loss1, siete victorias [1,1,1,1,1,1,1],
+864 callbacks automaticos y cero elecciones manuales de movimientos.
+Racha7, PB1->5, regreso al lobby y guardado por menu. Continue conserva
+registros, equipo, HP, PP, movimientos e inventario sin reescribir el save.
+Evidencia: build/t27-r10-palace-level40-retry.log,
+build/natural-campaign-replay-r10-palace-retry/campaign.log y
+build/t27-r10-palace-seven-reload.log. Equipo legal seleccionado: Swampert54,
+Pelipper52 y Castform40; no se forzaron resultados ni niveles.
+
+El entrenamiento adicional llego a nivel42 y se detuvo por dejar de ser
+necesario; no acredita objetivo50. Checkpoint41 recargado PASS y checkpoint42
+conservado en build/. T27/Checkpoint E cerrados: ver t27-completion-audit.md.
+Las secciones anteriores conservan el estado historico de cada incremento.

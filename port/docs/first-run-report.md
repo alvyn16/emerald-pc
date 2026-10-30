@@ -8,7 +8,7 @@ del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
 ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
 Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
-R06 (crianza/eclosión y cuatro recargas) PASS. R07 Safari completo (30 bolas/500 pasos y dos Continue). R08–R09 y R11–R15 completos; R10 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+R06 (crianza/eclosión y cuatro recargas) PASS. R07 Safari completo (30 bolas/500 pasos y dos Continue). R08–R15 completos; T27 y Checkpoint E cerrados (ver t27-completion-audit.md). Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
 Consulta [cobertura pendiente](tasks/t27-remaining.md) y
 [registro de campaña](campaign-progress.md). Los checkpoints, capturas,
@@ -1837,3 +1837,13 @@ El replay posterior abre/cierra la bolsa, completa los siete pisos y recibe
 5 PB; Continue PASS. Evidencia build/t27-r14-pyramid-round-retry.log y
 build/t27-r14-pyramid-complete-reload.log. make test verify-normal PASS
 en build/t27-r14-bag-host-tests.log.
+
+
+## T27: cierre de Palace (30-10-2026)
+
+Siete victorias naturales, racha7 y PB1->5; 864 callbacks de movimientos
+automaticos y ninguna seleccion manual. Continue conserva registros/equipo
+sin reescribir save. Logs: t27-r10-palace-level40-retry.log y
+t27-r10-palace-seven-reload.log bajo build/. No hubo nueva excepcion;
+los intentos perdidos fueron derrotas normales. Auditoria de cierre y
+restricciones: [t27-completion-audit.md](t27-completion-audit.md).

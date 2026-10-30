@@ -96,13 +96,17 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   cuatro victorias y Continue conservan alquileres, personalidad y movimientos.
   Continue final PASS conserva equipo, registros y save intacto. Evidencia:
   build/t27-r09-factory-resume.log y build/t27-r09-factory-seven-reload.log.
-- [ ] R10: Palace: selección automática de movimientos y racha/recompensa.
+- [x] R10: Palace: selección automática de movimientos y racha/recompensa.
   IA automatica observada sin entradas manuales; rondas anteriores perdidas.
   Castform subido naturalmente 25->30, aprende Bola Clima y Pulso Agua por MT;
   Continue del equipo nivel30 PASS. Entrenamiento natural adicional hasta
   nivel40 y guardado PASS (build/t27-r10-training-level40.log). Ultimo intento
   con nivel30: cuatro victorias y derrota; PB sin aumento. Aun falta racha
-  completa, recompensa y Continue final.
+  completa, recompensa y Continue final (estado anterior).
+  Cierre: siete victorias, 864 callbacks automaticos y cero selecciones
+  manuales; racha7, PB1->5 y Continue sin reescribir save PASS.
+  Evidencia: build/t27-r10-palace-level40-retry.log y
+  build/t27-r10-palace-seven-reload.log.
 - [x] R11: Arena: juicio, restricciones de cambio y racha/recompensa.
   Restriccion de cambio, juicio estados0-10, siete victorias, racha7 y PB1->2:
   PASS. Continue conserva equipo y registros sin modificar el save. Evidencia:
@@ -156,3 +160,8 @@ Reproducción base: MINGW32, make -C port exe diagnostic-exe test verify-normal
 (builds secuenciales). Python del entorno para harness; GDB MINGW32.
 Compare: MINGW64 con ARM Binutils 2.43.1, make -C pokeemerald compare
 KEEP_TEMPS=1 NODEP=1. Ajustar las pruebas focalizadas por incremento.
+
+## Cierre (30-10-2026)
+
+R01-R15 completos. Auditoria y limites: [t27-completion-audit.md](../t27-completion-audit.md).
+Los intentos fallidos anteriores son historial, no requisitos pendientes.

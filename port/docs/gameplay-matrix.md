@@ -91,7 +91,7 @@ al PC. No fuerzan resultados de almacenamiento. Capturas raw locales en build/.
 Estado al 28 de octubre de 2026: campaña natural R01–R05 completa;
 ocho medallas, Calle Victoria, Alto Mando, Wallace, Hall of Fame y The End.
 Replay y Continue final PASS, incluyendo integridad del equipo y Hall of Fame.
-R06–R09 y R11–R14 PASS. R10 y Checkpoint E abiertos. La tabla conserva pruebas con fixtures
+R06–R15 PASS. T27 y Checkpoint E cerrados; ver t27-completion-audit.md. La tabla conserva pruebas con fixtures
 preparados, identificadas como evidencia independiente de la campaña natural.
 
 El upstream contiene 518 mapas en 34 grupos. PASS para 32 cargas seleccionadas:
@@ -112,15 +112,15 @@ cambian con input real y callback de campo conservado. Capturas privadas en buil
 | Crianza | Mudkip + Ditto guardados, huevo generado por rutinas reales, especie Mudkip, IS_EGG=1, save | PASS; readiness del huevo dirigida, no espera de pasos ni eclosión |
 | Safari | Huida previa más admisión/cobro 500/30 bolas, captura Magikarp, salida por pasos y limpieza de modo | PASS dirigido; rutina de pasos invocada, no paseo ni agotamiento de bolas |
 | Frontier fixture dirigido | Tower singles, rival generado de la tabla de facility, Swampert/Salamence/Metagross 50, victoria y save | PASS de un combate; no racha completa ni otras seis facilities |
-| Campaña continua | R01–R05 naturales completos; ocho medallas, Calle Victoria, Alto Mando, Wallace, Hall of Fame y The End; replay/Continue final | R01–R09 y R11–R14 PASS; R10 pendiente |
-| Frontier natural | Torre, Factory, Arena, Dome, Pike y Pyramid: rondas/recompensas y Continue; Factory pausa/intercambio, Arena juicio y restricciones, Pike estados, Pyramid bolsa | R08–R09 y R11–R14 PASS; Palace pendiente |
+| Campaña continua | R01–R05 naturales completos; ocho medallas, Calle Victoria, Alto Mando, Wallace, Hall of Fame y The End; replay/Continue final | R01–R15 PASS |
+| Frontier natural | Torre, Factory, Palace, Arena, Dome, Pike y Pyramid: rondas/recompensas y Continue; Factory pausa/intercambio, Arena juicio y restricciones, Pike estados, Pyramid bolsa | R08–R14 PASS; Palace siete victorias, PB1->5 y Continue |
 | Safari natural R07 | 30 bolas lanzadas y 500 pasos por teclas; dos salidas limpias, Continue conserva equipo/inventario/dinero y save intacto | PASS |
 | Crianza natural R06 | Padres Gloom/Oddish por UI, captura de macho, huevo generado/recogido, 5375 pasos hasta Oddish5, identidad conservada; cuatro Continue/save intacto | PASS |
-| Historia | R01–R04: Devon/Peeko/Steven, gimnasios, escondites, Space Center, Dive/Seafloor, Sky Pillar/Rayquaza de historia y Sootopolis por input real | PASS para R01–R04; captura de Rayquaza PASS; contenidos posteriores pendientes |
+| Historia | R01–R04: Devon/Peeko/Steven, gimnasios, escondites, Space Center, Dive/Seafloor, Sky Pillar/Rayquaza de historia y Sootopolis por input real | PASS para R01–R04; captura de Rayquaza PASS; contenidos posteriores en R05–R14 |
 
 El progreso medido procede de scripts NPC y guardados reales; warps y equipo
 asistidos no acreditan recorrido ni desbloqueos de historia. T27 y Checkpoint E
-siguen abiertos por esos tramos, crianza/eclosión y ampliación del Frontier.
+quedan cerrados con los resultados naturales y limites de la auditoria final.
 Detalle y comandos: [campaign-progress.md](campaign-progress.md).
 
 Fallos reales corregidos:
@@ -163,3 +163,9 @@ R06-R15 y Checkpoint E siguen abiertos. Detalle: campaign-progress.md.
 
 Actualizacion posterior: R05 COMPLETO; Wallace/Hall of Fame/The End y Continue
 final PASS. R06-R15 y Checkpoint E siguen abiertos. Ver campaign-progress.md.
+
+## Cierre T27 / Checkpoint E
+
+Ver [auditoria final](t27-completion-audit.md). Los estados pendientes de las
+secciones cronologicas anteriores son historicos. No se afirma cobertura
+exhaustiva ni inscripcion natural a Concursos.
