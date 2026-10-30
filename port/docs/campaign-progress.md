@@ -1,6 +1,6 @@
 # T27: progreso de campaña con scripts reales
 
-## Estado actual: 21 de octubre de 2026
+## Estado actual: 30 de octubre de 2026
 
 La campaña continua natural completa R01–R05: ocho medallas, Calle Victoria,
 cuatro victorias del Alto Mando, Wallace, Hall of Fame y The End. El replay
@@ -8,7 +8,7 @@ del Campeon y la recarga final por Continue PASS: regreso al dormitorio,
 ocho medallas, game-clear, seis especies/niveles y Hall of Fame valido.
 Continue no modifica el archivo guardado. No se concedio progreso por GDB.
 
-R06–R09 y R12 completos. R10 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
+R06–R09 y R11–R15 completos. R10 y Checkpoint E siguen abiertos. Las victorias, créditos y Hall of Fame
 de fixtures con equipo preparado son pruebas anteriores independientes.
 Consulta [cobertura pendiente](tasks/t27-remaining.md) y
 [informe de ejecución](first-run-report.md). Los checkpoints, capturas,
@@ -2030,3 +2030,20 @@ Restriccion de cambio comprobada en menu real; juicio observa estados0-10.
 Siete victorias [1,1,1,1,1,1,1], racha7 y PB1->2; guardar y Continue
 conservan equipo y registros sin modificar save. Evidencia
 build/t27-r11-arena-third-loss-isolated.log y t27-r11-arena-seven-reload.log.
+
+
+## T27 / R10: entrenamiento adicional (30-10-2026)
+
+El intento desde r10-palace-trained-loss3 termino con cuatro victorias y
+una derrota ([1,1,1,1,2]); 464 callbacks automaticos y ninguna seleccion
+manual. PB permanece en 1: no acredita recompensa ni circuito. Evidencia:
+build/t27-r10-palace-trained-retry3.log y campaign.log de
+build/natural-campaign-replay-r10-palace-retry/ (history/ tras otro intento).
+
+Entrenamiento natural independiente llevo a Castform de nivel30 a 40 con
+Repartir Exp., combates y curacion por UI. Checkpoint real guardado en
+build/natural-campaign/r10-castform-level40.*; evidencia
+build/t27-r10-training-level40.log y
+build/natural-campaign-replay-r10-training-advanced/campaign.log.
+R10 sigue pendiente de siete victorias, recompensa y Continue. No se
+alteraron niveles ni resultados con GDB.

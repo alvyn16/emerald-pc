@@ -12,7 +12,7 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   por el debugger. Guardar y reabrir: especie, nivel, mapa y progreso coinciden.
   Evidencia: `build/natural-campaign/r01-birch-dex.json` y
   `build/natural-campaign-reload/reload.log`; recorrido y lectura descritos
-  en `campaign-progress.md`. R05–R15 siguen abiertos.
+  en `campaign-progress.md`.
 - [x] R02: desplazamientos reales y puzzles para los primeros cuatro gimnasios;
   Devon/Peeko/Briney, Aqua en Slateport, meteorito y Magma en Mt. Chimney.
   Comprobar rechazo de pasos bloqueados antes de completar su requisito y
@@ -20,7 +20,7 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
   Evidencia: checkpoints de Roxanne/Brawly/Wattson/Flannery y sus recargas;
   `r02-maxie-meteorite`, gating del museo/teleférico y regresiones naturales
   de Rock Smash, Meteor Falls, Jagged Pass y el puzzle/combate de Flannery.
-  Detalle y límites de los intentos: `campaign-progress.md`. R05–R15 abiertos.
+  Detalle y límites de los intentos: `campaign-progress.md`.
 - [x] R03: Norman/Surf, Weather Institute/Castform, rival/Fly y Fortree/Devon
   Scope. Cruzar los obstáculos con input y los movimientos/herramientas reales.
   Norman/quinta medalla y entrega/enseñanza/cruce de Surf naturales: PASS;
@@ -99,7 +99,10 @@ GDB y se corrige en port/ o mediante un parche PORT_PC numerado.
 - [ ] R10: Palace: selección automática de movimientos y racha/recompensa.
   IA automatica observada sin entradas manuales; rondas anteriores perdidas.
   Castform subido naturalmente 25->30, aprende Bola Clima y Pulso Agua por MT;
-  Continue del equipo entrenado PASS. Aun falta racha completa y recompensa.
+  Continue del equipo nivel30 PASS. Entrenamiento natural adicional hasta
+  nivel40 y guardado PASS (build/t27-r10-training-level40.log). Ultimo intento
+  con nivel30: cuatro victorias y derrota; PB sin aumento. Aun falta racha
+  completa, recompensa y Continue final.
 - [x] R11: Arena: juicio, restricciones de cambio y racha/recompensa.
   Restriccion de cambio, juicio estados0-10, siete victorias, racha7 y PB1->2:
   PASS. Continue conserva equipo y registros sin modificar el save. Evidencia:
